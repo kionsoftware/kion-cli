@@ -68,18 +68,14 @@ __Description:__
 
 The Kion CLI allows users to perform common Kion workflows via the command
 line. Users can quickly generate short term access keys (stak) via configured
-favorites or by walking through an account and role selection wizard. Users can
-similarly federate into the AWS console.
+favorites or by walking through an account and role selection wizard.
 
 __Commands:__
 
 ```text
 stak, s            Generate short-term access keys.
 
-console, con, c    Federate into the AWS console.
-
-favorite, fav, f   Access pre-configured favorites to quickly generate staks or
-                   federate into the console.
+favorite, fav, f   Access pre-configured favorites to quickly generate staks.
 
 run                Run a command with short-term access keys
 
