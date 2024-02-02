@@ -78,4 +78,3 @@ else
   echo "${GREEN}No findings!${NORM}"
   echo
 fi
-
