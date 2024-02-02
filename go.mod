@@ -1,4 +1,4 @@
-module kion-cli
+module github.com/kionsoftware/kion-cli
 
 go 1.19
 

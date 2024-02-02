@@ -1,6 +1,6 @@
 package structs
 
-import "kion-cli/lib/kion"
+import "github.com/kionsoftware/kion-cli/lib/kion"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

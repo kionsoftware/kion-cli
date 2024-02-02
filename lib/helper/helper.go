@@ -2,8 +2,6 @@ package helper
 
 import (
 	"fmt"
-	"kion-cli/lib/kion"
-	"kion-cli/lib/structs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,6 +9,9 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+
+	"github.com/kionsoftware/kion-cli/lib/kion"
+	"github.com/kionsoftware/kion-cli/lib/structs"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
