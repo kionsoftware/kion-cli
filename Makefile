@@ -23,3 +23,4 @@ install: build
 clean:
 	rm -f kion
 	rm -f profile.cov
+	rm -f tools/golangci-lint
