@@ -28,20 +28,7 @@ var (
 	config     structs.Configuration
 	configPath string
 	configFile = ".kion.yml"
-	debugMode  bool
 )
-
-func init() {
-	// Initialize debug mode based on an environment variable
-	debugMode = os.Getenv("DEBUG_MODE") == "true"
-}
-
-// DebugLog prints debug information if debug mode is enabled
-func DebugLog(format string, v ...interface{}) {
-	if debugMode {
-		log.Printf(format, v...)
-	}
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -295,7 +282,6 @@ func authCommand(cCtx *cli.Context) error {
 // interactive prompt. Short term access keys are either printed to stdout or a
 // subshell is created with them set in the environment.
 func genStaks(cCtx *cli.Context) error {
-	DebugLog("Starting genstacks")
 
 	err := authCommand(cCtx)
 	if err != nil {
@@ -354,8 +340,6 @@ func genStaks(cCtx *cli.Context) error {
 		return fmt.Errorf("unknown genStaks account type")
 	}
 
-	DebugLog("default region for stack gen: %s", defaultRegion)
-
 	// get a list of cloud access roles, then build a list of names and lookup map
 	cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
 	if err != nil {
@@ -392,7 +376,6 @@ func genStaks(cCtx *cli.Context) error {
 // favorite is found that matches the passed argument it is used, otherwise the
 // user is walked through a wizard to make a selection.
 func genStaksFav(cCtx *cli.Context) error {
-	DebugLog("Starting genStaksFav")
 
 	// map our favorites for ease of use
 	fNames, fMap := helper.MapFavs(config.Favorites)
@@ -433,8 +416,6 @@ func genStaksFav(cCtx *cli.Context) error {
 		return fmt.Errorf("unknown genStaksFav account type: %d", favorite.AccountType)
 	}
 
-	DebugLog("default region for fav stak gen: %s", defaultRegion)
-
 	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account, defaultRegion)
 	if err != nil {
 		return err
@@ -451,7 +432,6 @@ func genStaksFav(cCtx *cli.Context) error {
 // fedConsole opens the AWS console for the selected account and cloud access
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
-	DebugLog("Starting fedConsole")
 
 	err := authCommand(cCtx)
 	if err != nil {
@@ -469,7 +449,6 @@ func fedConsole(cCtx *cli.Context) error {
 // listFavorites prints out the users stored favorites. Extra information is
 // provided if the verbose flag is set.
 func listFavorites(cCtx *cli.Context) error {
-	DebugLog("Listing Favorites")
 
 	// map our favorites for ease of use
 	fNames, fMap := helper.MapFavs(config.Favorites)
@@ -490,84 +469,61 @@ func listFavorites(cCtx *cli.Context) error {
 // runCommand generates creds for an AWS account then executes the user
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
-	DebugLog("Starting runCommand")
 
 	if cCtx.String("fav") != "" {
-		DebugLog("Favorite is not empty: %s", cCtx.String("fav"))
 		// map our favorites for ease of use
 		_, fMap := helper.MapFavs(config.Favorites)
-		DebugLog("Favorites mapped")
 
 		// if arg passed is a valid favorite use it else prompt
 		var fav string
 		var err error
 		if fMap[cCtx.String("fav")] != (structs.Favorite{}) {
 			fav = cCtx.String("fav")
-			DebugLog("Using favorite: %s", fav)
 		} else {
-			DebugLog("Favorite not found: %s", cCtx.String("fav"))
 			return errors.New("can't find fav")
 		}
 
 		userConfig, err := kion.GetUserDefaultRegions(cCtx.String("endpoint"), cCtx.String("token"))
 		if err != nil {
-			DebugLog("Error getting user default regions: %v", err)
 			return err
 		}
-		DebugLog("User default regions obtained")
 
 		err = authCommand(cCtx)
 		if err != nil {
-			DebugLog("Error in authCommand: %v", err)
 			return err
 		}
-		DebugLog("authCommand successful")
 
 		// generate stak
 		favorite := fMap[fav]
-		DebugLog("Favorite details retrieved: %+v", favorite)
 
 		selectedAccount, ok := fMap[favorite.Name]
 		if !ok {
-			DebugLog("Account from favorite not found: %s", favorite.Name)
 			return fmt.Errorf("account from favorite not found")
 		}
-		DebugLog("Selected account: %+v", selectedAccount)
 
 		var defaultRegion string
 
 		if selectedAccount.AccountType == 1 {
 			defaultRegion = userConfig.Data.AwsDefaultCommercialRegion
-			DebugLog("Using AWS Default Commercial Region: %s", defaultRegion)
 		} else if selectedAccount.AccountType == 2 {
 			defaultRegion = userConfig.Data.AwsDefaultGovcloudRegion
-			DebugLog("Using AWS Default Govcloud Region: %s", defaultRegion)
 		} else {
-			DebugLog("Unknown favorite account type: %d", selectedAccount.AccountType)
 			return fmt.Errorf("unknown fav account type")
 		}
 
-		DebugLog("default region for run command: %s", defaultRegion)
-
 		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account, defaultRegion)
 		if err != nil {
-			DebugLog("Error getting STAK: %v", err)
 			return err
 		}
-		DebugLog("STAK obtained")
 
 		err = helper.RunCommand(favorite.Account, favorite.Name, favorite.CAR, stak, defaultRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
 		if err != nil {
-			DebugLog("Error running command: %v", err)
 			return err
 		}
-		DebugLog("Command executed successfully")
 
 	} else if cCtx.String("account") != "" && cCtx.String("car") != "" {
 		err := authCommand(cCtx)
 		if err != nil {
-			DebugLog("Starting authCommand")
-
 			return err
 		}
 
@@ -621,8 +577,6 @@ func afterCommands(cCtx *cli.Context) error {
 // out into its own function some day.
 func main() {
 
-	DebugLog("Debug Log Turned On")
-
 	// get home directory
 	home, err := os.UserHomeDir()
 
@@ -668,7 +622,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.0.1",
+		Version:              "v0.0.2",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,

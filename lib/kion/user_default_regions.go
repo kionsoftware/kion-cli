@@ -3,25 +3,7 @@ package kion
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 )
-
-var (
-	debugMode bool
-)
-
-func init() {
-	// Initialize debug mode based on an environment variable
-	debugMode = os.Getenv("DEBUG_MODE") == "true"
-}
-
-// DebugLog prints debug information if debug mode is enabled
-func DebugLog(format string, v ...interface{}) {
-	if debugMode {
-		log.Printf(format, v...)
-	}
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -58,11 +40,9 @@ func GetUserDefaultRegions(host string, token string) (UserConfigResponse, error
 	// Check for null values and set defaults
 	if defaultRegionResp.Data.AwsDefaultCommercialRegion == "" {
 		defaultRegionResp.Data.AwsDefaultCommercialRegion = "us-east-1"
-		DebugLog("Commercial region was null, defaulting to us-east-1")
 	}
 	if defaultRegionResp.Data.AwsDefaultGovcloudRegion == "" {
 		defaultRegionResp.Data.AwsDefaultGovcloudRegion = "us-gov-east-1"
-		DebugLog("GovCloud region was null, defaulting to us-gov-east-1")
 	}
 
 	return defaultRegionResp, nil

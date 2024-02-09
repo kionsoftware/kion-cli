@@ -202,7 +202,6 @@ func RunCommand(accountNumber string, accountAlias string, carName string, stak 
 	env = append(env, fmt.Sprintf("KION_ACCOUNT_ALIAS=%s", accountAlias))
 	env = append(env, fmt.Sprintf("KION_CAR=%s", carName))
 
-	kion.DebugLog("Running command: %v", newCmd)
 	// moosh it all together
 	newCmd = append(newCmd, args...)
 
