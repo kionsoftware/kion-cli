@@ -1,10 +1,19 @@
 Kion CLI
 ========
-
 Kion CLI is a simple tool allowing Kion customers to generate short term access
 keys via the command line.
 
-![kion-cli usage](doc/kion-cli-usage.gif)
+![kion-cli usage](doc/kion-cli-usage.gif "kion-cli usage")
+
+Goals
+-----
+
+- Well documented usage
+- Simple, maintainable code base
+- Use the Kion public API for stability
+- Standard configuration precedence (flag > env var > config file > default value)
+- Autocompletion for Bash and ZSH
+- Wizards to gather unset but required configurations
 
 Setup
 -----
@@ -56,9 +65,11 @@ Setup
       - name: sandbox
         account: "111122223333"
         cloud_access_role: Admin
-      - name: prod
+        account_type: 1 # 1 = AWS Commercial, 2 = AWS GovCloud
+      - name: govcloud-prod
         account: "111122224444"
         cloud_access_role: ReadOnly
+        account_type: 2 # 1 = AWS Commercial, 2 = AWS GovCloud
     ```
 
 User Manual
@@ -68,14 +79,18 @@ __Description:__
 
 The Kion CLI allows users to perform common Kion workflows via the command
 line. Users can quickly generate short term access keys (stak) via configured
-favorites or by walking through an account and role selection wizard.
+favorites or by walking through an account and role selection wizard. Users can
+similarly federate into the AWS console.
 
 __Commands:__
 
 ```text
 stak, s            Generate short-term access keys.
 
-favorite, fav, f   Access pre-configured favorites to quickly generate staks.
+console, con, c    Federate into the AWS console.
+
+favorite, fav, f   Access pre-configured favorites to quickly generate staks or
+                   federate into the console.
 
 run                Run a command with short-term access keys
 
@@ -132,7 +147,7 @@ KION_URL        URL of the Kion instance to interact with.
 
 KION_USERNAME   Username used for authenticating with Kion.
 
-KION_PASSWORD   Passwrod used for authenticating with Kion.
+KION_PASSWORD   Password used for authenticating with Kion.
 
 KION_IDMS_ID    IDMS ID with which to authenticate if using username and
                 password. If only one IDMS is configured that uses username and
@@ -173,7 +188,7 @@ but it is not enabled by default.
    to Users -> Identitiy Management Systems -> click on the SAML IDMS you use
    to login to Kion.  Locate the ID in the URL of this page.
 
-   For example: `http://mykion.example/portal/idms/##`
+   For example: `https://mykion.example/portal/idms/##`
 2. Using the Kion API, add the Kion CLI tool as an additional SAML destination
    by adding `http://localhost:8400/callback` as a supported destination URL.
    Use the `POST /v3/idms/{id}/destination-url` API.
@@ -254,3 +269,31 @@ redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/quicksta
 6. Save your changes
 
 </details>
+
+
+Development
+-----------
+
+__Features / TODO:__
+
+- [x] ability to set aws_region in env
+- [ ] ability to create and store favorites
+- [ ] support refresh tokens (kion currently doesn't use/support them)
+- [ ] possible to suport api key rotation?
+- [ ] support for other csps
+- [ ] pipeline to build for all platforms
+- [ ] pipeline to run unit tests
+- [ ] ability to copy staks to system clipboard
+- [ ] ability to federate into the console (open a browser tab) (waiting on dev fix)
+- [ ] ability to use upstream favorites defined in kion ui
+- [x] ability to auth with saml
+- [ ] ability to ssm into a host within an account
+- [ ] ability to set configs for multiple kion instances
+- [x] good documentation and in app help
+- [x] ability to use pre-defined favorites
+- [x] auto complete functions
+- [x] ability to generate short term tokens
+- [x] ability to use an api key (set via config file)
+- [x] ability to use username and password (passed via flags or propmted if no api key in config and no flags)
+- [x] makefile for building and installing into the path
+- [ ] example `.kion.yml` configuration file, or have the application create it if it doesn't exist and prompt the user for the required values to ease initial setup!

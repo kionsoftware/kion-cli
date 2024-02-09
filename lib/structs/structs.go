@@ -31,8 +31,9 @@ type Kion struct {
 // Favorite holds information about user defined favorites used to quicly
 // access desired accounts.
 type Favorite struct {
-	Name       string `yaml:"name"`
-	Account    string `yaml:"account"`
-	CAR        string `yaml:"cloud_access_role"`
-	AccessType string `yaml:"access_type"`
+	Name        string `yaml:"name"`
+	Account     string `yaml:"account"`
+	CAR         string `yaml:"cloud_access_role"`
+	AccessType  string `yaml:"access_type"`
+	AccountType int    `yaml:"account_type"`
 }
