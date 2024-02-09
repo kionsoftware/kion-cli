@@ -22,6 +22,7 @@ type STAK struct {
 	AccessKey       string `json:"access_key"`
 	SecretAccessKey string `json:"secret_access_key"`
 	SessionToken    string `json:"session_token"`
+	AWS_REGION      string `json:"aws_region"`
 }
 
 // STAKRequest maps to the required post body when interfacing with the Kion
@@ -32,7 +33,7 @@ type STAKRequest struct {
 }
 
 // GetSTAK queries the Kion API to generate short term access keys.
-func GetSTAK(host string, token string, carName string, accNum string) (STAK, error) {
+func GetSTAK(host string, token string, carName string, accNum string, awsRegion string) (STAK, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/temporary-credentials/cloud-access-role", host)
 	query := map[string]string{}
