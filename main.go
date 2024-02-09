@@ -282,7 +282,14 @@ func authCommand(cCtx *cli.Context) error {
 // interactive prompt. Short term access keys are either printed to stdout or a
 // subshell is created with them set in the environment.
 func genStaks(cCtx *cli.Context) error {
+
 	err := authCommand(cCtx)
+	if err != nil {
+		return err
+	}
+
+	// Assume host and token are available from your context or configuration
+	userConfig, err := kion.GetUserDefaultRegions(cCtx.String("endpoint"), cCtx.String("token"))
 	if err != nil {
 		return err
 	}
@@ -292,6 +299,7 @@ func genStaks(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	pNames, pMap := helper.MapProjects(projects)
 	if len(pNames) == 0 {
 		return fmt.Errorf("no projects found")
@@ -319,6 +327,19 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
+	selectedAccount := aMap[account]
+
+	var defaultRegion string
+
+	// Now check the TypeID of the selected account
+	if selectedAccount.TypeID == 1 {
+		defaultRegion = userConfig.Data.AwsDefaultCommercialRegion
+	} else if selectedAccount.TypeID == 2 {
+		defaultRegion = userConfig.Data.AwsDefaultGovcloudRegion
+	} else {
+		return fmt.Errorf("unknown genStaks account type")
+	}
+
 	// get a list of cloud access roles, then build a list of names and lookup map
 	cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
 	if err != nil {
@@ -336,16 +357,18 @@ func genStaks(cCtx *cli.Context) error {
 	}
 
 	// generate short term tokens
-	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car, aMap[account].Number)
+	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car, aMap[account].Number, defaultRegion)
 	if err != nil {
 		return err
 	}
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, aMap[account].Number)
+		return helper.PrintSTAK(stak, aMap[account].Number, defaultRegion)
+
 	} else {
-		return helper.CreateSubShell(aMap[account].Number, account, car, stak)
+		return helper.CreateSubShell(aMap[account].Number, account, car, stak, defaultRegion)
+
 	}
 }
 
@@ -353,6 +376,7 @@ func genStaks(cCtx *cli.Context) error {
 // favorite is found that matches the passed argument it is used, otherwise the
 // user is walked through a wizard to make a selection.
 func genStaksFav(cCtx *cli.Context) error {
+
 	// map our favorites for ease of use
 	fNames, fMap := helper.MapFavs(config.Favorites)
 
@@ -373,24 +397,42 @@ func genStaksFav(cCtx *cli.Context) error {
 		return err
 	}
 
+	// Assume host and token are available from your context or configuration
+	userConfig, err := kion.GetUserDefaultRegions(cCtx.String("endpoint"), cCtx.String("token"))
+	if err != nil {
+		return err
+	}
+
 	// generate stak
 	favorite := fMap[fav]
-	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+
+	var defaultRegion string
+
+	if favorite.AccountType == 1 {
+		defaultRegion = userConfig.Data.AwsDefaultCommercialRegion
+	} else if favorite.AccountType == 2 {
+		defaultRegion = userConfig.Data.AwsDefaultGovcloudRegion
+	} else {
+		return fmt.Errorf("unknown genStaksFav account type: %d", favorite.AccountType)
+	}
+
+	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account, defaultRegion)
 	if err != nil {
 		return err
 	}
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, favorite.Account)
+		return helper.PrintSTAK(stak, favorite.Account, defaultRegion)
 	} else {
-		return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
+		return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak, defaultRegion)
 	}
 }
 
 // fedConsole opens the AWS console for the selected account and cloud access
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
+
 	err := authCommand(cCtx)
 	if err != nil {
 		return err
@@ -407,6 +449,7 @@ func fedConsole(cCtx *cli.Context) error {
 // listFavorites prints out the users stored favorites. Extra information is
 // provided if the verbose flag is set.
 func listFavorites(cCtx *cli.Context) error {
+
 	// map our favorites for ease of use
 	fNames, fMap := helper.MapFavs(config.Favorites)
 
@@ -426,6 +469,7 @@ func listFavorites(cCtx *cli.Context) error {
 // runCommand generates creds for an AWS account then executes the user
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
+
 	if cCtx.String("fav") != "" {
 		// map our favorites for ease of use
 		_, fMap := helper.MapFavs(config.Favorites)
@@ -439,6 +483,11 @@ func runCommand(cCtx *cli.Context) error {
 			return errors.New("can't find fav")
 		}
 
+		userConfig, err := kion.GetUserDefaultRegions(cCtx.String("endpoint"), cCtx.String("token"))
+		if err != nil {
+			return err
+		}
+
 		err = authCommand(cCtx)
 		if err != nil {
 			return err
@@ -446,12 +495,28 @@ func runCommand(cCtx *cli.Context) error {
 
 		// generate stak
 		favorite := fMap[fav]
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+
+		selectedAccount, ok := fMap[favorite.Name]
+		if !ok {
+			return fmt.Errorf("account from favorite not found")
+		}
+
+		var defaultRegion string
+
+		if selectedAccount.AccountType == 1 {
+			defaultRegion = userConfig.Data.AwsDefaultCommercialRegion
+		} else if selectedAccount.AccountType == 2 {
+			defaultRegion = userConfig.Data.AwsDefaultGovcloudRegion
+		} else {
+			return fmt.Errorf("unknown fav account type")
+		}
+
+		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account, defaultRegion)
 		if err != nil {
 			return err
 		}
 
-		err = helper.RunCommand(favorite.Account, favorite.Name, favorite.CAR, stak, cCtx.Args().First(), cCtx.Args().Tail()...)
+		err = helper.RunCommand(favorite.Account, favorite.Name, favorite.CAR, stak, defaultRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
 		if err != nil {
 			return err
 		}
@@ -461,6 +526,8 @@ func runCommand(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+
+		var defaultRegion string
 
 		account, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("account"))
 		if err != nil {
@@ -477,12 +544,13 @@ func runCommand(cCtx *cli.Context) error {
 			return err
 		}
 
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car.Name, account.Number)
+		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car.Name, account.Number, defaultRegion)
 		if err != nil {
 			return err
 		}
 
-		err = helper.RunCommand(account.Number, account.Name, car.Name, stak, cCtx.Args().First(), cCtx.Args().Tail()...)
+		err = helper.RunCommand(account.Number, account.Name, car.Name, stak, defaultRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
+
 		if err != nil {
 			return err
 		}
@@ -511,6 +579,7 @@ func main() {
 
 	// get home directory
 	home, err := os.UserHomeDir()
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -553,7 +622,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.0.1",
+		Version:              "v0.0.2",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
@@ -640,12 +709,12 @@ func main() {
 					},
 				},
 			},
-			// {
-			// 	Name:    "console",
-			// 	Aliases: []string{"con", "c"},
-			// 	Usage:   "Federate into the AWS console",
-			// 	Action:  fedConsole,
-			// },
+			{
+				Name:    "console",
+				Aliases: []string{"con", "c"},
+				Usage:   "Federate into the AWS console",
+				Action:  fedConsole,
+			},
 			{
 				Name:      "favorite",
 				Aliases:   []string{"fav", "f"},
