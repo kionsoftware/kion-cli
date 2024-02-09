@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"kion-cli/lib/helper"
-	"kion-cli/lib/kion"
-	"kion-cli/lib/structs"
+	"github.com/kionsoftware/kion-cli/lib/helper"
+	"github.com/kionsoftware/kion-cli/lib/kion"
+	"github.com/kionsoftware/kion-cli/lib/structs"
 
 	"github.com/fatih/color"
 	samlTypes "github.com/russellhaering/gosaml2/types"

@@ -1,7 +1,9 @@
 Kion CLI
 ========
+Kion CLI is a simple tool allowing Kion customers to generate short term access
+keys via the command line.
 
-<div align="center">![kion-cli usage](doc/example.gif "kion-cli usage")</div>
+![kion-cli usage](doc/kion-cli-usage.gif "kion-cli usage")
 
 Goals
 -----
