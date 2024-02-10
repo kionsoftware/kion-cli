@@ -16,6 +16,6 @@ Thumbs.db
 # Repository Specific #
 #######################
 
-./kion
+/kion
 profile.cov
 tools/golangci-lint
