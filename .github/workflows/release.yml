@@ -1,0 +1,38 @@
+# This GitHub action publishes assets for a release when a tag is created.
+# It's configured to trigger on tags that match the pattern "v*" (e.g., v0.1.0).
+
+# We use the 'crazy-max/ghaction-import-gpg' action for GPG key handling.
+# Ensure your private key and passphrase are set in the `GPG_PRIVATE_KEY` and `PASSPHRASE` secrets, respectively.
+
+# For GoReleaser, ensure it is configured correctly for non-interactive mode as necessary.
+# This setup is streamlined for simplicity and efficiency in automating the release process.
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unshallow
+        run: git fetch --prune --unshallow
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '^1.21.5'
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
