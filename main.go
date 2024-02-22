@@ -332,7 +332,7 @@ func genStaksPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, project
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, aMap[account].Number)
+		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
 		return helper.CreateSubShell(aMap[account].Number, account, car, stak)
 	}
@@ -408,7 +408,7 @@ func genStaks(cCtx *cli.Context) error {
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, aMap[account].Number)
+		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
 		return helper.CreateSubShell(aMap[account].Number, account, car, stak)
 	}
@@ -447,7 +447,7 @@ func genStaksFav(cCtx *cli.Context) error {
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, favorite.Account)
+		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
 		return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
 	}
