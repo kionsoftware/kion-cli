@@ -55,7 +55,10 @@ func TestPrintSTAK(t *testing.T) {
 			}()
 
 			var output bytes.Buffer
-			PrintSTAK(&output, tc.stak)
+			err := PrintSTAK(&output, tc.stak)
+			if err != nil {
+				t.Error(err)
+			}
 			if tc.want != "panic" && tc.want != output.String() {
 				t.Errorf("\ngot:\n  %v\nwanted:\n  %v", output.String(), tc.want)
 			}
