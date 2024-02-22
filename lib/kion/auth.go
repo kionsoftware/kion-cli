@@ -63,7 +63,7 @@ func GetIDMSs(host string) ([]IDMS, error) {
 	url := fmt.Sprintf("%v/api/v2/idms", host)
 	query := map[string]string{}
 	var data interface{}
-	resp, err := runQuery("GET", url, "", query, data)
+	resp, _, err := runQuery("GET", url, "", query, data)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func Authenticate(host string, idmsID uint, un string, pw string) (Session, erro
 		Username: un,
 		Password: pw,
 	}
-	resp, err := runQuery("POST", url, "", query, data)
+	resp, _, err := runQuery("POST", url, "", query, data)
 	if err != nil {
 		return Session{}, err
 	}

@@ -33,7 +33,7 @@ func GetProjects(host string, token string) ([]Project, error) {
 	url := host + "/api/v3/project"
 	query := map[string]string{}
 	var data interface{}
-	resp, err := runQuery("GET", url, token, query, data)
+	resp, _, err := runQuery("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
 	}
