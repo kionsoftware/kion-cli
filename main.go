@@ -278,6 +278,66 @@ func authCommand(cCtx *cli.Context) error {
 	return nil
 }
 
+// genStaksPrivateAPI is a temp shim workaround to address a public api
+// permissions issue. genStaks should be called directly which will the forward
+// to this function if needed.
+func genStaksPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, project string) error {
+	// hit private api endpoint to gather all users cars and their associated accounts
+	caCARs, err := kion.GetConsoleAccessCARS(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
+	if err != nil {
+		return err
+	}
+
+	// build a consolidated list of accounts from all available CARS and slice of cars per account
+	var accounts []kion.Account
+	aToCMap := make(map[string][]string)
+	for _, car := range caCARs {
+		for _, account := range car.Accounts {
+			aToCMap[account.Name] = append(aToCMap[account.Name], car.CARName)
+			found := false
+			for _, a := range accounts {
+				if a.ID == account.ID {
+					found = true
+				}
+			}
+			if !found {
+				accounts = append(accounts, account)
+			}
+		}
+	}
+
+	// build a list of names and lookup map
+	aNames, aMap := helper.MapAccounts(accounts)
+	if len(aNames) == 0 {
+		return fmt.Errorf("no accounts found")
+	}
+
+	// prompt user to select an account
+	account, err := helper.PromptSelect("Choose an Account:", aNames)
+	if err != nil {
+		return err
+	}
+
+	// prompt user to select car
+	car, err := helper.PromptSelect("Choose a Cloud Access Role:", aToCMap[account])
+	if err != nil {
+		return err
+	}
+
+	// generate stak
+	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car, aMap[account].Number)
+	if err != nil {
+		return err
+	}
+
+	// print or create subshell
+	if cCtx.Bool("print") {
+		return helper.PrintSTAK(stak, aMap[account].Number)
+	} else {
+		return helper.CreateSubShell(aMap[account].Number, account, car, stak)
+	}
+}
+
 // genStaks generates short term access keys by walking users through an
 // interactive prompt. Short term access keys are either printed to stdout or a
 // subshell is created with them set in the environment.
@@ -304,9 +364,14 @@ func genStaks(cCtx *cli.Context) error {
 	}
 
 	// get list of accounts on project, then build a list of names and lookup map
-	accounts, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
+	accounts, statusCode, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
 	if err != nil {
-		return err
+		if statusCode == 403 {
+			// if we're getting a 403 work around permissions bug by temp using private api
+			return genStaksPrivateAPI(cCtx, pMap, project)
+		} else {
+			return err
+		}
 	}
 	aNames, aMap := helper.MapAccounts(accounts)
 	if len(aNames) == 0 {

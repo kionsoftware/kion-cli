@@ -40,7 +40,7 @@ func GetSTAK(host string, token string, carName string, accNum string) (STAK, er
 		AccountNumber: accNum,
 		CARName:       carName,
 	}
-	resp, err := runQuery("POST", url, token, query, data)
+	resp, _, err := runQuery("POST", url, token, query, data)
 	if err != nil {
 		return STAK{}, err
 	}

@@ -55,7 +55,7 @@ func GetCARS(host string, token string) ([]CAR, error) {
 	url := fmt.Sprintf("%v/api/v3/me/cloud-access-role", host)
 	query := map[string]string{}
 	var data interface{}
-	resp, err := runQuery("GET", url, token, query, data)
+	resp, _, err := runQuery("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
 	}

@@ -39,7 +39,7 @@ func GetFederationURL(host string, token string, car CAR) (string, error) {
 		RoleID:         0,
 		RoleType:       "",
 	}
-	resp, err := runQuery("POST", url, token, query, data)
+	resp, _, err := runQuery("POST", url, token, query, data)
 	if err != nil {
 		return "", err
 	}
