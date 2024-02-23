@@ -23,6 +23,7 @@ type CAR struct {
 	AccountID           uint   `json:"account_id"`
 	AccountNumber       string `json:"account_number"`
 	AccountType         string `json:"account_type"`
+	AccountTypeID       uint
 	AccountName         string
 	ApplyToAllAccounts  bool   `json:"apply_to_all_accounts"`
 	AwsIamPath          string `json:"aws_iam_path"`
@@ -105,4 +106,21 @@ func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 	}
 
 	return cars, nil
+}
+
+// GetCARByNameAndAccount returns a car that matches a given name for a given account number
+func GetCARByName(host string, token string, carName string) (CAR, error) {
+	allCars, err := GetCARS(host, token)
+	if err != nil {
+		return CAR{}, err
+	}
+
+	// find our match
+	for _, car := range allCars {
+		if car.Name == carName {
+			return car, nil
+		}
+	}
+
+	return CAR{}, fmt.Errorf("unable to find car %v", carName)
 }

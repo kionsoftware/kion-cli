@@ -308,10 +308,11 @@ func genStaks(cCtx *cli.Context) error {
 	}
 }
 
-// genStaksFav generates short term access keys from stored favorites. If a
-// favorite is found that matches the passed argument it is used, otherwise the
-// user is walked through a wizard to make a selection.
-func genStaksFav(cCtx *cli.Context) error {
+// favorites generates short term access keys or launches the csp web console
+// from stored favorites. If a favorite is found that matches the passed
+// argument it is used, otherwise the user is walked through a wizard to make a
+// selection.
+func favorites(cCtx *cli.Context) error {
 	// map our favorites for ease of use
 	fNames, fMap := helper.MapFavs(config.Favorites)
 
@@ -333,18 +334,33 @@ func genStaksFav(cCtx *cli.Context) error {
 		return err
 	}
 
-	// generate stak
+	// grab the favorite object
 	favorite := fMap[fav]
-	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
-	if err != nil {
-		return err
-	}
 
-	// print or create subshell
-	if cCtx.Bool("print") {
-		return helper.PrintSTAK(os.Stdout, stak)
+	// determine favorite action, stak or console
+	if favorite.AccessType == "stak" {
+		// generate stak
+		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+		if err != nil {
+			return err
+		}
+
+		// print or create subshell
+		if cCtx.Bool("print") {
+			return helper.PrintSTAK(os.Stdout, stak)
+		} else {
+			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
+		}
 	} else {
-		return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
+		car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+		if err != nil {
+			return err
+		}
+		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+		if err != nil {
+			return err
+		}
+		return helper.OpenBrowser(url)
 	}
 }
 
@@ -608,18 +624,18 @@ func main() {
 					},
 				},
 			},
-			// {
-			// 	Name:    "console",
-			// 	Aliases: []string{"con", "c"},
-			// 	Usage:   "Federate into the AWS console",
-			// 	Action:  fedConsole,
-			// },
+			{
+				Name:    "console",
+				Aliases: []string{"con", "c"},
+				Usage:   "Federate into the AWS console",
+				Action:  fedConsole,
+			},
 			{
 				Name:      "favorite",
 				Aliases:   []string{"fav", "f"},
 				Usage:     "Quickly access a favorite",
 				ArgsUsage: "[FAVORITE_NAME]",
-				Action:    genStaksFav,
+				Action:    favorites,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "print",

@@ -400,6 +400,7 @@ func CARSelector(cCtx *cli.Context) (kion.CAR, error) {
 	// inject the account name into the car struct (not returned via api)
 	carObj := cMap[car]
 	carObj.AccountName = account
+	carObj.AccountTypeID = aMap[account].TypeID
 
 	// return the selected car
 	return carObj, nil
@@ -417,8 +418,10 @@ func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, proj
 
 	// build a consolidated list of accounts from all available CARS and slice of cars per account
 	var accounts []kion.Account
+	cMap := make(map[string]kion.ConsoleAccessCAR)
 	aToCMap := make(map[string][]string)
 	for _, car := range caCARs {
+		cMap[car.CARName] = car
 		for _, account := range car.Accounts {
 			aToCMap[account.Name] = append(aToCMap[account.Name], car.CARName)
 			found := false
@@ -453,8 +456,13 @@ func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, proj
 
 	// build enough of a car and return it
 	return kion.CAR{
-		Name:          car,
-		AccountName:   account,
-		AccountNumber: aMap[account].Number,
+		Name:                car,
+		AccountName:         account,
+		AccountNumber:       aMap[account].Number,
+		AccountID:           aMap[account].ID,
+		AwsIamRoleName:      cMap[car].AwsIamRoleName,
+		AccountTypeID:       aMap[account].TypeID,
+		ID:                  cMap[car].CARID,
+		CloudAccessRoleType: cMap[car].CARRoleType,
 	}, nil
 }
