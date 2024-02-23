@@ -52,5 +52,5 @@ func GetFederationURL(host string, token string, car CAR) (string, error) {
 		return "", err
 	}
 
-	return string(urlResp.URL), nil
+	return urlResp.URL, nil
 }
