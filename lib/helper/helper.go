@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,10 +78,8 @@ func SaveSession(filename string, config structs.Configuration) error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // PrintSTAK prints out the short term access keys for AWS auth.
-func PrintSTAK(stak kion.STAK, account string) error {
-	fmt.Printf("export AWS_ACCESS_KEY_ID=%v\n", stak.AccessKey)
-	fmt.Printf("export AWS_SECRET_ACCESS_KEY=%v\n", stak.SecretAccessKey)
-	fmt.Printf("export AWS_SESSION_TOKEN=%v\n", stak.SessionToken)
+func PrintSTAK(w io.Writer, stak kion.STAK) error {
+	fmt.Fprintf(w, "export AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
 	return nil
 }
 
