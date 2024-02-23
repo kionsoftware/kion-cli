@@ -302,7 +302,7 @@ func genStaks(cCtx *cli.Context) error {
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, car.AccountNumber)
+		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
 		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak)
 	}
@@ -342,7 +342,7 @@ func genStaksFav(cCtx *cli.Context) error {
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, favorite.Account)
+		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
 		return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
 	}
