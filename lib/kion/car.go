@@ -23,6 +23,7 @@ type CAR struct {
 	AccountID           uint   `json:"account_id"`
 	AccountNumber       string `json:"account_number"`
 	AccountType         string `json:"account_type"`
+	AccountName         string
 	ApplyToAllAccounts  bool   `json:"apply_to_all_accounts"`
 	AwsIamPath          string `json:"aws_iam_path"`
 	AwsIamRoleName      string `json:"aws_iam_role_name"`
@@ -48,8 +49,8 @@ type CAR struct {
 	WebAccess bool `json:"web_access"`
 }
 
-// GetCARSOnProject queries the Kion API for all cloud access roles to which
-// the authenticated user has access.
+// GetCARS queries the Kion API for all cloud access roles to which the
+// authenticated user has access.
 func GetCARS(host string, token string) ([]CAR, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/me/cloud-access-role", host)
