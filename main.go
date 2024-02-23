@@ -308,7 +308,7 @@ func genStaks(cCtx *cli.Context) error {
 	}
 }
 
-// favorites generates short term access keys or launches the csp web console
+// favorites generates short term access keys or launches the web console
 // from stored favorites. If a favorite is found that matches the passed
 // argument it is used, otherwise the user is walked through a wizard to make a
 // selection.
@@ -364,7 +364,7 @@ func favorites(cCtx *cli.Context) error {
 	}
 }
 
-// fedConsole opens the AWS console for the selected account and cloud access
+// fedConsole opens the csp console for the selected account and cloud access
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
@@ -627,7 +627,7 @@ func main() {
 			{
 				Name:    "console",
 				Aliases: []string{"con", "c"},
-				Usage:   "Federate into the AWS console",
+				Usage:   "Federate into the web console",
 				Action:  fedConsole,
 			},
 			{
