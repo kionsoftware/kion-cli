@@ -13,13 +13,14 @@ type ConsoleAccessCARResponse struct {
 
 // Account maps to the Kion API response for account data.
 type ConsoleAccessCAR struct {
-	CARName       string    `json:"name"`
-	CARID         int       `json:"id"`
-	CARRoleType   string    `json:"role_type"`
-	Accounts      []Account `json:"accounts"`
-	ConsoleAccess bool      `json:"console_access"`
-	STAKAccess    bool      `json:"short_term_key_access"`
-	LTAKAccess    bool      `json:"long_term_key_access"`
+	CARName        string    `json:"name"`
+	CARID          uint      `json:"id"`
+	CARRoleType    string    `json:"role_type"`
+	Accounts       []Account `json:"accounts"`
+	ConsoleAccess  bool      `json:"console_access"`
+	STAKAccess     bool      `json:"short_term_key_access"`
+	LTAKAccess     bool      `json:"long_term_key_access"`
+	AwsIamRoleName string    `json:"aws_iam_role_name"`
 }
 
 func GetConsoleAccessCARS(host string, token string, projID uint) ([]ConsoleAccessCAR, error) {
