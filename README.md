@@ -55,11 +55,11 @@ Setup
       - name: sandbox
         account: "111122223333"
         cloud_access_role: Admin
-        access_type: console
+        access_type: web
       - name: prod
         account: "111122224444"
         cloud_access_role: ReadOnly
-        access_type: stak
+        access_type: cli
     ```
 
 User Manual
