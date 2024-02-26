@@ -337,8 +337,8 @@ func favorites(cCtx *cli.Context) error {
 	// grab the favorite object
 	favorite := fMap[fav]
 
-	// determine favorite action, stak or console
-	if favorite.AccessType == "stak" {
+	// determine favorite action, cli or web
+	if favorite.AccessType == "cli" {
 		// generate stak
 		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
