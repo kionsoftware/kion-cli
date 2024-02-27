@@ -1,8 +1,7 @@
 Kion CLI
 ========
 
-Kion CLI is a simple tool allowing Kion customers to generate short term access
-keys via the command line.
+Kion CLI is a tool allowing Kion customers to generate short term access keys and federate into the cloud service provide console via the command line.
 
 ![kion-cli usage](doc/kion-cli-usage.gif)
 
@@ -56,9 +55,11 @@ Setup
       - name: sandbox
         account: "111122223333"
         cloud_access_role: Admin
+        access_type: web
       - name: prod
         account: "111122224444"
         cloud_access_role: ReadOnly
+        access_type: cli
     ```
 
 User Manual
@@ -76,6 +77,8 @@ __Commands:__
 stak, s            Generate short-term access keys.
 
 favorite, fav, f   Access pre-configured favorites to quickly generate staks.
+
+console, con, c    Federate into the cloud service provider console.
 
 run                Run a command with short-term access keys
 

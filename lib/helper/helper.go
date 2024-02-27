@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
+	"github.com/urfave/cli/v2"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
@@ -77,10 +79,8 @@ func SaveSession(filename string, config structs.Configuration) error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // PrintSTAK prints out the short term access keys for AWS auth.
-func PrintSTAK(stak kion.STAK, account string) error {
-	fmt.Printf("export AWS_ACCESS_KEY_ID=%v\n", stak.AccessKey)
-	fmt.Printf("export AWS_SECRET_ACCESS_KEY=%v\n", stak.SecretAccessKey)
-	fmt.Printf("export AWS_SESSION_TOKEN=%v\n", stak.SessionToken)
+func PrintSTAK(w io.Writer, stak kion.STAK) error {
+	fmt.Fprintf(w, "export AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
 	return nil
 }
 
@@ -332,4 +332,137 @@ func PromptPassword(message string) (string, error) {
 	}
 	err := survey.AskOne(pi, &input, surveyFormat, survey.WithValidator(survey.Required))
 	return input, err
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Wizard Flows                                                              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// CARSelector is a wizard that walks a user through the selection of a
+// Project, then associated Accounts, then available Cloud Access Roles,
+// returning the user selected Cloud Access Role.
+func CARSelector(cCtx *cli.Context) (kion.CAR, error) {
+	// get list of projects, then build list of names and lookup map
+	projects, err := kion.GetProjects(cCtx.String("endpoint"), cCtx.String("token"))
+	if err != nil {
+		return kion.CAR{}, err
+	}
+	pNames, pMap := MapProjects(projects)
+	if len(pNames) == 0 {
+		return kion.CAR{}, fmt.Errorf("no projects found")
+	}
+
+	// prompt user to select a project
+	project, err := PromptSelect("Choose a project:", pNames)
+	if err != nil {
+		return kion.CAR{}, err
+	}
+
+	// get list of accounts on project, then build a list of names and lookup map
+	accounts, statusCode, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
+	if err != nil {
+		if statusCode == 403 {
+			// if we're getting a 403 work around permissions bug by temp using private api
+			return carSelectorPrivateAPI(cCtx, pMap, project)
+		} else {
+			return kion.CAR{}, err
+		}
+	}
+	aNames, aMap := MapAccounts(accounts)
+	if len(aNames) == 0 {
+		return kion.CAR{}, fmt.Errorf("no accounts found")
+	}
+
+	// prompt user to select an account
+	account, err := PromptSelect("Choose an Account:", aNames)
+	if err != nil {
+		return kion.CAR{}, err
+	}
+
+	// get a list of cloud access roles, then build a list of names and lookup map
+	cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
+	if err != nil {
+		return kion.CAR{}, err
+	}
+	cNames, cMap := MapCAR(cars)
+	if len(cNames) == 0 {
+		return kion.CAR{}, fmt.Errorf("no cloud access roles found")
+	}
+
+	// prompt user to select a car
+	car, err := PromptSelect("Choose a Cloud Access Role:", cNames)
+	if err != nil {
+		return kion.CAR{}, err
+	}
+
+	// inject the account name into the car struct (not returned via api)
+	carObj := cMap[car]
+	carObj.AccountName = account
+	carObj.AccountTypeID = aMap[account].TypeID
+
+	// return the selected car
+	return carObj, nil
+}
+
+// carSelectorPrivateAPI is a temp shim workaround to address a public api
+// permissions issue. CARSelector should be called directly which will the
+// forward to this function if needed.
+func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, project string) (kion.CAR, error) {
+	// hit private api endpoint to gather all users cars and their associated accounts
+	caCARs, err := kion.GetConsoleAccessCARS(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
+	if err != nil {
+		return kion.CAR{}, err
+	}
+
+	// build a consolidated list of accounts from all available CARS and slice of cars per account
+	var accounts []kion.Account
+	cMap := make(map[string]kion.ConsoleAccessCAR)
+	aToCMap := make(map[string][]string)
+	for _, car := range caCARs {
+		cMap[car.CARName] = car
+		for _, account := range car.Accounts {
+			aToCMap[account.Name] = append(aToCMap[account.Name], car.CARName)
+			found := false
+			for _, a := range accounts {
+				if a.ID == account.ID {
+					found = true
+				}
+			}
+			if !found {
+				accounts = append(accounts, account)
+			}
+		}
+	}
+
+	// build a list of names and lookup map
+	aNames, aMap := MapAccounts(accounts)
+	if len(aNames) == 0 {
+		return kion.CAR{}, fmt.Errorf("no accounts found")
+	}
+
+	// prompt user to select an account
+	account, err := PromptSelect("Choose an Account:", aNames)
+	if err != nil {
+		return kion.CAR{}, err
+	}
+
+	// prompt user to select car
+	car, err := PromptSelect("Choose a Cloud Access Role:", aToCMap[account])
+	if err != nil {
+		return kion.CAR{}, err
+	}
+
+	// build enough of a car and return it
+	return kion.CAR{
+		Name:                car,
+		AccountName:         account,
+		AccountNumber:       aMap[account].Number,
+		AccountID:           aMap[account].ID,
+		AwsIamRoleName:      cMap[car].AwsIamRoleName,
+		AccountTypeID:       aMap[account].TypeID,
+		ID:                  cMap[car].CARID,
+		CloudAccessRoleType: cMap[car].CARRoleType,
+	}, nil
 }

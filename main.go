@@ -282,77 +282,37 @@ func authCommand(cCtx *cli.Context) error {
 // interactive prompt. Short term access keys are either printed to stdout or a
 // subshell is created with them set in the environment.
 func genStaks(cCtx *cli.Context) error {
+	// handle auth
 	err := authCommand(cCtx)
 	if err != nil {
 		return err
 	}
 
-	// get list of projects, then build list of names and lookup map
-	projects, err := kion.GetProjects(cCtx.String("endpoint"), cCtx.String("token"))
-	if err != nil {
-		return err
-	}
-	pNames, pMap := helper.MapProjects(projects)
-	if len(pNames) == 0 {
-		return fmt.Errorf("no projects found")
-	}
-
-	// prompt user to select a project
-	project, err := helper.PromptSelect("Choose a project:", pNames)
-	if err != nil {
-		return err
-	}
-
-	// get list of accounts on project, then build a list of names and lookup map
-	accounts, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
-	if err != nil {
-		return err
-	}
-	aNames, aMap := helper.MapAccounts(accounts)
-	if len(aNames) == 0 {
-		return fmt.Errorf("no accounts found")
-	}
-
-	// prompt user to select an account
-	account, err := helper.PromptSelect("Choose an Account:", aNames)
-	if err != nil {
-		return err
-	}
-
-	// get a list of cloud access roles, then build a list of names and lookup map
-	cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
-	if err != nil {
-		return err
-	}
-	cNames, _ := helper.MapCAR(cars)
-	if len(cNames) == 0 {
-		return fmt.Errorf("no cloud access roles found")
-	}
-
-	// prompt user to select a car
-	car, err := helper.PromptSelect("Choose a Cloud Access Role:", cNames)
+	// walk user through the propt workflow to select a car
+	car, err := helper.CARSelector(cCtx)
 	if err != nil {
 		return err
 	}
 
 	// generate short term tokens
-	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car, aMap[account].Number)
+	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car.Name, car.AccountNumber)
 	if err != nil {
 		return err
 	}
 
 	// print or create subshell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, aMap[account].Number)
+		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
-		return helper.CreateSubShell(aMap[account].Number, account, car, stak)
+		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak)
 	}
 }
 
-// genStaksFav generates short term access keys from stored favorites. If a
-// favorite is found that matches the passed argument it is used, otherwise the
-// user is walked through a wizard to make a selection.
-func genStaksFav(cCtx *cli.Context) error {
+// favorites generates short term access keys or launches the web console
+// from stored favorites. If a favorite is found that matches the passed
+// argument it is used, otherwise the user is walked through a wizard to make a
+// selection.
+func favorites(cCtx *cli.Context) error {
 	// map our favorites for ease of use
 	fNames, fMap := helper.MapFavs(config.Favorites)
 
@@ -368,36 +328,59 @@ func genStaksFav(cCtx *cli.Context) error {
 		}
 	}
 
+	// handle auth
 	err = authCommand(cCtx)
 	if err != nil {
 		return err
 	}
 
-	// generate stak
+	// grab the favorite object
 	favorite := fMap[fav]
-	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
-	if err != nil {
-		return err
-	}
 
-	// print or create subshell
-	if cCtx.Bool("print") {
-		return helper.PrintSTAK(stak, favorite.Account)
+	// determine favorite action, cli or web
+	if favorite.AccessType == "cli" {
+		// generate stak
+		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+		if err != nil {
+			return err
+		}
+
+		// print or create subshell
+		if cCtx.Bool("print") {
+			return helper.PrintSTAK(os.Stdout, stak)
+		} else {
+			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
+		}
 	} else {
-		return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
+		car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+		if err != nil {
+			return err
+		}
+		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+		if err != nil {
+			return err
+		}
+		return helper.OpenBrowser(url)
 	}
 }
 
-// fedConsole opens the AWS console for the selected account and cloud access
+// fedConsole opens the csp console for the selected account and cloud access
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
+	// handle auth
 	err := authCommand(cCtx)
 	if err != nil {
 		return err
 	}
 
+	// walk user through the prompt workflow to select a car
+	car, err := helper.CARSelector(cCtx)
+	if err != nil {
+		return err
+	}
+
 	// TODO: handle arg if passed else run prompts
-	url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), kion.CAR{})
+	url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
 	if err != nil {
 		return err
 	}
@@ -439,6 +422,7 @@ func runCommand(cCtx *cli.Context) error {
 			return errors.New("can't find fav")
 		}
 
+		// handle auth
 		err = authCommand(cCtx)
 		if err != nil {
 			return err
@@ -553,7 +537,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.0.1",
+		Version:              "v0.0.2",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
@@ -640,18 +624,18 @@ func main() {
 					},
 				},
 			},
-			// {
-			// 	Name:    "console",
-			// 	Aliases: []string{"con", "c"},
-			// 	Usage:   "Federate into the AWS console",
-			// 	Action:  fedConsole,
-			// },
+			{
+				Name:    "console",
+				Aliases: []string{"con", "c"},
+				Usage:   "Federate into the web console",
+				Action:  fedConsole,
+			},
 			{
 				Name:      "favorite",
 				Aliases:   []string{"fav", "f"},
 				Usage:     "Quickly access a favorite",
 				ArgsUsage: "[FAVORITE_NAME]",
-				Action:    genStaksFav,
+				Action:    favorites,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "print",

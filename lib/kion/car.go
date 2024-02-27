@@ -23,6 +23,8 @@ type CAR struct {
 	AccountID           uint   `json:"account_id"`
 	AccountNumber       string `json:"account_number"`
 	AccountType         string `json:"account_type"`
+	AccountTypeID       uint
+	AccountName         string
 	ApplyToAllAccounts  bool   `json:"apply_to_all_accounts"`
 	AwsIamPath          string `json:"aws_iam_path"`
 	AwsIamRoleName      string `json:"aws_iam_role_name"`
@@ -48,14 +50,14 @@ type CAR struct {
 	WebAccess bool `json:"web_access"`
 }
 
-// GetCARSOnProject queries the Kion API for all cloud access roles to which
-// the authenticated user has access.
+// GetCARS queries the Kion API for all cloud access roles to which the
+// authenticated user has access.
 func GetCARS(host string, token string) ([]CAR, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/me/cloud-access-role", host)
 	query := map[string]string{}
 	var data interface{}
-	resp, err := runQuery("GET", url, token, query, data)
+	resp, _, err := runQuery("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
 	}
@@ -104,4 +106,21 @@ func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 	}
 
 	return cars, nil
+}
+
+// GetCARByNameAndAccount returns a car that matches a given name for a given account number
+func GetCARByName(host string, token string, carName string) (CAR, error) {
+	allCars, err := GetCARS(host, token)
+	if err != nil {
+		return CAR{}, err
+	}
+
+	// find our match
+	for _, car := range allCars {
+		if car.Name == carName {
+			return car, nil
+		}
+	}
+
+	return CAR{}, fmt.Errorf("unable to find car %v", carName)
 }

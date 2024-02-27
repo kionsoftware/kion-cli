@@ -19,7 +19,7 @@
 [3.449703, "o", "\u001b]0;kion\u0007"]
 [3.481045, "o", "NAME:\r\n"]
 [3.481283, "o", "   Kion CLI - Kion federation on the command line!\r\n\r\nUSAGE:\r\n"]
-[3.481358, "o", "   Kion CLI [global options] command [command options] [arguments...]\r\n\r\nVERSION:\r\n   v0.0.1\r\n\r\nCOMMANDS:\r\n   stak, s           Generate short-term access keys\r\n   favorite, fav, f  Quickly access a favorite\r\n"]
+[3.481358, "o", "   Kion CLI [global options] command [command options] [arguments...]\r\n\r\nVERSION:\r\n   v0.0.1\r\n\r\nCOMMANDS:\r\n   stak, s           Generate short-term access keys\r\n   console, con, c   Federate into the web console\r\n   favorite, fav, f  Quickly access a favorite\r\n"]
 [3.481436, "o", "   run               Run a command with short-term access keys\r\n   help, h           Shows a list of commands or help for one command\r\n\r\nGLOBAL OPTIONS:\r\n"]
 [3.481525, "o", "   --endpoint URL, -e URL            Kion URL (default: \"https://kion.company.io\") [$KION_URL]\r\n   --user USERNAME, -u USERNAME      USERNAME for authentication [$KION_USERNAME]\r\n   --password PASSWORD, -p PASSWORD  PASSWORD for authentication [$KION_PASSWORD]\r\n   --idms IDMSID, -i IDMSID"]
 [3.48163, "o", "          IDMSID for authentication [$KION_IDMS_ID]\r\n   --saml-metadata-file FILE         SAML metadata FILE or URL [$KION_SAML_METADATA_FILE]\r\n   --saml-sp-issuer ISSUER           SAML Service Provider ISSUER [$KION_SAML_SP_ISSUER]\r\n   --token TOKEN, -t TOKEN           TOKEN for authentication (default: *****) [$KION_API_KEY]\r\n   --help, -h                        show help\r\n   --version, -v                     print the version\r\n"]

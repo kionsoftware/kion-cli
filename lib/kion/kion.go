@@ -15,17 +15,17 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // runQuery performs queries against the Kion API.
-func runQuery(method string, url string, token string, query map[string]string, payload interface{}) ([]byte, error) {
+func runQuery(method string, url string, token string, query map[string]string, payload interface{}) ([]byte, int, error) {
 	// prepare the request body
 	reqBody, err := json.Marshal(payload)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// start our request
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// append on our parameters to the req.URL.String(), only active milestones
@@ -44,21 +44,21 @@ func runQuery(method string, url string, token string, query map[string]string, 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer resp.Body.Close()
 
 	// get the body of the response
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// handle non 200's
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("received %v\n %v", resp.StatusCode, string(respBody))
+		return nil, resp.StatusCode, fmt.Errorf("received %v\n %v", resp.StatusCode, string(respBody))
 	}
 
 	// return the response
-	return respBody, nil
+	return respBody, resp.StatusCode, nil
 }

@@ -1,6 +1,7 @@
 package kion
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -31,18 +32,25 @@ func GetFederationURL(host string, token string, car CAR) (string, error) {
 	url := fmt.Sprintf("%v/api/v1/console-access", host)
 	query := map[string]string{}
 	data := URLRequest{
-		AccountNumber:  car.AccountNumber,
 		AccountID:      car.AccountID,
-		AccountName:    "",
-		AWSIAMRoleName: "",
-		AccountTypeID:  0,
-		RoleID:         0,
-		RoleType:       "",
+		AccountName:    car.AccountName,
+		AccountNumber:  car.AccountNumber,
+		AWSIAMRoleName: car.AwsIamRoleName,
+		AccountTypeID:  car.AccountTypeID,
+		RoleID:         car.ID,
+		RoleType:       car.CloudAccessRoleType,
 	}
-	resp, err := runQuery("POST", url, token, query, data)
+	resp, _, err := runQuery("POST", url, token, query, data)
 	if err != nil {
 		return "", err
 	}
 
-	return string(resp), nil
+	// unmarshal response body
+	urlResp := URLResponse{}
+	err = json.Unmarshal(resp, &urlResp)
+	if err != nil {
+		return "", err
+	}
+
+	return urlResp.URL, nil
 }
