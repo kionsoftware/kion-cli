@@ -50,6 +50,24 @@ var kionTestAccountsNames = []string{
 	"account six",
 }
 
+var kionTestCARs = []kion.CAR{
+	{AccountID: 101, AccountNumber: "111111111111", AccountType: "aws", AccountTypeID: 1, AccountName: "account one", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role one", CloudAccessRoleType: "type", FutureAccounts: true, ID: 101, LongTermAccessKeys: false, Name: "car one", ProjectID: 101, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 102, AccountNumber: "121212121212", AccountType: "aws", AccountTypeID: 2, AccountName: "account two", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role two", CloudAccessRoleType: "type", FutureAccounts: true, ID: 102, LongTermAccessKeys: false, Name: "car two", ProjectID: 102, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 103, AccountNumber: "131313131313", AccountType: "aws", AccountTypeID: 3, AccountName: "account three", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role three", CloudAccessRoleType: "type", FutureAccounts: true, ID: 103, LongTermAccessKeys: false, Name: "car three", ProjectID: 103, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 104, AccountNumber: "141414141414", AccountType: "aws", AccountTypeID: 4, AccountName: "account four", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role four", CloudAccessRoleType: "type", FutureAccounts: true, ID: 104, LongTermAccessKeys: false, Name: "car four", ProjectID: 104, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 105, AccountNumber: "151515151515", AccountType: "aws", AccountTypeID: 5, AccountName: "account five", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role five", CloudAccessRoleType: "type", FutureAccounts: true, ID: 105, LongTermAccessKeys: false, Name: "car five", ProjectID: 105, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 106, AccountNumber: "161616161616", AccountType: "aws", AccountTypeID: 6, AccountName: "account six", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role six", CloudAccessRoleType: "type", FutureAccounts: true, ID: 106, LongTermAccessKeys: false, Name: "car six", ProjectID: 106, ShortTermAccessKeys: true, WebAccess: true},
+}
+
+var kionTestCARsNames = []string{
+	"car one",
+	"car two",
+	"car three",
+	"car four",
+	"car five",
+	"car six",
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Helpers                                                                   //
@@ -192,6 +210,45 @@ func TestMapAccounts(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			one, two := MapAccounts(test.accounts)
+			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
+			}
+		})
+	}
+}
+
+func TestMapCAR(t *testing.T) {
+	tests := []struct {
+		name    string
+		cars    []kion.CAR
+		wantOne []string
+		wantTwo map[string]kion.CAR
+	}{
+		{
+			"Basic",
+			kionTestCARs,
+			[]string{
+				kionTestCARsNames[4],
+				kionTestCARsNames[3],
+				kionTestCARsNames[0],
+				kionTestCARsNames[5],
+				kionTestCARsNames[2],
+				kionTestCARsNames[1],
+			},
+			map[string]kion.CAR{
+				kionTestCARsNames[0]: kionTestCARs[0],
+				kionTestCARsNames[1]: kionTestCARs[1],
+				kionTestCARsNames[2]: kionTestCARs[2],
+				kionTestCARsNames[3]: kionTestCARs[3],
+				kionTestCARsNames[4]: kionTestCARs[4],
+				kionTestCARsNames[5]: kionTestCARs[5],
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			one, two := MapCAR(test.cars)
 			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
 			}
