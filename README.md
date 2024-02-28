@@ -1,7 +1,7 @@
 Kion CLI
 ========
 
-Kion CLI is a tool allowing Kion customers to generate short term access keys and federate into the cloud service provide console via the command line.
+Kion CLI is a tool allowing Kion customers to generate short term access keys and federate into the cloud service provider console via the command line.
 
 ![kion-cli usage](doc/kion-cli-usage.gif)
 
@@ -68,15 +68,16 @@ User Manual
 __Description:__
 
 The Kion CLI allows users to perform common Kion workflows via the command
-line. Users can quickly generate short term access keys (stak) via configured
-favorites or by walking through an account and role selection wizard.
+line. Users can quickly generate short term access keys (stak) or federate
+into the cloud service provider web console via configured favorites or by
+walking through an account and role selection wizard.
 
 __Commands:__
 
 ```text
 stak, s            Generate short-term access keys.
 
-favorite, fav, f   Access pre-configured favorites to quickly generate staks.
+favorite, fav, f   Access pre-configured favorites to quickly generate staks or federate into the cloud service provider console depending on the access_type defined in the favorite.
 
 console, con, c    Federate into the cloud service provider console.
 
@@ -176,7 +177,7 @@ but it is not enabled by default.
    to Users -> Identitiy Management Systems -> click on the SAML IDMS you use
    to login to Kion.  Locate the ID in the URL of this page.
 
-   For example: `http://mykion.example/portal/idms/##`
+   For example: `https://mykion.example/portal/idms/##`
 2. Using the Kion API, add the Kion CLI tool as an additional SAML destination
    by adding `http://localhost:8400/callback` as a supported destination URL.
    Use the `POST /v3/idms/{id}/destination-url` API.
