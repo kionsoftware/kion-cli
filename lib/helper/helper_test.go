@@ -15,14 +15,33 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 var kionTestProjects = []kion.Project{
-	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-east-1", Description: "test description one", ID: 101, Name: "account one", OuID: 201},
-	{Archived: false, AutoPay: false, DefaultAwsRegion: "us-west-1", Description: "test description two", ID: 102, Name: "account two", OuID: 202},
-	{Archived: true, AutoPay: false, DefaultAwsRegion: "us-east-1", Description: "test description three", ID: 103, Name: "account three", OuID: 203},
-	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-west-1", Description: "test description four", ID: 104, Name: "account four", OuID: 204},
-	{Archived: true, AutoPay: false, DefaultAwsRegion: "us-east-1", Description: "test description five", ID: 105, Name: "account five", OuID: 205},
-	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-east-1", Description: "test description six", ID: 106, Name: "account six", OuID: 206},
+	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-east-1", Description: "test description one", ID: 101, Name: "project one", OuID: 201},
+	{Archived: false, AutoPay: false, DefaultAwsRegion: "us-west-1", Description: "test description two", ID: 102, Name: "project two", OuID: 202},
+	{Archived: true, AutoPay: false, DefaultAwsRegion: "us-east-1", Description: "test description three", ID: 103, Name: "project three", OuID: 203},
+	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-west-1", Description: "test description four", ID: 104, Name: "project four", OuID: 204},
+	{Archived: true, AutoPay: false, DefaultAwsRegion: "us-east-1", Description: "test description five", ID: 105, Name: "project five", OuID: 205},
+	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-east-1", Description: "test description six", ID: 106, Name: "project six", OuID: 206},
 }
+
 var kionTestProjectsNames = []string{
+	"project one",
+	"project two",
+	"project three",
+	"project four",
+	"project five",
+	"project six",
+}
+
+var kionTestAccounts = []kion.Account{
+	{Email: "test1@kion.io", Name: "account one", Number: "111111111111", TypeID: 1, ID: 101, IncludeLinkedAccountSpend: true, LinkedAccountNumber: "", LinkedRole: "", PayerID: 101, ProjectID: 101, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test2@kion.io", Name: "account two", Number: "121212121212", TypeID: 2, ID: 102, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 102, ProjectID: 102, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test3@kion.io", Name: "account three", Number: "131313131313", TypeID: 3, ID: 103, IncludeLinkedAccountSpend: true, LinkedAccountNumber: "000000000000", LinkedRole: "", PayerID: 103, ProjectID: 103, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test4@kion.io", Name: "account four", Number: "141414141414", TypeID: 4, ID: 104, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 104, ProjectID: 104, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test5@kion.io", Name: "account five", Number: "151515151515", TypeID: 5, ID: 105, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 105, ProjectID: 105, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test6@kion.io", Name: "account six", Number: "161616161616", TypeID: 6, ID: 106, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 106, ProjectID: 106, SkipAccessChecking: true, UseOrgAccountInfo: true},
+}
+
+var kionTestAccountsNames = []string{
 	"account one",
 	"account two",
 	"account three",
@@ -134,6 +153,45 @@ func TestMapProjects(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			one, two := MapProjects(test.projects)
+			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
+			}
+		})
+	}
+}
+
+func TestMapAccounts(t *testing.T) {
+	tests := []struct {
+		name     string
+		accounts []kion.Account
+		wantOne  []string
+		wantTwo  map[string]kion.Account
+	}{
+		{
+			"Basic",
+			kionTestAccounts,
+			[]string{
+				kionTestAccountsNames[4],
+				kionTestAccountsNames[3],
+				kionTestAccountsNames[0],
+				kionTestAccountsNames[5],
+				kionTestAccountsNames[2],
+				kionTestAccountsNames[1],
+			},
+			map[string]kion.Account{
+				kionTestAccountsNames[0]: kionTestAccounts[0],
+				kionTestAccountsNames[1]: kionTestAccounts[1],
+				kionTestAccountsNames[2]: kionTestAccounts[2],
+				kionTestAccountsNames[3]: kionTestAccounts[3],
+				kionTestAccountsNames[4]: kionTestAccounts[4],
+				kionTestAccountsNames[5]: kionTestAccounts[5],
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			one, two := MapAccounts(test.accounts)
 			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
 			}
