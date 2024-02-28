@@ -68,6 +68,24 @@ var kionTestCARsNames = []string{
 	"car six",
 }
 
+var kionTestIDMSs = []kion.IDMS{
+	{ID: 101, IdmsTypeID: 1, Name: "idms one"},
+	{ID: 102, IdmsTypeID: 2, Name: "idms two"},
+	{ID: 103, IdmsTypeID: 3, Name: "idms three"},
+	{ID: 104, IdmsTypeID: 4, Name: "idms four"},
+	{ID: 105, IdmsTypeID: 5, Name: "idms five"},
+	{ID: 106, IdmsTypeID: 6, Name: "idms six"},
+}
+
+var kionTestIDMSsNames = []string{
+	"idms one",
+	"idms two",
+	"idms three",
+	"idms four",
+	"idms five",
+	"idms six",
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Helpers                                                                   //
@@ -249,6 +267,46 @@ func TestMapCAR(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			one, two := MapCAR(test.cars)
+			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
+			}
+		})
+	}
+}
+
+func TestMapIDMSs(t *testing.T) {
+	tests := []struct {
+		name    string
+		idmss   []kion.IDMS
+		wantOne []string
+		wantTwo map[string]kion.IDMS
+	}{
+		{
+			"Basic",
+			kionTestIDMSs,
+			[]string{
+				kionTestIDMSsNames[4],
+				kionTestIDMSsNames[3],
+				kionTestIDMSsNames[0],
+				kionTestIDMSsNames[5],
+				kionTestIDMSsNames[2],
+				kionTestIDMSsNames[1],
+			},
+			map[string]kion.IDMS{
+				kionTestIDMSsNames[0]: kionTestIDMSs[0],
+				kionTestIDMSsNames[1]: kionTestIDMSs[1],
+				kionTestIDMSsNames[2]: kionTestIDMSs[2],
+				kionTestIDMSsNames[3]: kionTestIDMSs[3],
+				kionTestIDMSsNames[4]: kionTestIDMSs[4],
+				kionTestIDMSsNames[5]: kionTestIDMSs[5],
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			one, two := MapIDMSs(test.idmss)
+			// if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
 			}
