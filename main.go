@@ -396,7 +396,12 @@ func listFavorites(cCtx *cli.Context) error {
 	// print it out
 	if cCtx.Bool("verbose") {
 		for _, f := range fMap {
-			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n", f.Name, f.Account, f.CAR)
+			// Check if AccessType is defined; if not, set a default value of "web" in the verbose output
+			accessType := f.AccessType
+			if accessType == "" {
+				accessType = "web (Default)"
+			}
+			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n", f.Name, f.Account, f.CAR, accessType)
 		}
 	} else {
 		for _, f := range fNames {
@@ -633,7 +638,7 @@ func main() {
 			{
 				Name:      "favorite",
 				Aliases:   []string{"fav", "f"},
-				Usage:     "Quickly access a favorite",
+				Usage:     "Quickly access a favorite via federating into the web console or from the cli via a stak.",
 				ArgsUsage: "[FAVORITE_NAME]",
 				Action:    favorites,
 				Flags: []cli.Flag{
