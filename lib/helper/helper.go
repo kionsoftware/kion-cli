@@ -287,7 +287,7 @@ func FindCARByName(cars []kion.CAR, carName string) (*kion.CAR, error) {
 			return &c, nil
 		}
 	}
-	return nil, fmt.Errorf("cannot find cloud access role with name %v", carName)
+	return &kion.CAR{}, fmt.Errorf("cannot find cloud access role with name %v", carName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

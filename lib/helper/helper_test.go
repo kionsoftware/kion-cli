@@ -2,6 +2,7 @@ package helper
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -368,6 +369,41 @@ func TestMapFavs(t *testing.T) {
 			// if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
+			}
+		})
+	}
+}
+
+func TestFindCARByName(t *testing.T) {
+	tests := []struct {
+		name    string
+		find    string
+		cars    []kion.CAR
+		wantCAR kion.CAR
+		wantErr error
+	}{
+		{
+			"Find Match",
+			"car one",
+			kionTestCARs,
+			kionTestCARs[0],
+			nil,
+		},
+		{
+			"Find No Match",
+			"fake car",
+			kionTestCARs,
+			kion.CAR{},
+			fmt.Errorf("cannot find cloud access role with name %v", "fake car"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			car, err := FindCARByName(test.cars, test.find)
+			// if !reflect.DeepEqual(&test.wantCAR, car) || test.wantErr != err {
+			if !reflect.DeepEqual(&test.wantCAR, car) || !reflect.DeepEqual(test.wantErr, err) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", car, err, &test.wantCAR, test.wantErr)
 			}
 		})
 	}
