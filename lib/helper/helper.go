@@ -141,9 +141,9 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 		}
 		cmd = fmt.Sprintf(`ZDOTDIR=%v zsh`, zdotdir)
 	case "bash":
-		cmd = fmt.Sprintf(`bash --rcfile <(echo "source "$HOME/.bashrc; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
+		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
 	default:
-		cmd = fmt.Sprintf(`bash --rcfile <(echo "source "$HOME/.bashrc; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
+		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
 	}
 
 	// init shell
