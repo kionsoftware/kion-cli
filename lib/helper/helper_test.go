@@ -2,13 +2,49 @@ package helper
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
 )
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Resources                                                                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+var kionTestProjects = []kion.Project{
+	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-east-1", Description: "test description one", ID: 101, Name: "account one", OuID: 201},
+	{Archived: false, AutoPay: false, DefaultAwsRegion: "us-west-1", Description: "test description two", ID: 102, Name: "account two", OuID: 202},
+	{Archived: true, AutoPay: false, DefaultAwsRegion: "us-east-1", Description: "test description three", ID: 103, Name: "account three", OuID: 203},
+	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-west-1", Description: "test description four", ID: 104, Name: "account four", OuID: 204},
+	{Archived: true, AutoPay: false, DefaultAwsRegion: "us-east-1", Description: "test description five", ID: 105, Name: "account five", OuID: 205},
+	{Archived: false, AutoPay: true, DefaultAwsRegion: "us-east-1", Description: "test description six", ID: 106, Name: "account six", OuID: 206},
+}
+var kionTestProjectsNames = []string{
+	"account one",
+	"account two",
+	"account three",
+	"account four",
+	"account five",
+	"account six",
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Helpers                                                                   //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Tests                                                                     //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 func TestPrintSTAK(t *testing.T) {
-	tt := []struct {
+	tests := []struct {
 		description string
 		stak        kion.STAK
 		want        string
@@ -43,11 +79,11 @@ func TestPrintSTAK(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tt {
-		t.Run(tc.description, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
 			// defer func to handle panic in test
 			defer func() {
-				if tc.want == "panic" {
+				if test.want == "panic" {
 					if r := recover(); r == nil {
 						t.Errorf("function should panic")
 					}
@@ -55,12 +91,51 @@ func TestPrintSTAK(t *testing.T) {
 			}()
 
 			var output bytes.Buffer
-			err := PrintSTAK(&output, tc.stak)
+			err := PrintSTAK(&output, test.stak)
 			if err != nil {
 				t.Error(err)
 			}
-			if tc.want != "panic" && tc.want != output.String() {
-				t.Errorf("\ngot:\n  %v\nwanted:\n  %v", output.String(), tc.want)
+			if test.want != "panic" && test.want != output.String() {
+				t.Errorf("\ngot:\n  %v\nwanted:\n  %v", output.String(), test.want)
+			}
+		})
+	}
+}
+
+func TestMapProjects(t *testing.T) {
+	tests := []struct {
+		name     string
+		projects []kion.Project
+		wantOne  []string
+		wantTwo  map[string]kion.Project
+	}{
+		{
+			"Basic",
+			kionTestProjects,
+			[]string{
+				kionTestProjectsNames[4],
+				kionTestProjectsNames[3],
+				kionTestProjectsNames[0],
+				kionTestProjectsNames[5],
+				kionTestProjectsNames[2],
+				kionTestProjectsNames[1],
+			},
+			map[string]kion.Project{
+				kionTestProjectsNames[0]: kionTestProjects[0],
+				kionTestProjectsNames[1]: kionTestProjects[1],
+				kionTestProjectsNames[2]: kionTestProjects[2],
+				kionTestProjectsNames[3]: kionTestProjects[3],
+				kionTestProjectsNames[4]: kionTestProjects[4],
+				kionTestProjectsNames[5]: kionTestProjects[5],
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			one, two := MapProjects(test.projects)
+			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
 			}
 		})
 	}
