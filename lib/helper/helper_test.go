@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
+	"github.com/kionsoftware/kion-cli/lib/structs"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +85,24 @@ var kionTestIDMSsNames = []string{
 	"idms four",
 	"idms five",
 	"idms six",
+}
+
+var kionTestFavorites = []structs.Favorite{
+	{Name: "fav one", Account: "111111111111", CAR: "car one", AccessType: "web"},
+	{Name: "fav two", Account: "121212121212", CAR: "car two", AccessType: "web"},
+	{Name: "fav three", Account: "131313131313", CAR: "car three", AccessType: "web"},
+	{Name: "fav four", Account: "141414141414", CAR: "car four", AccessType: "web"},
+	{Name: "fav five", Account: "151515151515", CAR: "car five", AccessType: "web"},
+	{Name: "fav six", Account: "161616161616", CAR: "car six", AccessType: "web"},
+}
+
+var kionTestFavoritesNames = []string{
+	"fav one",
+	"fav two",
+	"fav three",
+	"fav four",
+	"fav five",
+	"fav six",
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,6 +325,46 @@ func TestMapIDMSs(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			one, two := MapIDMSs(test.idmss)
+			// if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
+			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
+			}
+		})
+	}
+}
+
+func TestMapFavs(t *testing.T) {
+	tests := []struct {
+		name      string
+		favorites []structs.Favorite
+		wantOne   []string
+		wantTwo   map[string]structs.Favorite
+	}{
+		{
+			"Basic",
+			kionTestFavorites,
+			[]string{
+				kionTestFavoritesNames[4],
+				kionTestFavoritesNames[3],
+				kionTestFavoritesNames[0],
+				kionTestFavoritesNames[5],
+				kionTestFavoritesNames[2],
+				kionTestFavoritesNames[1],
+			},
+			map[string]structs.Favorite{
+				kionTestFavoritesNames[0]: kionTestFavorites[0],
+				kionTestFavoritesNames[1]: kionTestFavorites[1],
+				kionTestFavoritesNames[2]: kionTestFavorites[2],
+				kionTestFavoritesNames[3]: kionTestFavorites[3],
+				kionTestFavoritesNames[4]: kionTestFavorites[4],
+				kionTestFavoritesNames[5]: kionTestFavorites[5],
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			one, two := MapFavs(test.favorites)
 			// if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
