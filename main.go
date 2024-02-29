@@ -638,7 +638,7 @@ func main() {
 			{
 				Name:      "favorite",
 				Aliases:   []string{"fav", "f"},
-				Usage:     "Quickly access a favorite via federating into the web console or from the cli via a stak.",
+				Usage:     "Access favorites via web console or a stak for CLI usage",
 				ArgsUsage: "[FAVORITE_NAME]",
 				Action:    favorites,
 				Flags: []cli.Flag{
