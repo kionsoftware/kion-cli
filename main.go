@@ -338,30 +338,30 @@ func favorites(cCtx *cli.Context) error {
 	favorite := fMap[fav]
 
 	// determine favorite action, default to cli unless explicitly set to web
-	if favorite.AccessType != "web" {
+	if favorite.AccessType == "web" {
+		// If access type is specifically set to web
+		car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+		if err != nil {
+			return err
+		}
+		car.AccountNumber = favorite.Account
+		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+		if err != nil {
+			return err
+		}
+		return helper.OpenBrowser(url)
+	} else {
 		// generate stak
 		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
 			return err
 		}
-
 		// print or create subshell
 		if cCtx.Bool("print") {
 			return helper.PrintSTAK(os.Stdout, stak)
 		} else {
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
 		}
-	} else {
-		// If access type is specifically set to web
-		car, err := kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
-		if err != nil {
-			return err
-		}
-		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
-		if err != nil {
-			return err
-		}
-		return helper.OpenBrowser(url)
 	}
 }
 
