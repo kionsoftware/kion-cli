@@ -339,10 +339,11 @@ func favorites(cCtx *cli.Context) error {
 
 	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
+		var car kion.CAR
 		// attempt to find exact match then fallback to first match
-		car, err := kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
-			car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+			car, err = kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
 			if err != nil {
 				return err
 			}
