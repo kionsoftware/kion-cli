@@ -353,6 +353,7 @@ func favorites(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
 		return helper.OpenBrowser(url)
 	} else {
 		// generate stak
