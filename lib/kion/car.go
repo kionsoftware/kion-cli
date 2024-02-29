@@ -124,3 +124,20 @@ func GetCARByName(host string, token string, carName string) (CAR, error) {
 
 	return CAR{}, fmt.Errorf("unable to find car %v", carName)
 }
+
+// GetCARByNameAndAccount returns a CAR that matches a given name and account number
+func GetCARByNameAndAccount(host string, token string, carName string, accountNumber string) (CAR, error) {
+	allCars, err := GetCARS(host, token)
+	if err != nil {
+		return CAR{}, err
+	}
+
+	// Find the CAR that matches both the name and account number
+	for _, car := range allCars {
+		if car.Name == carName && car.AccountNumber == accountNumber {
+			return car, nil
+		}
+	}
+
+	return CAR{}, fmt.Errorf("unable to find car %v for account %v", carName, accountNumber)
+}
