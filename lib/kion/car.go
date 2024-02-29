@@ -109,7 +109,7 @@ func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 }
 
 // GetCARByNameAndAccount returns a car that matches a given name for a given account number
-func GetCARByName(host string, token string, carName string) (CAR, error) {
+func GetCARByName(host string, token string, carName string, accountNumber string) (CAR, error) {
 	allCars, err := GetCARS(host, token)
 	if err != nil {
 		return CAR{}, err
@@ -117,7 +117,7 @@ func GetCARByName(host string, token string, carName string) (CAR, error) {
 
 	// find our match
 	for _, car := range allCars {
-		if car.Name == carName {
+		if car.Name == carName && car.AccountNumber == accountNumber {
 			return car, nil
 		}
 	}

@@ -352,7 +352,7 @@ func favorites(cCtx *cli.Context) error {
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
 		}
 	} else {
-		car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+		car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
 			return err
 		}
