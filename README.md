@@ -78,8 +78,8 @@ __Commands:__
 stak, s            Generate short-term access keys.
 
 favorite, fav, f   Access pre-configured favorites to quickly generate staks or federate
-                          into the cloud service provider console depending on the access_type
-                          defined in the favorite.
+                   into the cloud service provider console depending on the access_type
+                   defined in the favorite.
 
 console, con, c    Federate into the cloud service provider console.
 
