@@ -108,19 +108,19 @@ func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 	return cars, nil
 }
 
-// GetCARByNameAndAccount returns a CAR that matches a given name and account number
-func GetCARByNameAndAccount(host string, token string, carName string, accountNumber string) (CAR, error) {
+// GetCARByNameAndAccount returns a car that matches a given name for a given account number
+func GetCARByName(host string, token string, carName string) (CAR, error) {
 	allCars, err := GetCARS(host, token)
 	if err != nil {
 		return CAR{}, err
 	}
 
-	// Find the CAR that matches both the name and account number
+	// find our match
 	for _, car := range allCars {
-		if car.Name == carName && car.AccountNumber == accountNumber {
+		if car.Name == carName {
 			return car, nil
 		}
 	}
 
-	return CAR{}, fmt.Errorf("unable to find car %v for account %v", carName, accountNumber)
+	return CAR{}, fmt.Errorf("unable to find car %v", carName)
 }
