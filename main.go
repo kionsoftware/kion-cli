@@ -337,8 +337,8 @@ func favorites(cCtx *cli.Context) error {
 	// grab the favorite object
 	favorite := fMap[fav]
 
-	// determine favorite action, cli or web
-	if favorite.AccessType == "cli" {
+	// determine favorite action, default to cli unless explicitly set to web
+	if favorite.AccessType != "web" {
 		// generate stak
 		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
@@ -352,6 +352,7 @@ func favorites(cCtx *cli.Context) error {
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
 		}
 	} else {
+		// If access type is specifically set to web
 		car, err := kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
 			return err
@@ -362,7 +363,6 @@ func favorites(cCtx *cli.Context) error {
 		}
 		return helper.OpenBrowser(url)
 	}
-
 }
 
 // fedConsole opens the csp console for the selected account and cloud access
@@ -397,10 +397,9 @@ func listFavorites(cCtx *cli.Context) error {
 	// print it out
 	if cCtx.Bool("verbose") {
 		for _, f := range fMap {
-			// Check if AccessType is defined; if not, set a default value of "web" in the verbose output
 			accessType := f.AccessType
 			if accessType == "" {
-				accessType = "web (Default)"
+				accessType = "cli (Default)"
 			}
 			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n", f.Name, f.Account, f.CAR, accessType)
 		}
