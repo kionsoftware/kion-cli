@@ -337,30 +337,31 @@ func favorites(cCtx *cli.Context) error {
 	// grab the favorite object
 	favorite := fMap[fav]
 
-	// determine favorite action, cli or web
-	if favorite.AccessType == "cli" {
+	// determine favorite action, default to cli unless explicitly set to web
+	if favorite.AccessType == "web" {
+		// If access type is specifically set to web
+		car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+		if err != nil {
+			return err
+		}
+		car.AccountNumber = favorite.Account
+		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+		if err != nil {
+			return err
+		}
+		return helper.OpenBrowser(url)
+	} else {
 		// generate stak
 		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
 			return err
 		}
-
 		// print or create subshell
 		if cCtx.Bool("print") {
 			return helper.PrintSTAK(os.Stdout, stak)
 		} else {
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
 		}
-	} else {
-		car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
-		if err != nil {
-			return err
-		}
-		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
-		if err != nil {
-			return err
-		}
-		return helper.OpenBrowser(url)
 	}
 }
 
@@ -396,7 +397,11 @@ func listFavorites(cCtx *cli.Context) error {
 	// print it out
 	if cCtx.Bool("verbose") {
 		for _, f := range fMap {
-			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n", f.Name, f.Account, f.CAR)
+			accessType := f.AccessType
+			if accessType == "" {
+				accessType = "cli (Default)"
+			}
+			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n", f.Name, f.Account, f.CAR, accessType)
 		}
 	} else {
 		for _, f := range fNames {
@@ -633,7 +638,7 @@ func main() {
 			{
 				Name:      "favorite",
 				Aliases:   []string{"fav", "f"},
-				Usage:     "Quickly access a favorite",
+				Usage:     "Access favorites via web console or a stak for CLI usage",
 				ArgsUsage: "[FAVORITE_NAME]",
 				Action:    favorites,
 				Flags: []cli.Flag{
