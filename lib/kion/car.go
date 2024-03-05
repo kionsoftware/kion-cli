@@ -141,3 +141,34 @@ func GetCARByNameAndAccount(host string, token string, carName string, accountNu
 
 	return CAR{}, fmt.Errorf("unable to find car %v", carName)
 }
+
+// GetAllCARsByName returns a slice of cars that matches a given name
+func GetAllCARsByName(host string, token string, carName string) ([]CAR, error) {
+	allCars, err := GetCARS(host, token)
+	if err != nil {
+		return nil, err
+	}
+
+	// find our matches
+	var cars []CAR
+	for _, car := range allCars {
+		if car.Name == carName {
+			account, err := GetAccount(host, token, car.AccountNumber)
+			if err != nil {
+				// TODO: this may not be what we want to do here, kept as info level log
+				fmt.Println("  unable to lookup an associated account:", car.AccountNumber)
+				continue
+			}
+			car.AccountName = account.Name
+			car.AccountTypeID = account.TypeID
+			cars = append(cars, car)
+		}
+	}
+
+	// return our slice of cars
+	if len(cars) > 0 {
+		return cars, nil
+	}
+
+	return nil, fmt.Errorf("unable to find car %v", carName)
+}
