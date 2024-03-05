@@ -288,8 +288,13 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
-	// walk user through the propt workflow to select a car
-	car, err := helper.CARSelector(cCtx)
+	// init a car object and populate it with any passed arguments
+	var car kion.CAR
+	car.AccountNumber = cCtx.String("account")
+	car.Name = cCtx.String("car")
+
+	// run through the car selector to fill any gaps
+	car, err = helper.CARSelector(cCtx, car)
 	if err != nil {
 		return err
 	}
@@ -380,7 +385,7 @@ func fedConsole(cCtx *cli.Context) error {
 	}
 
 	// walk user through the prompt workflow to select a car
-	car, err := helper.CARSelector(cCtx)
+	car, err := helper.CARSelector(cCtx, kion.CAR{})
 	if err != nil {
 		return err
 	}
@@ -631,6 +636,16 @@ func main() {
 						Name:    "print",
 						Aliases: []string{"p"},
 						Usage:   "print stak only",
+					},
+					&cli.StringFlag{
+						Name:    "account",
+						Aliases: []string{"acc", "a"},
+						Usage:   "target account number",
+					},
+					&cli.StringFlag{
+						Name:    "car",
+						Aliases: []string{"c"},
+						Usage:   "target cloud access role",
 					},
 				},
 			},
