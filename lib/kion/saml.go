@@ -97,6 +97,12 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 	tokenChan := make(chan SamlCallbackResult, 1)
 	http.HandleFunc("/", func(rw http.ResponseWriter, req *http.Request) {
 		if strings.Contains(req.URL.String(), "/favicon.ico") {
+			http.NotFound(rw, req)
+			return
+		}
+
+		// Ensure we work with private network access check preflight requests
+		if req.Method == "OPTIONS" {
 			return
 		}
 
