@@ -12,7 +12,8 @@ Notes for upgrading...
 
 ### Added
 - Print metadata to stdout when federating into web consoles [https://github.com/kionsoftware/kion-cli/pull/20]
-- Add flags to support headless runs on all commands [https://github.com/kionsoftware/kion-cli/pull/22]
+- Add flags to support headless runs [https://github.com/kionsoftware/kion-cli/pull/22]
+- Fallback logic for users with restricted perms when using the `run` cmd [https://github.com/kionsoftware/kion-cli/pull/22]
 
 ### Changed
 
@@ -51,4 +52,4 @@ Notes for upgrading...
 [0.0.1] - 2024-02-02
 --------------------
 
-Initial release
+Initial release.
