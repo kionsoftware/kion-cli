@@ -390,7 +390,7 @@ func fedConsole(cCtx *cli.Context) error {
 		return err
 	}
 
-	// TODO: handle arg if passed else run prompts
+	// grab the csp federation url
 	url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
 	if err != nil {
 		return err

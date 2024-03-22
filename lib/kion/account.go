@@ -61,22 +61,22 @@ func GetAccountsOnProject(host string, token string, id uint) ([]Account, int, e
 }
 
 // GetAccount returns an account by the given account number
-func GetAccount(host string, token string, accountNum string) (*Account, error) {
+func GetAccount(host string, token string, accountNum string) (*Account, int, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/account/by-account-number/%v", host, accountNum)
 	query := map[string]string{}
 	var data interface{}
-	resp, _, err := runQuery("GET", url, token, query, data)
+	resp, statusCode, err := runQuery("GET", url, token, query, data)
 	if err != nil {
-		return nil, err
+		return nil, statusCode, err
 	}
 
 	// unmarshal response body
 	accResp := AccountResponse{}
 	jsonErr := json.Unmarshal(resp, &accResp)
 	if jsonErr != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return &accResp.Account, nil
+	return &accResp.Account, accResp.Status, nil
 }

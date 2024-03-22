@@ -153,10 +153,10 @@ func GetAllCARsByName(host string, token string, carName string) ([]CAR, error) 
 	var cars []CAR
 	for _, car := range allCars {
 		if car.Name == carName {
-			account, err := GetAccount(host, token, car.AccountNumber)
+			account, _, err := GetAccount(host, token, car.AccountNumber)
 			if err != nil {
 				// TODO: this may not be what we want to do here, kept as info level log
-				fmt.Println("  unable to lookup an associated account:", car.AccountNumber)
+				// fmt.Println("  unable to lookup an associated account:", car.AccountNumber)
 				continue
 			}
 			car.AccountName = account.Name
