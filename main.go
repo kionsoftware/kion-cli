@@ -456,13 +456,32 @@ func runCommand(cCtx *cli.Context) error {
 		}
 
 	} else if cCtx.String("account") != "" && cCtx.String("car") != "" {
-		err := authCommand(cCtx)
+		account, statusCode, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("account"))
 		if err != nil {
-			return err
-		}
+			if statusCode == 403 || statusCode == 401 {
+				// try our way prone to collisions of car names
+				err := authCommand(cCtx)
+				if err != nil {
+					return err
+				}
 
-		account, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("account"))
-		if err != nil {
+				car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"))
+				if err != nil {
+					return err
+				}
+
+				stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"), cCtx.String("account"))
+				if err != nil {
+					return err
+				}
+
+				err = helper.RunCommand(cCtx.String("account"), car.AccountName, car.Name, stak, cCtx.Args().First(), cCtx.Args().Tail()...)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			}
 			return err
 		}
 
@@ -485,7 +504,6 @@ func runCommand(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-
 	} else {
 		return errors.New("must specify either --fav OR --account and --car parameters")
 	}
