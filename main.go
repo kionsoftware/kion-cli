@@ -658,12 +658,12 @@ func main() {
 					&cli.StringFlag{
 						Name:    "account",
 						Aliases: []string{"acc", "a"},
-						Usage:   "target account number",
+						Usage:   "target account number, must be passed with car",
 					},
 					&cli.StringFlag{
 						Name:    "car",
 						Aliases: []string{"c"},
-						Usage:   "target cloud access role",
+						Usage:   "target cloud access role, must be passed with account",
 					},
 				},
 			},
