@@ -431,7 +431,6 @@ func CARSelector(cCtx *cli.Context, car kion.CAR) (kion.CAR, error) {
 	}
 	cNames, cMap := MapCAR(cars)
 	if len(cNames) == 0 {
-		fmt.Println("in here")
 		return kion.CAR{}, fmt.Errorf("no cloud access roles found")
 	}
 
