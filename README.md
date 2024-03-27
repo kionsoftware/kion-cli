@@ -131,9 +131,11 @@ __STAK Options:__
 ```text
 --print, -p                             Print STAK only. (default: false)
 
---account value, --acc value, -a value  Target account number, used to bypass prompts.
+--account value, --acc value, -a value  Target account number, used to bypass prompts,
+                                        must be passed with --car.
 
---car value, -c value                   Target cloud access role, used to bypass prompts.
+--car value, -c value                   Target cloud access role, used to bypass
+                                        prompts, must be passed with --account.
 
 --help, -h                              Print usage text.
 
