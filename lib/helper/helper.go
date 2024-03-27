@@ -118,7 +118,6 @@ func OpenBrowser(url string) error {
 // while overriding the prompt to indicate the authed AWS account.
 func CreateSubShell(accountNumber string, accountAlias string, carName string, stak kion.STAK) error {
 	// check if we know the account name
-	nameless := accountAlias == ""
 	var accountMeta string
 	var accountMetaSentence string
 	if accountAlias == "" {
