@@ -294,7 +294,7 @@ func genStaks(cCtx *cli.Context) error {
 	car.Name = cCtx.String("car")
 
 	// run through the car selector to fill any gaps
-	car, err = helper.CARSelector(cCtx, car)
+	err = helper.CARSelector(cCtx, &car)
 	if err != nil {
 		return err
 	}
@@ -385,7 +385,8 @@ func fedConsole(cCtx *cli.Context) error {
 	}
 
 	// walk user through the prompt workflow to select a car
-	car, err := helper.CARSelector(cCtx, kion.CAR{})
+	var car kion.CAR
+	err = helper.CARSelector(cCtx, &car)
 	if err != nil {
 		return err
 	}
