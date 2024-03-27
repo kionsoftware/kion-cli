@@ -119,6 +119,15 @@ func OpenBrowser(url string) error {
 func CreateSubShell(accountNumber string, accountAlias string, carName string, stak kion.STAK) error {
 	// check if we know the account name
 	nameless := accountAlias == ""
+	var accountMeta string
+	var accountMetaSentence string
+	if accountAlias == "" {
+		accountMeta = accountNumber
+		accountMetaSentence = accountNumber
+	} else {
+		accountMeta = fmt.Sprintf("%v|%v", accountAlias, accountNumber)
+		accountMetaSentence = fmt.Sprintf("%v (%v)", accountAlias, accountNumber)
+	}
 
 	// get users shell information
 	usrShellPath := os.Getenv("SHELL")
@@ -137,28 +146,16 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 		if err != nil {
 			return err
 		}
-		if nameless {
-			fmt.Fprintf(f, `source $HOME/.zshrc; autoload -U colors && colors; export PS1="%%F{green}[%v]%%b%%f $PS1"`, accountNumber)
-		} else {
-			fmt.Fprintf(f, `source $HOME/.zshrc; autoload -U colors && colors; export PS1="%%F{green}[%v|%v]%%b%%f $PS1"`, accountAlias, accountNumber)
-		}
+		fmt.Fprintf(f, `source $HOME/.zshrc; autoload -U colors && colors; export PS1="%%F{green}[%v]%%b%%f $PS1"`, accountMeta)
 		err = f.Sync()
 		if err != nil {
 			return err
 		}
 		cmd = fmt.Sprintf(`ZDOTDIR=%v zsh`, zdotdir)
 	case "bash":
-		if nameless {
-			cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountNumber)
-		} else {
-			cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
-		}
+		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountMeta)
 	default:
-		if nameless {
-			cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountNumber)
-		} else {
-			cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
-		}
+		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountMeta)
 	}
 
 	// init shell
@@ -179,17 +176,9 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 	shell.Stderr = os.Stderr
 
 	// run the shell
-	if nameless {
-		color.Green("Starting session for %v", accountNumber)
-	} else {
-		color.Green("Starting session for %v (%v)", accountAlias, accountNumber)
-	}
+	color.Green("Starting session for %v", accountMetaSentence)
 	err := shell.Run()
-	if nameless {
-		color.Green("Shutting down session for %v", accountNumber)
-	} else {
-		color.Green("Shutting down session for %v (%v)", accountAlias, accountNumber)
-	}
+	color.Green("Shutting down session for %v", accountMetaSentence)
 
 	return err
 }
