@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-version"
 	"github.com/kionsoftware/kion-cli/lib/helper"
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
@@ -258,8 +259,32 @@ func setAuthToken(cCtx *cli.Context) error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // beforeCommands run after the context is ready but before any subcommands are
-// executed.
+// executed. Currently used to test feature compatibility with targeted Kion.
 func beforeCommands(cCtx *cli.Context) error {
+	// gather the targeted kion version
+	kionVer, err := kion.GetVersion(cCtx.String("endpoint"), cCtx.String("token"))
+	if err != nil {
+		return err
+	}
+	curVer, err := version.NewSemver(kionVer)
+	if err != nil {
+		return err
+	}
+
+	// api/v3/me/cloud-access-role fix constraints
+	v3mecarC1, _ := version.NewConstraint(">=3.6.29, < 3.7.0")
+	v3mecarC2, _ := version.NewConstraint(">=3.7.17, < 3.8.0")
+	v3mecarC3, _ := version.NewConstraint(">=3.8.9, < 3.9.0")
+	v3mecarC4, _ := version.NewConstraint(">=3.9.0")
+
+	// check constriants and set bool in context
+	if v3mecarC1.Check(curVer) ||
+		v3mecarC2.Check(curVer) ||
+		v3mecarC3.Check(curVer) ||
+		v3mecarC4.Check(curVer) {
+		cCtx.App.Metadata["useMeCAR"] = true
+	}
+
 	return nil
 }
 
@@ -577,6 +602,9 @@ func main() {
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
 		After:                afterCommands,
+		Metadata: map[string]interface{}{
+			"useMeCAR": false,
+		},
 
 		////////////////////
 		//  Global Flags  //
