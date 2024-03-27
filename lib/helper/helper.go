@@ -359,10 +359,17 @@ func PromptPassword(message string) (string, error) {
 func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 	// if we have what we need go look stuff up without prompts do it
 	if car.AccountNumber != "" && car.Name != "" {
-		car, err := kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), car.Name, car.AccountNumber)
+		// lookup the car details and populate the passed car
+		foundcar, err := kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), car.Name, car.AccountNumber)
 		if err != nil {
 			return err
 		}
+		car.AccountID = foundcar.AccountID
+		car.AwsIamRoleName = foundcar.AwsIamRoleName
+		car.ID = foundcar.ID
+		car.CloudAccessRoleType = foundcar.CloudAccessRoleType
+
+		// attempt to get account metadata
 		acc, statusCode, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), car.AccountNumber)
 		if err != nil {
 			if statusCode == 403 {

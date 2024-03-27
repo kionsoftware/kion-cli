@@ -289,12 +289,13 @@ func genStaks(cCtx *cli.Context) error {
 	}
 
 	// init a car object and populate it with any passed arguments
-	var car kion.CAR
-	car.AccountNumber = cCtx.String("account")
-	car.Name = cCtx.String("car")
+	car := &kion.CAR{
+		AccountNumber: cCtx.String("account"),
+		Name:          cCtx.String("car"),
+	}
 
 	// run through the car selector to fill any gaps
-	err = helper.CARSelector(cCtx, &car)
+	err = helper.CARSelector(cCtx, car)
 	if err != nil {
 		return err
 	}
