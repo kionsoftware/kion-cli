@@ -288,8 +288,14 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
-	// walk user through the propt workflow to select a car
-	car, err := helper.CARSelector(cCtx)
+	// init a car object and populate it with any passed arguments
+	car := &kion.CAR{
+		AccountNumber: cCtx.String("account"),
+		Name:          cCtx.String("car"),
+	}
+
+	// run through the car selector to fill any gaps
+	err = helper.CARSelector(cCtx, car)
 	if err != nil {
 		return err
 	}
@@ -380,12 +386,13 @@ func fedConsole(cCtx *cli.Context) error {
 	}
 
 	// walk user through the prompt workflow to select a car
-	car, err := helper.CARSelector(cCtx)
+	var car kion.CAR
+	err = helper.CARSelector(cCtx, &car)
 	if err != nil {
 		return err
 	}
 
-	// TODO: handle arg if passed else run prompts
+	// grab the csp federation url
 	url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
 	if err != nil {
 		return err
@@ -451,13 +458,32 @@ func runCommand(cCtx *cli.Context) error {
 		}
 
 	} else if cCtx.String("account") != "" && cCtx.String("car") != "" {
-		err := authCommand(cCtx)
+		account, statusCode, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("account"))
 		if err != nil {
-			return err
-		}
+			if statusCode == 403 || statusCode == 401 {
+				// try our way prone to collisions of car names
+				err := authCommand(cCtx)
+				if err != nil {
+					return err
+				}
 
-		account, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("account"))
-		if err != nil {
+				car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"))
+				if err != nil {
+					return err
+				}
+
+				stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"), cCtx.String("account"))
+				if err != nil {
+					return err
+				}
+
+				err = helper.RunCommand(cCtx.String("account"), car.AccountName, car.Name, stak, cCtx.Args().First(), cCtx.Args().Tail()...)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			}
 			return err
 		}
 
@@ -480,7 +506,6 @@ func runCommand(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-
 	} else {
 		return errors.New("must specify either --fav OR --account and --car parameters")
 	}
@@ -631,6 +656,16 @@ func main() {
 						Name:    "print",
 						Aliases: []string{"p"},
 						Usage:   "print stak only",
+					},
+					&cli.StringFlag{
+						Name:    "account",
+						Aliases: []string{"acc", "a"},
+						Usage:   "target account number, must be passed with car",
+					},
+					&cli.StringFlag{
+						Name:    "car",
+						Aliases: []string{"c"},
+						Usage:   "target cloud access role, must be passed with account",
 					},
 				},
 			},

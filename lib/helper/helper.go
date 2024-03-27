@@ -117,6 +117,17 @@ func OpenBrowser(url string) error {
 // term access keys. It attempts to use the users configured shell and rc file
 // while overriding the prompt to indicate the authed AWS account.
 func CreateSubShell(accountNumber string, accountAlias string, carName string, stak kion.STAK) error {
+	// check if we know the account name
+	var accountMeta string
+	var accountMetaSentence string
+	if accountAlias == "" {
+		accountMeta = accountNumber
+		accountMetaSentence = accountNumber
+	} else {
+		accountMeta = fmt.Sprintf("%v|%v", accountAlias, accountNumber)
+		accountMetaSentence = fmt.Sprintf("%v (%v)", accountAlias, accountNumber)
+	}
+
 	// get users shell information
 	usrShellPath := os.Getenv("SHELL")
 	usrShellName := filepath.Base(usrShellPath)
@@ -134,16 +145,16 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(f, `source $HOME/.zshrc; autoload -U colors && colors; export PS1="%%F{green}[%v|%v]%%b%%f $PS1"`, accountAlias, accountNumber)
+		fmt.Fprintf(f, `source $HOME/.zshrc; autoload -U colors && colors; export PS1="%%F{green}[%v]%%b%%f $PS1"`, accountMeta)
 		err = f.Sync()
 		if err != nil {
 			return err
 		}
 		cmd = fmt.Sprintf(`ZDOTDIR=%v zsh`, zdotdir)
 	case "bash":
-		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
+		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountMeta)
 	default:
-		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v|%v] > '")`, accountAlias, accountNumber)
+		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountMeta)
 	}
 
 	// init shell
@@ -164,9 +175,9 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 	shell.Stderr = os.Stderr
 
 	// run the shell
-	color.Green("Starting session for %v (%v)", accountAlias, accountNumber)
+	color.Green("Starting session for %v", accountMetaSentence)
 	err := shell.Run()
-	color.Green("Shutting down session for %v (%v)", accountAlias, accountNumber)
+	color.Green("Shutting down session for %v", accountMetaSentence)
 
 	return err
 }
@@ -341,23 +352,50 @@ func PromptPassword(message string) (string, error) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // CARSelector is a wizard that walks a user through the selection of a
-// Project, then associated Accounts, then available Cloud Access Roles,
-// returning the user selected Cloud Access Role.
-func CARSelector(cCtx *cli.Context) (kion.CAR, error) {
+// Project, then associated Accounts, then available Cloud Access Roles, to set
+// the user selected Cloud Access Role. Optional account number and or car name
+// can be passed via an existing car struct, the flow will dynamically ask what
+// is needed to be able to find the full car.
+func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
+	// if we have what we need go look stuff up without prompts do it
+	if car.AccountNumber != "" && car.Name != "" {
+		// lookup the car details and populate the passed car
+		foundcar, err := kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), car.Name, car.AccountNumber)
+		if err != nil {
+			return err
+		}
+		car.AccountID = foundcar.AccountID
+		car.AwsIamRoleName = foundcar.AwsIamRoleName
+		car.ID = foundcar.ID
+		car.CloudAccessRoleType = foundcar.CloudAccessRoleType
+
+		// attempt to get account metadata
+		acc, statusCode, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), car.AccountNumber)
+		if err != nil {
+			if statusCode == 403 {
+				return nil
+			}
+			return err
+		}
+		car.AccountName = acc.Name
+		car.AccountTypeID = acc.TypeID
+		return nil
+	}
+
 	// get list of projects, then build list of names and lookup map
 	projects, err := kion.GetProjects(cCtx.String("endpoint"), cCtx.String("token"))
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 	pNames, pMap := MapProjects(projects)
 	if len(pNames) == 0 {
-		return kion.CAR{}, fmt.Errorf("no projects found")
+		return fmt.Errorf("no projects found")
 	}
 
 	// prompt user to select a project
 	project, err := PromptSelect("Choose a project:", pNames)
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 
 	// get list of accounts on project, then build a list of names and lookup map
@@ -365,55 +403,60 @@ func CARSelector(cCtx *cli.Context) (kion.CAR, error) {
 	if err != nil {
 		if statusCode == 403 {
 			// if we're getting a 403 work around permissions bug by temp using private api
-			return carSelectorPrivateAPI(cCtx, pMap, project)
+			return carSelectorPrivateAPI(cCtx, pMap, project, car)
 		} else {
-			return kion.CAR{}, err
+			return err
 		}
 	}
 	aNames, aMap := MapAccounts(accounts)
 	if len(aNames) == 0 {
-		return kion.CAR{}, fmt.Errorf("no accounts found")
+		return fmt.Errorf("no accounts found")
 	}
 
 	// prompt user to select an account
 	account, err := PromptSelect("Choose an Account:", aNames)
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 
 	// get a list of cloud access roles, then build a list of names and lookup map
 	cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 	cNames, cMap := MapCAR(cars)
 	if len(cNames) == 0 {
-		return kion.CAR{}, fmt.Errorf("no cloud access roles found")
+		return fmt.Errorf("no cloud access roles found")
 	}
 
 	// prompt user to select a car
-	car, err := PromptSelect("Choose a Cloud Access Role:", cNames)
+	carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 
-	// inject the account name into the car struct (not returned via api)
-	carObj := cMap[car]
-	carObj.AccountName = account
-	carObj.AccountTypeID = aMap[account].TypeID
+	// inject the metaata into the car
+	car.Name = carname
+	car.AccountName = account
+	car.AccountNumber = aMap[account].Number
+	car.AccountTypeID = aMap[account].TypeID
+	car.AccountID = aMap[account].ID
+	car.AwsIamRoleName = cMap[carname].AwsIamRoleName
+	car.ID = cMap[carname].ID
+	car.CloudAccessRoleType = cMap[carname].CloudAccessRoleType
 
-	// return the selected car
-	return carObj, nil
+	// return nil
+	return nil
 }
 
 // carSelectorPrivateAPI is a temp shim workaround to address a public api
 // permissions issue. CARSelector should be called directly which will the
 // forward to this function if needed.
-func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, project string) (kion.CAR, error) {
+func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, project string, car *kion.CAR) error {
 	// hit private api endpoint to gather all users cars and their associated accounts
 	caCARs, err := kion.GetConsoleAccessCARS(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 
 	// build a consolidated list of accounts from all available CARS and slice of cars per account
@@ -439,30 +482,30 @@ func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, proj
 	// build a list of names and lookup map
 	aNames, aMap := MapAccounts(accounts)
 	if len(aNames) == 0 {
-		return kion.CAR{}, fmt.Errorf("no accounts found")
+		return fmt.Errorf("no accounts found")
 	}
 
 	// prompt user to select an account
 	account, err := PromptSelect("Choose an Account:", aNames)
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 
 	// prompt user to select car
-	car, err := PromptSelect("Choose a Cloud Access Role:", aToCMap[account])
+	carname, err := PromptSelect("Choose a Cloud Access Role:", aToCMap[account])
 	if err != nil {
-		return kion.CAR{}, err
+		return err
 	}
 
 	// build enough of a car and return it
-	return kion.CAR{
-		Name:                car,
-		AccountName:         account,
-		AccountNumber:       aMap[account].Number,
-		AccountID:           aMap[account].ID,
-		AwsIamRoleName:      cMap[car].AwsIamRoleName,
-		AccountTypeID:       aMap[account].TypeID,
-		ID:                  cMap[car].CARID,
-		CloudAccessRoleType: cMap[car].CARRoleType,
-	}, nil
+	car.Name = carname
+	car.AccountName = account
+	car.AccountNumber = aMap[account].Number
+	car.AccountID = aMap[account].ID
+	car.AwsIamRoleName = cMap[carname].AwsIamRoleName
+	car.AccountTypeID = aMap[account].TypeID
+	car.ID = cMap[carname].CARID
+	car.CloudAccessRoleType = cMap[carname].CARRoleType
+
+	return nil
 }

@@ -126,6 +126,21 @@ __Global Options:__
 --version, -v                      Print the Kion CLI version.
 ```
 
+__STAK Options:__
+
+```text
+--print, -p                             Print STAK only. (default: false)
+
+--account value, --acc value, -a value  Target account number, used to bypass prompts,
+                                        must be passed with --car.
+
+--car value, -c value                   Target cloud access role, used to bypass
+                                        prompts, must be passed with --account.
+
+--help, -h                              Print usage text.
+
+```
+
 __Environment:__
 
 Environment variables can be set to enable other modalities of Kion CLI usage.
