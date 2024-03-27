@@ -428,11 +428,15 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		return err
 	}
 
-	// inject the account name into the car struct (not returned via api)
-	selectedCar := cMap[carname]
-	car = &selectedCar
+	// inject the metaata into the car
+	car.Name = carname
 	car.AccountName = account
+	car.AccountNumber = aMap[account].Number
 	car.AccountTypeID = aMap[account].TypeID
+	car.AccountID = aMap[account].ID
+	car.AwsIamRoleName = cMap[carname].AwsIamRoleName
+	car.ID = cMap[carname].ID
+	car.CloudAccessRoleType = cMap[carname].CloudAccessRoleType
 
 	// return nil
 	return nil
