@@ -277,7 +277,7 @@ func beforeCommands(cCtx *cli.Context) error {
 	v3mecarC3, _ := version.NewConstraint(">=3.8.9, < 3.9.0")
 	v3mecarC4, _ := version.NewConstraint(">=3.9.0")
 
-	// check constriants and set bool in context
+	// check constraints and set bool in metadata
 	if v3mecarC1.Check(curVer) ||
 		v3mecarC2.Check(curVer) ||
 		v3mecarC3.Check(curVer) ||
