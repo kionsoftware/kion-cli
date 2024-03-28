@@ -14,6 +14,7 @@ require (
 require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
