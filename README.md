@@ -13,6 +13,10 @@ Setup
     ```bash
     go build -o kion
     ln -s $(pwd)/kion /usr/local/bin/
+
+    # or
+
+    make install
     ```
 
 2. (optional) For ZSH completion place this file as `_kion` in your ZSH autocomplete path:
@@ -275,3 +279,10 @@ redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/quicksta
 6. Save your changes
 
 </details>
+
+Contributing
+------------
+
+1. Ensure you have golang installed and configured.
+2. Clone the repository and initialize with `make init`. This will setup the necessary git hooks and other needed tools.
+3. Create and populate your `~/.kion.yml` configuration file. See the example at the top of this document.
