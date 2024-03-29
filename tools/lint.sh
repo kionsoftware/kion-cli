@@ -23,19 +23,16 @@ fi
 
 # check local go version matches what we are running in the pipe, warn if not
 LOCAL_GO_VERSION=$(go version | { read -r _ _ v _; echo "${v#go}"; })
-TARGET_GO_VERSION="1.21.6"
+TARGET_GO_VERSION=$(awk '/go-version:/{gsub(/\047/, ""); print $2}' < .github/workflows/golangci-lint.yml)
 if [ "$LOCAL_GO_VERSION" != "$TARGET_GO_VERSION" ]; then
   echo
   echo "${YELLOW}You are running ${BOLD}Go ${LOCAL_GO_VERSION}${NORM}${YELLOW} locally but the pipeline is on ${BOLD}Go ${TARGET_GO_VERSION}${NORM}${YELLOW}.${NORM}"
   echo "${YELLOW}This can cause inconsistent findings between the pipe and this local${NORM}"
   echo "${YELLOW}run. ${UNDER}Please install Go ${TARGET_GO_VERSION} locally.${NORM}"
-  echo
 fi
 
 # grab the expected golangci-lint version
-GOLANG_CI_LINT_VERSION="v1.55.2"
-# GOLANG_CI_LINT_VERSION=$(awk '/GOLANG_CI_LINT_VERSION:/{print $2}' < .gitlab-ci.yml)
-echo "${YELLOW}Expecting golangci-lint version:  ${BOLD}${BLUE}${GOLANG_CI_LINT_VERSION}${NORM}"
+GOLANG_CI_LINT_VERSION=$(awk '/ version:/{gsub(/\047/, ""); print $2}' < .github/workflows/golangci-lint.yml)
 
 # find install path
 if [ -f "tools/golangci-lint" ]; then
