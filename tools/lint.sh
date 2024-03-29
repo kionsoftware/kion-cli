@@ -49,20 +49,22 @@ if [ "${LINTER_PATH}" == "none" ]; then
 else
   LOCAL_GOLANGCI_LINT_VER=$($LINTER_PATH --version 2> /dev/null | awk '{print "v"$4}')
 fi
-echo "${YELLOW}Found golangci-lint version:      ${BOLD}${BLUE}${LOCAL_GOLANGCI_LINT_VER}${NORM}"
-echo
 
 if [ "$LOCAL_GOLANGCI_LINT_VER" != "$GOLANG_CI_LINT_VERSION" ]; then
+  echo
+  echo "${YELLOW}Found golangci-lint version:      ${BOLD}${BLUE}${LOCAL_GOLANGCI_LINT_VER}${NORM}"
+  echo "${YELLOW}Expecting golangci-lint version:  ${BOLD}${BLUE}${GOLANG_CI_LINT_VERSION}${NORM}"
+  echo
   echo "${YELLOW}Installing the expected version of golangci-lint in $(pwd)/tools${NORM}"
   echo
   wget -O /tmp/golangci-lint_install.sh https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh &> /dev/null
   bash /tmp/golangci-lint_install.sh -b tools "$GOLANG_CI_LINT_VERSION"
   LINTER_PATH="tools/golangci-lint"
-  echo
 fi
 
 # run the linter
-echo "${YELLOW}Linting...${NORM}"
+echo
+echo "${BLUE}Linting...${NORM}"
 echo
 ${LINTER_PATH} run --issues-exit-code 1
 
