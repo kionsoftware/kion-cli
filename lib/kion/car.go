@@ -23,8 +23,8 @@ type CAR struct {
 	AccountID           uint   `json:"account_id"`
 	AccountNumber       string `json:"account_number"`
 	AccountType         string `json:"account_type"`
-	AccountTypeID       uint
-	AccountName         string
+	AccountTypeID       uint   `json:"account_type_id"`
+	AccountName         string `json:"account_name"`
 	ApplyToAllAccounts  bool   `json:"apply_to_all_accounts"`
 	AwsIamPath          string `json:"aws_iam_path"`
 	AwsIamRoleName      string `json:"aws_iam_role_name"`
