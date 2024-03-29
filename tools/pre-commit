@@ -65,5 +65,3 @@ if [[ $? != 0 ]]; then
 fi
 
 echo
-
-echo $TERM
