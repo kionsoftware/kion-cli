@@ -10,12 +10,12 @@
 
 # color helpers
 if [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
-  export BOLD="$(tput -Txterm-256color bold)"
-  export UNDER="$(tput -Txterm-256color smul)"
-  export GREEN="$(tput -Txterm-256color setaf 2)"
-  export YELLOW="$(tput -Txterm-256color setaf 3)"
-  export BLUE="$(tput -Txterm-256color setaf 4)"
-  export NORM="$(tput -Txterm-256color sgr0)"
+  BOLD="$(tput -Txterm-256color bold)"
+  UNDER="$(tput -Txterm-256color smul)"
+  GREEN="$(tput -Txterm-256color setaf 2)"
+  YELLOW="$(tput -Txterm-256color setaf 3)"
+  BLUE="$(tput -Txterm-256color setaf 4)"
+  NORM="$(tput -Txterm-256color sgr0)"
 fi
 
 # create the tools dir if it does not exist
