@@ -11,7 +11,7 @@ type ConsoleAccessCARResponse struct {
 	ConsoleAccessCARs []ConsoleAccessCAR `json:"data"`
 }
 
-// Account maps to the Kion API response for account data.
+// ConsoleAccessCAR maps to the Kion API response for CAR data.
 type ConsoleAccessCAR struct {
 	CARName        string    `json:"name"`
 	CARID          uint      `json:"id"`
@@ -23,6 +23,9 @@ type ConsoleAccessCAR struct {
 	AwsIamRoleName string    `json:"aws_iam_role_name"`
 }
 
+// GetConsoleAccessCARS hits the private API endpoint to gather all cloud
+// access roles a user has access to. This method should only be used as a
+// fallback.
 func GetConsoleAccessCARS(host string, token string, projID uint) ([]ConsoleAccessCAR, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v1/project/%v/console-access", host, projID)

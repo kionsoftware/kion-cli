@@ -22,7 +22,7 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//  Config                                                                    //
+//  Configuration                                                             //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,7 @@ func LoadConfig(filename string, config *structs.Configuration) error {
 	return yaml.Unmarshal(bytes, &config)
 }
 
-// saveConfig saves the etirety of the current config to the users config file.
+// SaveConfig saves the entirety of the current config to the users config file.
 func SaveConfig(filename string, config structs.Configuration) error {
 	// marshal to yaml
 	bytes, err := yaml.Marshal(config)
@@ -113,7 +113,7 @@ func OpenBrowser(url string) error {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// CreateSubShell creates a subshell containing set variables for AWS short
+// CreateSubShell creates a sub-shell containing set variables for AWS short
 // term access keys. It attempts to use the users configured shell and rc file
 // while overriding the prompt to indicate the authed AWS account.
 func CreateSubShell(accountNumber string, accountAlias string, carName string, stak kion.STAK) error {
@@ -183,12 +183,12 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 }
 
 // RunCommand executes a one time command with AWS credentials set within the
-// environment. Command output is sent dirctly to stdout / stderr.
+// environment. Command output is sent directly to stdout / stderr.
 func RunCommand(accountNumber string, accountAlias string, carName string, stak kion.STAK, cmd string, args ...string) error {
 	// stub out an empty command stack
 	newCmd := make([]string, 0)
 
-	// if we can't find a binary, assume it's a shell alias and prep a subshell call, otherwise use the binary path
+	// if we can't find a binary, assume it's a shell alias and prep a sub-shell call, otherwise use the binary path
 	binary, err := exec.LookPath(cmd)
 	if len(binary) < 1 || err != nil {
 		sh := os.Getenv("SHELL")
@@ -221,7 +221,7 @@ func RunCommand(accountNumber string, accountAlias string, carName string, stak 
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// MapProjects transofrms a slice of Projects into a slice of their names and a
+// MapProjects transforms a slice of Projects into a slice of their names and a
 // map indexed by their names.
 func MapProjects(projects []kion.Project) ([]string, map[string]kion.Project) {
 	var pNames []string
@@ -235,7 +235,7 @@ func MapProjects(projects []kion.Project) ([]string, map[string]kion.Project) {
 	return pNames, pMap
 }
 
-// MapAccounts transofrms a slice of Accounts into a slice of their names and a
+// MapAccounts transforms a slice of Accounts into a slice of their names and a
 // map indexed by their names.
 func MapAccounts(accounts []kion.Account) ([]string, map[string]kion.Account) {
 	var aNames []string
@@ -249,7 +249,7 @@ func MapAccounts(accounts []kion.Account) ([]string, map[string]kion.Account) {
 	return aNames, aMap
 }
 
-// MapCAR transofrms a slice of CARs into a slice of their names and a map
+// MapCAR transforms a slice of CARs into a slice of their names and a map
 // indexed by their names.
 func MapCAR(cars []kion.CAR) ([]string, map[string]kion.CAR) {
 	var cNames []string
@@ -263,8 +263,8 @@ func MapCAR(cars []kion.CAR) ([]string, map[string]kion.CAR) {
 	return cNames, cMap
 }
 
-// MapIDMSs transofrms a slice of IDMSs into a slice of their names and a map
-// indexd by their names.
+// MapIDMSs transforms a slice of IDMSs into a slice of their names and a map
+// indexed by their names.
 func MapIDMSs(idmss []kion.IDMS) ([]string, map[string]kion.IDMS) {
 	var iNames []string
 	iMap := make(map[string]kion.IDMS)
@@ -277,8 +277,8 @@ func MapIDMSs(idmss []kion.IDMS) ([]string, map[string]kion.IDMS) {
 	return iNames, iMap
 }
 
-// MapFavs transofrms a slice of Favorites into a slice of their names and a
-// map indexd by their names.
+// MapFavs transforms a slice of Favorites into a slice of their names and a
+// map indexed by their names.
 func MapFavs(favs []structs.Favorite) ([]string, map[string]structs.Favorite) {
 	var fNames []string
 	fMap := make(map[string]structs.Favorite)
@@ -307,13 +307,13 @@ func FindCARByName(cars []kion.CAR, carName string) (*kion.CAR, error) {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// survey icon and color configs
+// surveyFormat sets survey icon and color configs.
 var surveyFormat = survey.WithIcons(func(icons *survey.IconSet) {
 	icons.Question.Text = ""
 	icons.Question.Format = "default+hb"
 })
 
-// PromptSelect promps the user to select from a slice of options. It requires
+// PromptSelect prompts the user to select from a slice of options. It requires
 // that the selection made be one of the options provided.
 func PromptSelect(message string, options []string) (string, error) {
 	selection := ""
@@ -435,7 +435,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		return err
 	}
 
-	// inject the metaata into the car
+	// inject the metadata into the car
 	car.Name = carname
 	car.AccountName = account
 	car.AccountNumber = aMap[account].Number
@@ -449,7 +449,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 	return nil
 }
 
-// carSelectorPrivateAPI is a temp shim workaround to address a public api
+// carSelectorPrivateAPI is a temp shim workaround to address a public API
 // permissions issue. CARSelector should be called directly which will the
 // forward to this function if needed.
 func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, project string, car *kion.CAR) error {

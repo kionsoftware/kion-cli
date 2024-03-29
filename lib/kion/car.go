@@ -72,7 +72,7 @@ func GetCARS(host string, token string) ([]CAR, error) {
 	return carResp.CARS, nil
 }
 
-// GetCARSOnProject returns all cloud access roles that match a given project and account
+// GetCARSOnProject returns all cloud access roles that match a given project and account.
 func GetCARSOnProject(host string, token string, projID uint, accID uint) ([]CAR, error) {
 	allCars, err := GetCARS(host, token)
 	if err != nil {
@@ -90,7 +90,7 @@ func GetCARSOnProject(host string, token string, projID uint, accID uint) ([]CAR
 	return cars, nil
 }
 
-// GetCARSOnAccount returns all cloud access roles that match a given account
+// GetCARSOnAccount returns all cloud access roles that match a given account.
 func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 	allCars, err := GetCARS(host, token)
 	if err != nil {
@@ -108,7 +108,11 @@ func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 	return cars, nil
 }
 
-// GetCARByName returns a car that matches a given name
+// GetCARByName returns a car that matches a given name. IMPORTANT: please use
+// GetCARByNameAndAccount instead where possible as there are no constraints
+// against CARs with duplicate names, this function is kept as a convenience
+// and workaround for users on older version of Kion that have limited
+// permissions.
 func GetCARByName(host string, token string, carName string) (CAR, error) {
 	allCars, err := GetCARS(host, token)
 	if err != nil {
@@ -116,6 +120,9 @@ func GetCARByName(host string, token string, carName string) (CAR, error) {
 	}
 
 	// find our match
+	// TODO: build and return a slice of matching CARs, then on all references
+	// should be updated to handle the slice and prompt users for selection or
+	// test all for success silently
 	for _, car := range allCars {
 		if car.Name == carName {
 			return car, nil
@@ -142,7 +149,7 @@ func GetCARByNameAndAccount(host string, token string, carName string, accountNu
 	return CAR{}, fmt.Errorf("unable to find car %v", carName)
 }
 
-// GetAllCARsByName returns a slice of cars that matches a given name
+// GetAllCARsByName returns a slice of cars that matches a given name.
 func GetAllCARsByName(host string, token string, carName string) ([]CAR, error) {
 	allCars, err := GetCARS(host, token)
 	if err != nil {

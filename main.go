@@ -111,7 +111,7 @@ func AuthUNPW(cCtx *cli.Context) error {
 	return cCtx.Set("token", config.Session.Access.Token)
 }
 
-// AuthSAML directs the user to authenticte via SAML in a web browser.
+// AuthSAML directs the user to authenticate via SAML in a web browser.
 // The SAML assertion is posted to this app which is forwarded to Kion and
 // exchanged for the context token.
 func AuthSAML(cCtx *cli.Context) error {
@@ -288,9 +288,10 @@ func beforeCommands(cCtx *cli.Context) error {
 	return nil
 }
 
-// Prompt for authentication and ensure auth token is set
+// authCommand prompts for authentication as needed and ensures an auth token
+// is set.
 func authCommand(cCtx *cli.Context) error {
-	// run propmts for any missing items
+	// run prompts for any missing items
 	err := setEndpoint(cCtx)
 	if err != nil {
 		return err
@@ -305,7 +306,7 @@ func authCommand(cCtx *cli.Context) error {
 
 // genStaks generates short term access keys by walking users through an
 // interactive prompt. Short term access keys are either printed to stdout or a
-// subshell is created with them set in the environment.
+// sub-shell is created with them set in the environment.
 func genStaks(cCtx *cli.Context) error {
 	// handle auth
 	err := authCommand(cCtx)
@@ -331,7 +332,7 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
-	// print or create subshell
+	// print or create sub-shell
 	if cCtx.Bool("print") {
 		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
@@ -392,7 +393,7 @@ func favorites(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		// print or create subshell
+		// print or create sub-shell
 		if cCtx.Bool("print") {
 			return helper.PrintSTAK(os.Stdout, stak)
 		} else {
@@ -401,7 +402,7 @@ func favorites(cCtx *cli.Context) error {
 	}
 }
 
-// fedConsole opens the csp console for the selected account and cloud access
+// fedConsole opens the CSP console for the selected account and cloud access
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
@@ -549,7 +550,7 @@ func afterCommands(cCtx *cli.Context) error {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// main defines the command line utilities api. This should probably be broken
+// main defines the command line utilities API. This should probably be broken
 // out into its own function some day.
 func main() {
 

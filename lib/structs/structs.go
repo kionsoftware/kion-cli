@@ -8,7 +8,7 @@ import "github.com/kionsoftware/kion-cli/lib/kion"
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Configuration holds the cli tool values needed to run. The struct maps to
+// Configuration holds the CLI tool values needed to run. The struct maps to
 // the applications configured dotfile for persistence between sessions.
 type Configuration struct {
 	Kion      Kion         `yaml:"kion"`
@@ -28,7 +28,7 @@ type Kion struct {
 	SamlIssuer       string `yaml:"saml_sp_issuer"`
 }
 
-// Favorite holds information about user defined favorites used to quicly
+// Favorite holds information about user defined favorites used to quickly
 // access desired accounts.
 type Favorite struct {
 	Name       string `yaml:"name"`

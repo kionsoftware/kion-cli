@@ -11,11 +11,14 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+// URLResponse maps to the Kion API response.
 type URLResponse struct {
 	Status int    `json:"status"`
 	URL    string `json:"data"`
 }
 
+// URLRequest maps to the required post body when interfacing with the Kion
+// API.
 type URLRequest struct {
 	AccountID      uint   `json:"account_id"`
 	AccountName    string `json:"account_name"`
