@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"syscall"
@@ -262,6 +263,9 @@ func MapAccountsFromCARS(cars []kion.CAR, pid uint) ([]string, map[string]string
 	for _, car := range cars {
 		if pid == 0 || car.ProjectID == pid {
 			name := fmt.Sprintf("%v (%v)", car.AccountName, car.AccountNumber)
+			if slices.Contains(aNames, name) {
+				continue
+			}
 			aNames = append(aNames, name)
 			aMap[name] = car.AccountNumber
 		}
