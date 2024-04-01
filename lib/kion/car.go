@@ -69,7 +69,14 @@ func GetCARS(host string, token string) ([]CAR, error) {
 		return nil, err
 	}
 
-	return carResp.CARS, nil
+	var cars []CAR
+	for _, car := range carResp.CARS {
+		if car.DeletedAt.Time.IsZero() {
+			cars = append(cars, car)
+		}
+	}
+
+	return cars, nil
 }
 
 // GetCARSOnProject returns all cloud access roles that match a given project and account.
@@ -79,10 +86,10 @@ func GetCARSOnProject(host string, token string, projID uint, accID uint) ([]CAR
 		return nil, err
 	}
 
-	// reduce to cars that match project and account, and are not deleted
+	// reduce to cars that match project and account
 	var cars []CAR
 	for _, car := range allCars {
-		if car.ProjectID == projID && car.AccountID == accID && car.DeletedAt.Time.IsZero() {
+		if car.ProjectID == projID && car.AccountID == accID {
 			cars = append(cars, car)
 		}
 	}
@@ -97,10 +104,10 @@ func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 		return nil, err
 	}
 
-	// reduce to cars that match project and account, and are not deleted
+	// reduce to cars that match project and account
 	var cars []CAR
 	for _, car := range allCars {
-		if car.AccountID == accID && car.DeletedAt.Time.IsZero() {
+		if car.AccountID == accID {
 			cars = append(cars, car)
 		}
 	}
