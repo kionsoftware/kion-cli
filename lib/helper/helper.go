@@ -401,6 +401,9 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 	}
 
 	if cCtx.App.Metadata["useMeCAR"] == true {
+		// TODO: consolidate on this logic when support for 3.9 drops, that will
+		// give us one full support line of buffer
+
 		// get all cars for authed user, works with min permission set
 		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"))
 		if err != nil {
@@ -515,9 +518,11 @@ func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, proj
 	cMap := make(map[string]kion.ConsoleAccessCAR)
 	aToCMap := make(map[string][]string)
 	for _, car := range caCARs {
-		cMap[car.CARName] = car
+		cname := fmt.Sprintf("%v (%v)", car.CARName, car.CARID)
+		cMap[cname] = car
 		for _, account := range car.Accounts {
-			aToCMap[account.Name] = append(aToCMap[account.Name], car.CARName)
+			name := fmt.Sprintf("%v (%v)", account.Name, account.Number)
+			aToCMap[name] = append(aToCMap[account.Name], cname)
 			found := false
 			for _, a := range accounts {
 				if a.ID == account.ID {
@@ -549,8 +554,8 @@ func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, proj
 	}
 
 	// build enough of a car and return it
-	car.Name = carname
-	car.AccountName = account
+	car.Name = cMap[carname].CARName
+	car.AccountName = aMap[account].Name
 	car.AccountNumber = aMap[account].Number
 	car.AccountID = aMap[account].ID
 	car.AwsIamRoleName = cMap[carname].AwsIamRoleName
