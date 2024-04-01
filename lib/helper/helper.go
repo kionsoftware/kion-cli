@@ -227,8 +227,9 @@ func MapProjects(projects []kion.Project) ([]string, map[string]kion.Project) {
 	var pNames []string
 	pMap := make(map[string]kion.Project)
 	for _, project := range projects {
-		pNames = append(pNames, project.Name)
-		pMap[project.Name] = project
+		name := fmt.Sprintf("%v (%v)", project.Name, project.ID)
+		pNames = append(pNames, name)
+		pMap[name] = project
 	}
 	sort.Strings(pNames)
 
@@ -241,8 +242,9 @@ func MapAccounts(accounts []kion.Account) ([]string, map[string]kion.Account) {
 	var aNames []string
 	aMap := make(map[string]kion.Account)
 	for _, account := range accounts {
-		aNames = append(aNames, account.Name)
-		aMap[account.Name] = account
+		name := fmt.Sprintf("%v (%v)", account.Name, account.Number)
+		aNames = append(aNames, name)
+		aMap[name] = account
 	}
 	sort.Strings(aNames)
 
@@ -259,8 +261,9 @@ func MapAccountsFromCARS(cars []kion.CAR, pid uint) ([]string, map[string]string
 	aMap := make(map[string]string)
 	for _, car := range cars {
 		if pid == 0 || car.ProjectID == pid {
-			aNames = append(aNames, car.AccountName)
-			aMap[car.AccountName] = car.AccountNumber
+			name := fmt.Sprintf("%v (%v)", car.AccountName, car.AccountNumber)
+			aNames = append(aNames, name)
+			aMap[name] = car.AccountNumber
 		}
 	}
 	sort.Strings(aNames)
@@ -274,8 +277,9 @@ func MapCAR(cars []kion.CAR) ([]string, map[string]kion.CAR) {
 	var cNames []string
 	cMap := make(map[string]kion.CAR)
 	for _, car := range cars {
-		cNames = append(cNames, car.Name)
-		cMap[car.Name] = car
+		name := fmt.Sprintf("%v (%v)", car.Name, car.ID)
+		cNames = append(cNames, name)
+		cMap[name] = car
 	}
 	sort.Strings(cNames)
 
@@ -428,8 +432,8 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		}
 
 		// inject the metadata into the car
-		car.Name = carname
-		car.AccountName = account
+		car.Name = cMap[carname].Name
+		car.AccountName = cMap[carname].AccountName
 		car.AccountNumber = aMap[account]
 		car.AccountTypeID = cMap[carname].AccountTypeID
 		car.AccountID = cMap[carname].AccountID
@@ -478,8 +482,8 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		}
 
 		// inject the metadata into the car
-		car.Name = carname
-		car.AccountName = account
+		car.Name = cMap[carname].Name
+		car.AccountName = cMap[carname].AccountName
 		car.AccountNumber = aMap[account].Number
 		car.AccountTypeID = aMap[account].TypeID
 		car.AccountID = aMap[account].ID
