@@ -249,6 +249,25 @@ func MapAccounts(accounts []kion.Account) ([]string, map[string]kion.Account) {
 	return aNames, aMap
 }
 
+// MapAccountsFromCARS transforms a slice of CARs into a slice of account names
+// and a map of account numbers indexed by their names. If a project ID is
+// passed it will only return accounts in the given project. Note that some
+// versions of Kion will not populate account metadata in CAR objects so use
+// carefully (see useMeCAR bool).
+func MapAccountsFromCARS(cars []kion.CAR, pid uint) ([]string, map[string]string) {
+	var aNames []string
+	aMap := make(map[string]string)
+	for _, car := range cars {
+		if pid == 0 || car.ProjectID == pid {
+			aNames = append(aNames, car.AccountName)
+			aMap[car.AccountName] = car.AccountNumber
+		}
+	}
+	sort.Strings(aNames)
+
+	return aNames, aMap
+}
+
 // MapCAR transforms a slice of CARs into a slice of their names and a map
 // indexed by their names.
 func MapCAR(cars []kion.CAR) ([]string, map[string]kion.CAR) {
@@ -357,31 +376,6 @@ func PromptPassword(message string) (string, error) {
 // can be passed via an existing car struct, the flow will dynamically ask what
 // is needed to be able to find the full car.
 func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
-	// if we have what we need go look stuff up without prompts do it
-	if car.AccountNumber != "" && car.Name != "" {
-		// lookup the car details and populate the passed car
-		foundcar, err := kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), car.Name, car.AccountNumber)
-		if err != nil {
-			return err
-		}
-		car.AccountID = foundcar.AccountID
-		car.AwsIamRoleName = foundcar.AwsIamRoleName
-		car.ID = foundcar.ID
-		car.CloudAccessRoleType = foundcar.CloudAccessRoleType
-
-		// attempt to get account metadata
-		acc, statusCode, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), car.AccountNumber)
-		if err != nil {
-			if statusCode == 403 {
-				return nil
-			}
-			return err
-		}
-		car.AccountName = acc.Name
-		car.AccountTypeID = acc.TypeID
-		return nil
-	}
-
 	// get list of projects, then build list of names and lookup map
 	projects, err := kion.GetProjects(cCtx.String("endpoint"), cCtx.String("token"))
 	if err != nil {
@@ -398,55 +392,104 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		return err
 	}
 
-	// get list of accounts on project, then build a list of names and lookup map
-	accounts, statusCode, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
-	if err != nil {
-		if statusCode == 403 {
-			// if we're getting a 403 work around permissions bug by temp using private api
-			return carSelectorPrivateAPI(cCtx, pMap, project, car)
-		} else {
+	if cCtx.App.Metadata["useMeCAR"] == true {
+		// get all cars for authed user, works with min permission set
+		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"))
+		if err != nil {
 			return err
 		}
-	}
-	aNames, aMap := MapAccounts(accounts)
-	if len(aNames) == 0 {
-		return fmt.Errorf("no accounts found")
-	}
+		aNames, aMap := MapAccountsFromCARS(cars, pMap[project].ID)
+		if len(aNames) == 0 {
+			return fmt.Errorf("no accounts found")
+		}
 
-	// prompt user to select an account
-	account, err := PromptSelect("Choose an Account:", aNames)
-	if err != nil {
-		return err
-	}
+		// prompt user to select an account
+		account, err := PromptSelect("Choose an Account:", aNames)
+		if err != nil {
+			return err
+		}
 
-	// get a list of cloud access roles, then build a list of names and lookup map
-	cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
-	if err != nil {
-		return err
-	}
-	cNames, cMap := MapCAR(cars)
-	if len(cNames) == 0 {
-		return fmt.Errorf("no cloud access roles found")
-	}
+		// narrow it down to just cars associated with the account
+		var carsFiltered []kion.CAR
+		for _, carObj := range cars {
+			if carObj.AccountNumber == aMap[account] {
+				carsFiltered = append(carsFiltered, carObj)
+			}
+		}
+		cNames, cMap := MapCAR(carsFiltered)
+		if len(cNames) == 0 {
+			return fmt.Errorf("you have no cloud access roles assigned")
+		}
 
-	// prompt user to select a car
-	carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
-	if err != nil {
-		return err
+		// prompt user to select a car
+		carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
+		if err != nil {
+			return err
+		}
+
+		// inject the metadata into the car
+		car.Name = carname
+		car.AccountName = account
+		car.AccountNumber = aMap[account]
+		car.AccountTypeID = cMap[carname].AccountTypeID
+		car.AccountID = cMap[carname].AccountID
+		car.AwsIamRoleName = cMap[carname].AwsIamRoleName
+		car.ID = cMap[carname].ID
+		car.CloudAccessRoleType = cMap[carname].CloudAccessRoleType
+
+		// return nil
+		return nil
+	} else {
+		// get list of accounts on project, then build a list of names and lookup map
+		accounts, statusCode, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
+		if err != nil {
+			if statusCode == 403 {
+				// if we're getting a 403 work around permissions bug by temp using private api
+				return carSelectorPrivateAPI(cCtx, pMap, project, car)
+			} else {
+				return err
+			}
+		}
+		aNames, aMap := MapAccounts(accounts)
+		if len(aNames) == 0 {
+			return fmt.Errorf("no accounts found")
+		}
+
+		// prompt user to select an account
+		account, err := PromptSelect("Choose an Account:", aNames)
+		if err != nil {
+			return err
+		}
+
+		// get a list of cloud access roles, then build a list of names and lookup map
+		cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
+		if err != nil {
+			return err
+		}
+		cNames, cMap := MapCAR(cars)
+		if len(cNames) == 0 {
+			return fmt.Errorf("no cloud access roles found")
+		}
+
+		// prompt user to select a car
+		carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
+		if err != nil {
+			return err
+		}
+
+		// inject the metadata into the car
+		car.Name = carname
+		car.AccountName = account
+		car.AccountNumber = aMap[account].Number
+		car.AccountTypeID = aMap[account].TypeID
+		car.AccountID = aMap[account].ID
+		car.AwsIamRoleName = cMap[carname].AwsIamRoleName
+		car.ID = cMap[carname].ID
+		car.CloudAccessRoleType = cMap[carname].CloudAccessRoleType
+
+		// return nil
+		return nil
 	}
-
-	// inject the metadata into the car
-	car.Name = carname
-	car.AccountName = account
-	car.AccountNumber = aMap[account].Number
-	car.AccountTypeID = aMap[account].TypeID
-	car.AccountID = aMap[account].ID
-	car.AwsIamRoleName = cMap[carname].AwsIamRoleName
-	car.ID = cMap[carname].ID
-	car.CloudAccessRoleType = cMap[carname].CloudAccessRoleType
-
-	// return nil
-	return nil
 }
 
 // carSelectorPrivateAPI is a temp shim workaround to address a public API
