@@ -70,7 +70,7 @@ coverage: test
 
 gif:
 	@printf "${B}${UN}${BLU}Building readme gif:${NRM}\n"
-	cd doc && asciicast2gif -s 1 -t monokai -w 89 -h 29 kion-cli-usage.cast kion-cli-usage.gif
+	cd doc && asciicast2gif -s 1 -t monokai -w 89 -h 30 kion-cli-usage.cast kion-cli-usage.gif
 
 install: build
 	@printf "${B}${UN}${BLU}Installing Kion CLI:${NRM}\n"
