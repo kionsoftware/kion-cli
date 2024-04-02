@@ -51,7 +51,7 @@ type CAR struct {
 }
 
 // GetCARS queries the Kion API for all cloud access roles to which the
-// authenticated user has access.
+// authenticated user has access. Deleted CARs will be excluded.
 func GetCARS(host string, token string) ([]CAR, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/me/cloud-access-role", host)
