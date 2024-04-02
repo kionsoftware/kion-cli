@@ -323,12 +323,12 @@ func genStaks(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-	}
-
-	// run through the car selector to fill any gaps
-	err = helper.CARSelector(cCtx, &car)
-	if err != nil {
-		return err
+	} else {
+		// run through the car selector to fill any gaps
+		err = helper.CARSelector(cCtx, &car)
+		if err != nil {
+			return err
+		}
 	}
 
 	// generate short term tokens
