@@ -139,7 +139,7 @@ func GetCARByName(host string, token string, carName string) (CAR, error) {
 	return CAR{}, fmt.Errorf("unable to find car %v", carName)
 }
 
-// GetCARByNameAndAccount returns a car that matches by name and account number
+// GetCARByNameAndAccount returns a car that matches by name and account number.
 func GetCARByNameAndAccount(host string, token string, carName string, accountNumber string) (CAR, error) {
 	allCars, err := GetCARS(host, token)
 	if err != nil {
