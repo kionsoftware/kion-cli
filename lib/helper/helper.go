@@ -256,7 +256,7 @@ func MapAccounts(accounts []kion.Account) ([]string, map[string]kion.Account) {
 // and a map of account numbers indexed by their names. If a project ID is
 // passed it will only return accounts in the given project. Note that some
 // versions of Kion will not populate account metadata in CAR objects so use
-// carefully (see useMeCAR bool).
+// carefully (see useUpdatedCloudAccessRoleAPI bool).
 func MapAccountsFromCARS(cars []kion.CAR, pid uint) ([]string, map[string]string) {
 	var aNames []string
 	aMap := make(map[string]string)
@@ -400,7 +400,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		return err
 	}
 
-	if cCtx.App.Metadata["useMeCAR"] == true {
+	if cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] == true {
 		// TODO: consolidate on this logic when support for 3.9 drops, that will
 		// give us one full support line of buffer
 

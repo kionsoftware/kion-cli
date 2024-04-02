@@ -282,7 +282,7 @@ func beforeCommands(cCtx *cli.Context) error {
 		v3mecarC2.Check(curVer) ||
 		v3mecarC3.Check(curVer) ||
 		v3mecarC4.Check(curVer) {
-		cCtx.App.Metadata["useMeCAR"] = true
+		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
 	}
 
 	return nil
@@ -609,7 +609,7 @@ func main() {
 		Before:               beforeCommands,
 		After:                afterCommands,
 		Metadata: map[string]interface{}{
-			"useMeCAR": false,
+			"useUpdatedCloudAccessRoleAPI": false,
 		},
 
 		////////////////////
