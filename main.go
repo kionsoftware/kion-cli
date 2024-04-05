@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-version"
 	"github.com/kionsoftware/kion-cli/lib/helper"
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
@@ -110,7 +111,7 @@ func AuthUNPW(cCtx *cli.Context) error {
 	return cCtx.Set("token", config.Session.Access.Token)
 }
 
-// AuthSAML directs the user to authenticte via SAML in a web browser.
+// AuthSAML directs the user to authenticate via SAML in a web browser.
 // The SAML assertion is posted to this app which is forwarded to Kion and
 // exchanged for the context token.
 func AuthSAML(cCtx *cli.Context) error {
@@ -258,14 +259,39 @@ func setAuthToken(cCtx *cli.Context) error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // beforeCommands run after the context is ready but before any subcommands are
-// executed.
+// executed. Currently used to test feature compatibility with targeted Kion.
 func beforeCommands(cCtx *cli.Context) error {
+	// gather the targeted kion version
+	kionVer, err := kion.GetVersion(cCtx.String("endpoint"), cCtx.String("token"))
+	if err != nil {
+		return err
+	}
+	curVer, err := version.NewSemver(kionVer)
+	if err != nil {
+		return err
+	}
+
+	// api/v3/me/cloud-access-role fix constraints
+	v3mecarC1, _ := version.NewConstraint(">=3.6.29, < 3.7.0")
+	v3mecarC2, _ := version.NewConstraint(">=3.7.17, < 3.8.0")
+	v3mecarC3, _ := version.NewConstraint(">=3.8.9, < 3.9.0")
+	v3mecarC4, _ := version.NewConstraint(">=3.9.0")
+
+	// check constraints and set bool in metadata
+	if v3mecarC1.Check(curVer) ||
+		v3mecarC2.Check(curVer) ||
+		v3mecarC3.Check(curVer) ||
+		v3mecarC4.Check(curVer) {
+		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
+	}
+
 	return nil
 }
 
-// Prompt for authentication and ensure auth token is set
+// authCommand prompts for authentication as needed and ensures an auth token
+// is set.
 func authCommand(cCtx *cli.Context) error {
-	// run propmts for any missing items
+	// run prompts for any missing items
 	err := setEndpoint(cCtx)
 	if err != nil {
 		return err
@@ -280,7 +306,7 @@ func authCommand(cCtx *cli.Context) error {
 
 // genStaks generates short term access keys by walking users through an
 // interactive prompt. Short term access keys are either printed to stdout or a
-// subshell is created with them set in the environment.
+// sub-shell is created with them set in the environment.
 func genStaks(cCtx *cli.Context) error {
 	// handle auth
 	err := authCommand(cCtx)
@@ -288,16 +314,21 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
-	// init a car object and populate it with any passed arguments
-	car := &kion.CAR{
-		AccountNumber: cCtx.String("account"),
-		Name:          cCtx.String("car"),
-	}
+	var car kion.CAR
 
-	// run through the car selector to fill any gaps
-	err = helper.CARSelector(cCtx, car)
-	if err != nil {
-		return err
+	// if we have what we need go look stuff up without prompts do it
+	if cCtx.String("account") != "" && cCtx.String("car") != "" {
+		// lookup the car details and populate the passed car
+		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"), cCtx.String("account"))
+		if err != nil {
+			return err
+		}
+	} else {
+		// run through the car selector to fill any gaps
+		err = helper.CARSelector(cCtx, &car)
+		if err != nil {
+			return err
+		}
 	}
 
 	// generate short term tokens
@@ -306,7 +337,7 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
-	// print or create subshell
+	// print or create sub-shell
 	if cCtx.Bool("print") {
 		return helper.PrintSTAK(os.Stdout, stak)
 	} else {
@@ -367,7 +398,7 @@ func favorites(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		// print or create subshell
+		// print or create sub-shell
 		if cCtx.Bool("print") {
 			return helper.PrintSTAK(os.Stdout, stak)
 		} else {
@@ -376,7 +407,7 @@ func favorites(cCtx *cli.Context) error {
 	}
 }
 
-// fedConsole opens the csp console for the selected account and cloud access
+// fedConsole opens the CSP console for the selected account and cloud access
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
@@ -524,7 +555,7 @@ func afterCommands(cCtx *cli.Context) error {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// main defines the command line utilities api. This should probably be broken
+// main defines the command line utilities API. This should probably be broken
 // out into its own function some day.
 func main() {
 
@@ -577,6 +608,9 @@ func main() {
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
 		After:                afterCommands,
+		Metadata: map[string]interface{}{
+			"useUpdatedCloudAccessRoleAPI": false,
+		},
 
 		////////////////////
 		//  Global Flags  //

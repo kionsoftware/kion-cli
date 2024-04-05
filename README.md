@@ -13,6 +13,10 @@ Setup
     ```bash
     go build -o kion
     ln -s $(pwd)/kion /usr/local/bin/
+
+    # or
+
+    make install
     ```
 
 2. (optional) For ZSH completion place this file as `_kion` in your ZSH autocomplete path:
@@ -191,7 +195,7 @@ tool as a supported SAML destination.  This is a supported SAML configuration
 but it is not enabled by default.
 
 1. In the Kion app, identify the ID of the SAML IDMS used to log in.  Navigate
-   to Users -> Identitiy Management Systems -> click on the SAML IDMS you use
+   to Users -> Identity Management Systems -> click on the SAML IDMS you use
    to login to Kion.  Locate the ID in the URL of this page.
 
    For example: `https://mykion.example/portal/idms/##`
@@ -228,7 +232,7 @@ You must add SAML configuration options to your `~/.kion.yml` file under the
     * In the Entra ID UI, this can be found in the SAML application's Endpoints
       section.  Look for the `Federation metadata document`.
 * `saml_sp_issuer` - This is the Entity ID for the Kion SAML IDMS.  This can
-   be found by navigating to the SAML IDMS in Kion (Users -> Identitiy Management
+   be found by navigating to the SAML IDMS in Kion (Users -> Identity Management
    Systems).  Edit the SAML IDMS and copy the `Service Provider Issuer (Entity ID)`
    URL.
 
@@ -275,3 +279,10 @@ redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/quicksta
 6. Save your changes
 
 </details>
+
+Contributing
+------------
+
+1. Ensure you have golang installed and configured.
+2. Clone the repository and initialize with `make init`. This will setup the necessary git hooks and other needed tools.
+3. Create and populate your `~/.kion.yml` configuration file. See the example at the top of this document.

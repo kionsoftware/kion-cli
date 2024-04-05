@@ -62,3 +62,26 @@ func runQuery(method string, url string, token string, query map[string]string, 
 	// return the response
 	return respBody, resp.StatusCode, nil
 }
+
+// getVersion returns the targeted Kion's version number.
+func GetVersion(host string, token string) (string, error) {
+	url := fmt.Sprintf("%v/api/version", host)
+	query := map[string]string{}
+	var data interface{}
+	resp, _, err := runQuery("GET", url, token, query, data)
+	if err != nil {
+		return "", err
+	}
+
+	// unmarshal response body
+	var response struct {
+		Status  int    `json:"status"`
+		Version string `json:"data"`
+	}
+	err = json.Unmarshal(resp, &response)
+	if err != nil {
+		return "", err
+	}
+
+	return response.Version, nil
+}

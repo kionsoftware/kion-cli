@@ -1,10 +1,11 @@
 module github.com/kionsoftware/kion-cli
 
-go 1.21
+go 1.22
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/fatih/color v1.15.0
+	github.com/hashicorp/go-version v1.6.0
 	github.com/russellhaering/gosaml2 v0.9.1
 	github.com/russellhaering/goxmldsig v1.4.0
 	github.com/urfave/cli/v2 v2.25.1

@@ -12,14 +12,15 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // AccountResponse maps to the Kion API response.
-type AccountsResponse struct {
-	Status   int       `json:"status"`
-	Accounts []Account `json:"data"`
-}
-
 type AccountResponse struct {
 	Status  int     `json:"status"`
 	Account Account `json:"data"`
+}
+
+// AccountsResponse maps to the Kion API response.
+type AccountsResponse struct {
+	Status   int       `json:"status"`
+	Accounts []Account `json:"data"`
 }
 
 // Account maps to the Kion API response for account data.
@@ -60,7 +61,7 @@ func GetAccountsOnProject(host string, token string, id uint) ([]Account, int, e
 	return accResp.Accounts, accResp.Status, nil
 }
 
-// GetAccount returns an account by the given account number
+// GetAccount returns an account by the given account number.
 func GetAccount(host string, token string, accountNum string) (*Account, int, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/account/by-account-number/%v", host, accountNum)

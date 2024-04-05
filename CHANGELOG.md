@@ -14,6 +14,8 @@ Notes for upgrading...
 - Print metadata to stdout when federating into web consoles [https://github.com/kionsoftware/kion-cli/pull/20]
 - Add flags to support headless runs [https://github.com/kionsoftware/kion-cli/pull/22]
 - Fallback logic for users with restricted perms when using the `run` cmd [https://github.com/kionsoftware/kion-cli/pull/22]
+- Logic to accommodate users with cloud access only permissions [https://github.com/kionsoftware/kion-cli/pull/24]
+- STAK selection wizard now includes project and car IDs and account numbers [https://github.com/kionsoftware/kion-cli/pull/24]
 
 ### Changed
 

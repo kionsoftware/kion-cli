@@ -56,7 +56,7 @@ type AuthResponse struct {
 	Session Session `json:"data"`
 }
 
-// GetIDMSs queries the kion API for all configured IDMS systems with which a
+// GetIDMSs queries the Kion API for all configured IDMS systems with which a
 // user can authenticate via username and password.
 func GetIDMSs(host string) ([]IDMS, error) {
 	// build our query and get response

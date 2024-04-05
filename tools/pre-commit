@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+# Kion CLI pre-commit hook.
+#
+# Run various checks and cleanups before committing.
+#
+# Author(s): Cody Buell
+#
+# Requisite:
+#
+# Usage: Intended to be placed in [proj dir]/.git/hooks and called via git
+
+if [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
+  BOLD="$(tput bold)"
+  # UNDER="$(tput smul)"
+  # NOUNDER="$(tput rmul)"
+  # DIM="$(tput dim)"
+
+  # BLACK="$(tput setaf 0)"
+  RED="$(tput setaf 1)"
+  # GREEN="$(tput setaf 2)"
+  YELLOW="$(tput setaf 3)"
+  # BLUE="$(tput setaf 4)"
+  # MAGENTA="$(tput setaf 5)"
+  # CYAN="$(tput setaf 6)"
+  # WHITE="$(tput setaf 7)"
+
+  NORM="$(tput sgr0)"
+fi
+
+# determine md5 binary name
+if which md5 &> /dev/null; then
+  MD5='md5 -q'
+else
+  MD5='md5sum'
+fi
+
+# check for a newer version of the pre-commit hook
+MD5HOOK=$(${MD5} ".git/hooks/pre-commit" | awk '{print $1}')
+MD5REPO=$(${MD5} "tools/pre-commit" | awk '{print $1}')
+if [[ "${MD5HOOK}" != "${MD5REPO}" ]]; then
+  make init
+  echo
+  echo "${BOLD}${YELLOW}The pre-commit git hook was out of date and has been updated.${NORM}"
+  echo "${BOLD}${YELLOW}Please re-run your last git commit.${NORM}"
+  exit 1
+fi
+
+# lint
+if ! make lint; then
+  echo
+  echo "${BOLD}${RED}The above linting errors were found, please correct before committing.${NORM}"
+  exit 1
+fi
+
+# test
+make test
+if ! make test; then
+  echo
+  echo "${BOLD}${RED}The above testing errors were found, please correct before committing.${NORM}"
+  exit 1
+fi
+
+echo

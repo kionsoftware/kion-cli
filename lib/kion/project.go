@@ -2,6 +2,7 @@ package kion
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -12,6 +13,12 @@ import (
 
 // ProjectResponse maps to the Kion API response.
 type ProjectResponse struct {
+	Status  int     `json:"status"`
+	Project Project `json:"data"`
+}
+
+// ProjectsResponse maps to the Kion API response.
+type ProjectsResponse struct {
 	Status   int       `json:"status"`
 	Projects []Project `json:"data"`
 }
@@ -39,11 +46,35 @@ func GetProjects(host string, token string) ([]Project, error) {
 	}
 
 	// unmarshal response body
-	projResp := ProjectResponse{}
+	projResp := ProjectsResponse{}
 	err = json.Unmarshal(resp, &projResp)
 	if err != nil {
 		return nil, err
 	}
 
 	return projResp.Projects, nil
+}
+
+// GetProjectByID returns the project for a given project ID. Note that if a
+// user has car access only to a project this will return a 403. To accommodate
+// users with minimal permissions test response codes and fallback accordingly
+// or use GetProjects which will work but be more verbose.
+func GetProjectByID(host string, token string, id uint) (Project, error) {
+	// build our query and get response
+	url := fmt.Sprintf("%v/api/v3/project/%v", host, id)
+	query := map[string]string{}
+	var data interface{}
+	resp, _, err := runQuery("GET", url, token, query, data)
+	if err != nil {
+		return Project{}, err
+	}
+
+	// unmarshal response body
+	projResp := ProjectResponse{}
+	err = json.Unmarshal(resp, &projResp)
+	if err != nil {
+		return Project{}, err
+	}
+
+	return projResp.Project, nil
 }
