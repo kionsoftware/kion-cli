@@ -137,15 +137,15 @@ func redirectServer(url string, typeID uint) {
             const logout_iframe = document.createElement('iframe');
             logout_iframe.height = '0';
             logout_iframe.width = '0';
-            if (accountTypeID == '0') {
-                // govcloud
-                logout_iframe.src = 'https://signin.amazonaws-us-gov.com/oauth?Action=logout';
-            } else if (accountTypeID == '1') {
+            if (accountTypeID == '1') {
                 // commercial
                 logout_iframe.src = 'https://signin.aws.amazon.com/oauth?Action=logout';
             } else if (accountTypeID == '2') {
+                // govcloud
+                logout_iframe.src = 'https://signin.amazonaws-us-gov.com/oauth?Action=logout';
+            } else if (accountTypeID == '4') {
                 logout_iframe.src = 'http://signin.c2shome.ic.gov/oauth?Action=logout';
-            } else if (accountTypeID == '3') {
+            } else if (accountTypeID == '5') {
                 logout_iframe.src = 'http://signin.sc2shome.sgov.gov/oauth?Action=logout';
             }
             logout_iframe.onload = () => {
