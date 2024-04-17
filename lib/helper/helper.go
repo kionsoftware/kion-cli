@@ -122,7 +122,7 @@ func redirectServer(url string, typeID uint) {
         </style>
         <script>
           function callbackClose() {
-            fetch('http://localhost:65432/done')
+            fetch('http://localhost:56092/done')
               .then(data => {
                 console.log(data);
               })
@@ -184,7 +184,7 @@ func OpenBrowser(url string, typeID uint) error {
 	go redirectServer(url, typeID)
 
 	// define our open url
-	serverURL := "http://localhost:65432/"
+	serverURL := "http://localhost:56092/"
 
 	switch runtime.GOOS {
 	case "linux":
