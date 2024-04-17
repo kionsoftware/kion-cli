@@ -35,4 +35,5 @@ type Favorite struct {
 	Account    string `yaml:"account"`
 	CAR        string `yaml:"cloud_access_role"`
 	AccessType string `yaml:"access_type"`
+	Region     string `yaml:"region"`
 }
