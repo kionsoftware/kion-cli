@@ -83,7 +83,10 @@ func SaveSession(filename string, config structs.Configuration) error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // PrintSTAK prints out the short term access keys for AWS auth.
-func PrintSTAK(w io.Writer, stak kion.STAK) error {
+func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
+	if region != "" {
+		fmt.Fprintf(w, "export AWS_REGION=%v\n", region)
+	}
 	fmt.Fprintf(w, "export AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
 	return nil
 }
@@ -212,7 +215,7 @@ func OpenBrowser(url string, typeID uint) error {
 // CreateSubShell creates a sub-shell containing set variables for AWS short
 // term access keys. It attempts to use the users configured shell and rc file
 // while overriding the prompt to indicate the authed AWS account.
-func CreateSubShell(accountNumber string, accountAlias string, carName string, stak kion.STAK) error {
+func CreateSubShell(accountNumber string, accountAlias string, carName string, stak kion.STAK, region string) error {
 	// check if we know the account name
 	var accountMeta string
 	var accountMetaSentence string
@@ -265,6 +268,11 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 	shell.Env = append(shell.Env, fmt.Sprintf("KION_ACCOUNT_ALIAS=%s", accountAlias))
 	shell.Env = append(shell.Env, fmt.Sprintf("KION_CAR=%s", carName))
 
+	// set region if one was passed
+	if region != "" {
+		shell.Env = append(shell.Env, fmt.Sprintf("AWS_REGION=%s", region))
+	}
+
 	// configure file handlers
 	shell.Stdin = os.Stdin
 	shell.Stdout = os.Stdout
@@ -280,7 +288,7 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 
 // RunCommand executes a one time command with AWS credentials set within the
 // environment. Command output is sent directly to stdout / stderr.
-func RunCommand(accountNumber string, accountAlias string, carName string, stak kion.STAK, cmd string, args ...string) error {
+func RunCommand(accountNumber string, accountAlias string, carName string, stak kion.STAK, region string, cmd string, args ...string) error {
 	// stub out an empty command stack
 	newCmd := make([]string, 0)
 
@@ -303,6 +311,11 @@ func RunCommand(accountNumber string, accountAlias string, carName string, stak 
 	env = append(env, fmt.Sprintf("KION_ACCOUNT_NUM=%s", accountNumber))
 	env = append(env, fmt.Sprintf("KION_ACCOUNT_ALIAS=%s", accountAlias))
 	env = append(env, fmt.Sprintf("KION_CAR=%s", carName))
+
+	// set region if one was passed
+	if region != "" {
+		env = append(env, fmt.Sprintf("AWS_REGION=%s", region))
+	}
 
 	// moosh it all together
 	newCmd = append(newCmd, args...)

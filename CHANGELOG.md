@@ -17,6 +17,7 @@ Notes for upgrading...
 - Logic to accommodate users with cloud access only permissions [https://github.com/kionsoftware/kion-cli/pull/24]
 - STAK selection wizard now includes project and car IDs and account numbers [https://github.com/kionsoftware/kion-cli/pull/24]
 - Automate AWS logout before federating into the AWS console [https://github.com/kionsoftware/kion-cli/pull/25]
+- Support defining region on favorites or via flag [https://github.com/kionsoftware/kion-cli/pull/26]
 
 ### Changed
 
