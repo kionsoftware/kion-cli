@@ -100,8 +100,11 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 // redirectServer runs a temp go http server to handle logging out any existing
 // AWS sessions then redirecting to the federated console login.
 func redirectServer(url string, typeID uint) {
+	// stub out a new mux
+	mux := http.NewServeMux()
+
 	// handles logout from aws and redirection to login
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		redirPage := `
     <!DOCTYPE html>
     <html lang="en">
@@ -170,13 +173,19 @@ func redirectServer(url string, typeID uint) {
 	})
 
 	// handles callback from client when login is complete
-	http.HandleFunc("/done", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/done", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "ok")
 		os.Exit(0)
 	})
 
+	// define our server
+	server := http.Server{
+		Addr:    ":56092",
+		Handler: mux,
+	}
+
 	// start our server
-	log.Fatal(http.ListenAndServe(":56092", nil))
+	log.Fatal(server.ListenAndServe())
 }
 
 // OpenBrowser opens up a URL in the users system default browser.
