@@ -339,9 +339,9 @@ func genStaks(cCtx *cli.Context) error {
 
 	// print or create sub-shell
 	if cCtx.Bool("print") {
-		return helper.PrintSTAK(os.Stdout, stak)
+		return helper.PrintSTAK(os.Stdout, stak, cCtx.String("region"))
 	} else {
-		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak)
+		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak, cCtx.String("region"))
 	}
 }
 
@@ -400,9 +400,9 @@ func favorites(cCtx *cli.Context) error {
 		}
 		// print or create sub-shell
 		if cCtx.Bool("print") {
-			return helper.PrintSTAK(os.Stdout, stak)
+			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)
 		} else {
-			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak)
+			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak, favorite.Region)
 		}
 	}
 }
@@ -444,7 +444,11 @@ func listFavorites(cCtx *cli.Context) error {
 			if accessType == "" {
 				accessType = "cli (Default)"
 			}
-			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n", f.Name, f.Account, f.CAR, accessType)
+			region := f.Region
+			if region == "" {
+				region = "[unset]"
+			}
+			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n   region: %v\n", f.Name, f.Account, f.CAR, accessType, region)
 		}
 	} else {
 		for _, f := range fNames {
@@ -457,7 +461,7 @@ func listFavorites(cCtx *cli.Context) error {
 // runCommand generates creds for an AWS account then executes the user
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
-	if cCtx.String("fav") != "" {
+	if cCtx.String("favorite") != "" {
 		// map our favorites for ease of use
 		_, fMap := helper.MapFavs(config.Favorites)
 
@@ -483,7 +487,13 @@ func runCommand(cCtx *cli.Context) error {
 			return err
 		}
 
-		err = helper.RunCommand(favorite.Account, favorite.Name, favorite.CAR, stak, cCtx.Args().First(), cCtx.Args().Tail()...)
+		// take the region flag over the favorite region
+		targetRegion := cCtx.String("region")
+		if targetRegion == "" {
+			targetRegion = favorite.Region
+		}
+
+		err = helper.RunCommand(favorite.Account, favorite.Name, favorite.CAR, stak, targetRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
 		if err != nil {
 			return err
 		}
@@ -508,7 +518,7 @@ func runCommand(cCtx *cli.Context) error {
 					return err
 				}
 
-				err = helper.RunCommand(cCtx.String("account"), car.AccountName, car.Name, stak, cCtx.Args().First(), cCtx.Args().Tail()...)
+				err = helper.RunCommand(cCtx.String("account"), car.AccountName, car.Name, stak, cCtx.String("region"), cCtx.Args().First(), cCtx.Args().Tail()...)
 				if err != nil {
 					return err
 				}
@@ -533,7 +543,7 @@ func runCommand(cCtx *cli.Context) error {
 			return err
 		}
 
-		err = helper.RunCommand(account.Number, account.Name, car.Name, stak, cCtx.Args().First(), cCtx.Args().Tail()...)
+		err = helper.RunCommand(account.Number, account.Name, car.Name, stak, cCtx.String("region"), cCtx.Args().First(), cCtx.Args().Tail()...)
 		if err != nil {
 			return err
 		}
@@ -701,6 +711,11 @@ func main() {
 						Aliases: []string{"c"},
 						Usage:   "target cloud access role, must be passed with account",
 					},
+					&cli.StringFlag{
+						Name:    "region",
+						Aliases: []string{"r"},
+						Usage:   "target region",
+					},
 				},
 			},
 			{
@@ -755,16 +770,24 @@ func main() {
 				Action:    runCommand,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "fav",
-						Usage: "favorite name",
+						Name:    "favorite",
+						Aliases: []string{"fav", "f"},
+						Usage:   "favorite name",
 					},
 					&cli.StringFlag{
-						Name:  "account",
-						Usage: "account number",
+						Name:    "account",
+						Aliases: []string{"acc", "a"},
+						Usage:   "account number",
 					},
 					&cli.StringFlag{
-						Name:  "car",
-						Usage: "CAR name",
+						Name:    "car",
+						Aliases: []string{"c"},
+						Usage:   "CAR name",
+					},
+					&cli.StringFlag{
+						Name:    "region",
+						Aliases: []string{"r"},
+						Usage:   "target region",
 					},
 				},
 			},

@@ -59,11 +59,11 @@ Setup
       - name: sandbox
         account: "111122223333"
         cloud_access_role: Admin
-        access_type: web
+        access_type: web               # optional (defaults to cli)
+        region: us-gov-west-1          # optional
       - name: prod
         account: "111122224444"
         cloud_access_role: ReadOnly
-        access_type: cli
     ```
 
 User Manual
@@ -130,19 +130,59 @@ __Global Options:__
 --version, -v                      Print the Kion CLI version.
 ```
 
-__STAK Options:__
+__STAK Command:__
 
 ```text
---print, -p                             Print STAK only. (default: false)
+OPTIONS
 
---account value, --acc value, -a value  Target account number, used to bypass prompts,
-                                        must be passed with --car.
+  --print, -p                          Print STAK only. (default: false)
 
---car value, -c value                   Target cloud access role, used to bypass
-                                        prompts, must be passed with --account.
+  --account val, -acc val, -a val      Target account number, used to bypass
+                                       prompts, must be passed with --car.
 
---help, -h                              Print usage text.
+  --car val, -c val                    Target cloud access role, used to bypass
+                                       prompts, must be passed with --account.
 
+  --region val, -r val                 Specify which region to target.
+
+  --help, -h                           Print usage text.
+```
+
+__Favorite Command:__
+
+```text
+SUB COMMANDS
+
+  list                                 List all configured favorites. List
+                                       accepts a --verbose / -v option to print
+                                       additional details.
+
+OPTIONS
+
+  --print, -p                          Print STAK only. Has no effect on
+                                       favorites with an "access_type" of
+                                       "web". (default: false)
+
+
+  --help, -h                           Print usage text.
+```
+
+__Run Command:__
+
+```text
+OPTIONS
+
+  --favorite val,  -fav val, -f val    Specify which favorite to run against.
+
+  --account val, -acc val, -a val      Specify which account to target, must be
+                                       passed with --car.
+
+  --car val, -c val                    Specify which Cloud Access Role to use,
+                                       must be passed with --account.
+
+  --region val, -r val                 Specify which region to target.
+
+  --help, -h                           Print usage text.
 ```
 
 __Environment:__
