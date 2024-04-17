@@ -326,3 +326,4 @@ Contributing
 1. Ensure you have golang installed and configured.
 2. Clone the repository and initialize with `make init`. This will setup the necessary git hooks and other needed tools.
 3. Create and populate your `~/.kion.yml` configuration file. See the example at the top of this document.
+4. When submitting a PR be sure to note your changes in the `CHANGELOG.md`.
