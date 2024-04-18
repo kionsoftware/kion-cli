@@ -391,7 +391,7 @@ func favorites(cCtx *cli.Context) error {
 			return err
 		}
 		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
-		return helper.OpenBrowser(url)
+		return helper.OpenBrowser(url, car.AccountTypeID)
 	} else {
 		// generate stak
 		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
@@ -428,7 +428,7 @@ func fedConsole(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	return helper.OpenBrowser(url)
+	return helper.OpenBrowser(url, car.AccountTypeID)
 }
 
 // listFavorites prints out the users stored favorites. Extra information is
