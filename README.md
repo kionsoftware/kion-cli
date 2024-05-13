@@ -95,8 +95,10 @@ help, h            Print usage text.
 COMPATIBILITY COMMANDS:
 
 view               Generate short-team access keys and print to standard out.
+                   This is effectively 'stak --print'.
 
 savecreds          Store short-term access keys to an AWS credentials profile.
+                   This is effectively 'stak --save'.
 ```
 
 __Files:__
