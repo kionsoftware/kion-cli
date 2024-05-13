@@ -337,9 +337,14 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
+	// grab the command usage [stak, s, view, savecreds, etc]
+	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
+
 	// print or create sub-shell
-	if cCtx.Bool("print") {
+	if cCtx.Bool("print") || cmdUsed == "view" {
 		return helper.PrintSTAK(os.Stdout, stak, cCtx.String("region"))
+	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
+		return helper.SaveAWSCreds(stak, car)
 	} else {
 		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak, cCtx.String("region"))
 	}
@@ -629,7 +634,7 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "endpoint",
-				Aliases:     []string{"e"},
+				Aliases:     []string{"url", "e"},
 				Value:       config.Kion.Url,
 				EnvVars:     []string{"KION_URL"},
 				Usage:       "Kion `URL`",
@@ -637,9 +642,9 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:        "user",
-				Aliases:     []string{"u"},
+				Aliases:     []string{"username", "u"},
 				Value:       config.Kion.Username,
-				EnvVars:     []string{"KION_USERNAME"},
+				EnvVars:     []string{"KION_USERNAME", "CTKEY_USERNAME"},
 				Usage:       "`USERNAME` for authentication",
 				Destination: &config.Kion.Username,
 			},
@@ -647,7 +652,7 @@ func main() {
 				Name:        "password",
 				Aliases:     []string{"p"},
 				Value:       config.Kion.Password,
-				EnvVars:     []string{"KION_PASSWORD"},
+				EnvVars:     []string{"KION_PASSWORD", "CTKEY_PASSWORD"},
 				Usage:       "`PASSWORD` for authentication",
 				Destination: &config.Kion.Password,
 				DefaultText: passwordDefaultText,
@@ -678,7 +683,7 @@ func main() {
 				Name:        "token",
 				Aliases:     []string{"t"},
 				Value:       config.Kion.ApiKey,
-				EnvVars:     []string{"KION_API_KEY"},
+				EnvVars:     []string{"KION_API_KEY", "CTKEY_APPAPIKEY"},
 				Usage:       "`TOKEN` for authentication",
 				Destination: &config.Kion.ApiKey,
 				DefaultText: apiKeyDefaultText,
@@ -692,7 +697,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:    "stak",
-				Aliases: []string{"s"},
+				Aliases: []string{"view", "savecreds", "s"},
 				Usage:   "Generate short-term access keys",
 				Action:  genStaks,
 				Flags: []cli.Flag{
@@ -708,13 +713,18 @@ func main() {
 					},
 					&cli.StringFlag{
 						Name:    "car",
-						Aliases: []string{"c"},
+						Aliases: []string{"cloud-access-role", "c"},
 						Usage:   "target cloud access role, must be passed with account",
 					},
 					&cli.StringFlag{
 						Name:    "region",
 						Aliases: []string{"r"},
 						Usage:   "target region",
+					},
+					&cli.BoolFlag{
+						Name:    "save",
+						Aliases: []string{"s"},
+						Usage:   "save short-term keys as aws credentials profile",
 					},
 				},
 			},
