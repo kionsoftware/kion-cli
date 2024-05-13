@@ -92,7 +92,8 @@ run                Run a command with short-term access keys
 
 help, h            Print usage text.
 
-COMPATIBILITY COMMANDS:
+
+The following are maintained for compatibility with older Kion utilities:
 
 view               Generate short-team access keys and print to standard out.
                    This is effectively 'stak --print'.
