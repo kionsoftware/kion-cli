@@ -20,6 +20,7 @@ Notes for upgrading...
 - Support defining region on favorites or via flag [https://github.com/kionsoftware/kion-cli/pull/26]
 - Support for old `ctkey` usage by adding compatibility commands [https://github.com/kionsoftware/kion-cli/pull/28]
 - Ability to save short-term access keys to an AWS credentials profile [https://github.com/kionsoftware/kion-cli/pull/28]
+- Add support for windows when printing STAKs for export [https://github.com/kionsoftware/kion-cli/pull/28]
 
 ### Changed
 

@@ -66,6 +66,25 @@ Setup
         cloud_access_role: ReadOnly
     ```
 
+4. Usage examples:
+
+    ```sh
+    # open the sandbox AWS console favorited in the config above
+    kion fav sandbox
+
+    # generate and print keys for an AWS account
+    kion stak --print --account 121212121212 --car Admin
+
+    # start a sub-shell authenticated into an account
+    kion stak --account 121212121212 --car Admin
+
+    # start a sub-shell using a wizard to select a target account and Cloud Rule
+    kion stak
+
+    # federate into a web console using a wizard to select a target account and Cloud Rule
+    kion console
+    ```
+
 User Manual
 -----------
 
@@ -95,7 +114,7 @@ help, h            Print usage text.
 
 The following are maintained for compatibility with older Kion utilities:
 
-view               Generate short-team access keys and print to standard out.
+setenv             Generate short-team access keys and print to standard out.
                    This is effectively 'stak --print'.
 
 savecreds          Store short-term access keys to an AWS credentials profile.
@@ -245,14 +264,23 @@ flag is no longer supported and must be replaced with `--cloud-access-role`,
 `--car`, or `-c` flag followed by a valid Cloud Access Role name.
 
 ```bash
-# old ctkey usage example
-ctkey view --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
+# old ctkey usage to print short-term access keys
+ctkey setenv --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
 # new Kion-CLI example (drop in replacement)
-kion view --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
+kion setenv --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
 # new Kion-CLI example (new usage, assumes use of ~/.kion.yml config)
 kion stak --print --account 121212121212 --car admin
 # new Kion-CLI example (short usage, assumes use of ~/.kion.yml config)
 kion s -p -a 121212121212 -c admin
+
+# old ctkey usage to store short-term access keys in an aws configuration profile
+ctkey savecreds --url=https://YOUR-CLOUDTAMER-URL --account=121212121212 --cloud-access-role=admin
+# new Kion-CLI example (drop in replacement)
+kion savecreds --url=https://YOUR-CLOUDTAMER-URL --account=121212121212 --cloud-access-role=admin
+# new Kion-CLI example (new usage, assumes use of ~/.kion.yml config)
+kion stak --save --account 121212121212 --car admin
+# new Kion-CLI example (short usage, assumes use of ~/.kion.yml config)
+kion s -s -a 121212121212 -c admin
 ```
 
 While you can drop in Kion-CLI directly with old usage it is recommended that

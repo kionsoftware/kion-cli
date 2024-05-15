@@ -87,10 +87,22 @@ func SaveSession(filename string, config structs.Configuration) error {
 
 // PrintSTAK prints out the short term access keys for AWS auth.
 func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
+	// handle windows vs linux for exports
+	var export string
+	if runtime.GOOS == "windows" {
+		export = "SET"
+	} else {
+		export = "export"
+	}
+
+	// conditionally print region
 	if region != "" {
 		fmt.Fprintf(w, "export AWS_REGION=%v\n", region)
 	}
-	fmt.Fprintf(w, "export AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
+
+	// print the stak
+	fmt.Fprintf(w, "%v AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", export, stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
+
 	return nil
 }
 
@@ -122,16 +134,17 @@ func SaveAWSCreds(stak kion.STAK, car kion.CAR) error {
 		}
 	}
 
-	b, err := os.ReadFile(awsCredsFile)
+	// read in the creds file
+	contents, err := os.ReadFile(awsCredsFile)
 	if err != nil {
 		return err
 	}
 
 	// determine if the profile already exists
 	profileName := fmt.Sprintf("[%v_%v]", car.AccountNumber, car.AwsIamRoleName)
-	index := strings.Index(string(b), profileName)
+	index := strings.Index(string(contents), profileName)
 
-	// if the profile does not exist, just append
+	// append the profile if it does not exist, else update it
 	if index == -1 {
 		f, err := os.OpenFile(awsCredsFile, os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
@@ -159,7 +172,6 @@ func SaveAWSCreds(stak kion.STAK, car kion.CAR) error {
 			return err
 		}
 	} else {
-		// fmt.Println("updating existing profile")
 		f, err := os.Open(awsCredsFile)
 		if err != nil {
 			return err

@@ -337,11 +337,11 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
-	// grab the command usage [stak, s, view, savecreds, etc]
+	// grab the command usage [stak, s, setenv, savecreds, etc]
 	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
 
 	// print or create sub-shell
-	if cCtx.Bool("print") || cmdUsed == "view" {
+	if cCtx.Bool("print") || cmdUsed == "setenv" {
 		return helper.PrintSTAK(os.Stdout, stak, cCtx.String("region"))
 	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
 		return helper.SaveAWSCreds(stak, car)
@@ -697,7 +697,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:    "stak",
-				Aliases: []string{"view", "savecreds", "s"},
+				Aliases: []string{"setenv", "savecreds", "s"},
 				Usage:   "Generate short-term access keys",
 				Action:  genStaks,
 				Flags: []cli.Flag{
