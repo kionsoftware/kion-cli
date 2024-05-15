@@ -274,9 +274,9 @@ kion stak --print --account 121212121212 --car admin
 kion s -p -a 121212121212 -c admin
 
 # old ctkey usage to store short-term access keys in an aws configuration profile
-ctkey savecreds --url=https://YOUR-CLOUDTAMER-URL --account=121212121212 --cloud-access-role=admin
+ctkey savecreds --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
 # new Kion-CLI example (drop in replacement)
-kion savecreds --url=https://YOUR-CLOUDTAMER-URL --account=121212121212 --cloud-access-role=admin
+kion savecreds --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
 # new Kion-CLI example (new usage, assumes use of ~/.kion.yml config)
 kion stak --save --account 121212121212 --car admin
 # new Kion-CLI example (short usage, assumes use of ~/.kion.yml config)
