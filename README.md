@@ -66,6 +66,25 @@ Setup
         cloud_access_role: ReadOnly
     ```
 
+4. Usage examples:
+
+    ```sh
+    # open the sandbox AWS console favorited in the config above
+    kion fav sandbox
+
+    # generate and print keys for an AWS account
+    kion stak --print --account 121212121212 --car Admin
+
+    # start a sub-shell authenticated into an account
+    kion stak --account 121212121212 --car Admin
+
+    # start a sub-shell using a wizard to select a target account and Cloud Rule
+    kion stak
+
+    # federate into a web console using a wizard to select a target account and Cloud Rule
+    kion console
+    ```
+
 User Manual
 -----------
 
@@ -81,6 +100,7 @@ __Commands:__
 ```text
 stak, s            Generate short-term access keys.
 
+
 favorite, fav, f   Access pre-configured favorites to quickly generate staks or federate
                    into the cloud service provider console depending on the access_type
                    defined in the favorite.
@@ -90,6 +110,15 @@ console, con, c    Federate into the cloud service provider console.
 run                Run a command with short-term access keys
 
 help, h            Print usage text.
+
+
+The following are maintained for compatibility with older Kion utilities:
+
+setenv             Generate short-team access keys and print to standard out.
+                   This is effectively 'stak --print'.
+
+savecreds          Store short-term access keys to an AWS credentials profile.
+                   This is effectively 'stak --save'.
 ```
 
 __Files:__
@@ -102,32 +131,32 @@ __Files:__
 __Global Options:__
 
 ```text
---endpoint URL, -e URL             URL of the Kion instance to interface with.
+--endpoint URL, -e URL, --url URL      URL of the Kion instance to interface with.
 
---user USERNAME, -u USERNAME       Username used for authenticating with Kion.
+--user USER, -u USER, --username USER  Username used for authenticating with Kion.
 
---password PASSWORD, -p PASSWORD   Password used for authenticating with Kion.
+--password PASSWORD, -p PASSWORD       Password used for authenticating with Kion.
 
---idms IDMS_ID, -i IDMS_ID         IDMS ID with which to authenticate if using
-                                   username and password. If only one IDMS is
-                                   configured that uses username and password
-                                   it is not required to specify its ID.
+--idms IDMS_ID, -i IDMS_ID             IDMS ID with which to authenticate if using
+                                       username and password. If only one IDMS is
+                                       configured that uses username and password
+                                       it is not required to specify its ID.
 
---saml_metadata_file FILENAME|URL  FILENAME or URL of the identity provider's
-                                   XML metadata document.  If a URL, this file
-                                   will be downloaded every time the CLI app
-                                   is run.  If a local file, this should be an
-                                   absolute path to a file on your computer.
+--saml_metadata_file FILENAME|URL      FILENAME or URL of the identity provider's
+                                       XML metadata document.  If a URL, this file
+                                       will be downloaded every time the CLI app
+                                       is run.  If a local file, this should be an
+                                       absolute path to a file on your computer.
 
---saml_sp_issuer ISSUER            SAML Service Provider issuer value from Kion
-                                   for example:
-                                   https://mykioninstance.example/api/v1/saml/auth/1
+--saml_sp_issuer ISSUER                SAML Service Provider issuer value from Kion
+                                       for example:
+                                       https://mykioninstance.example/api/v1/saml/auth/1
 
---token TOKEN, -t TOKEN            Token (API or Bearer) used to authenticate.
+--token TOKEN, -t TOKEN                Token (API or Bearer) used to authenticate.
 
---help, -h                         Print usage text.
+--help, -h                             Print usage text.
 
---version, -v                      Print the Kion CLI version.
+--version, -v                          Print the Kion CLI version.
 ```
 
 __STAK Command:__
@@ -137,13 +166,17 @@ OPTIONS
 
   --print, -p                          Print STAK only. (default: false)
 
-  --account val, -acc val, -a val      Target account number, used to bypass
+  --account val, --acc val, -a val     Target account number, used to bypass
                                        prompts, must be passed with --car.
 
-  --car val, -c val                    Target cloud access role, used to bypass
-                                       prompts, must be passed with --account.
+  --car val, --cloud-access-role val,  Target cloud access role, used to bypass
+    -c val                             prompts, must be passed with --account.
 
   --region val, -r val                 Specify which region to target.
+
+  --save, -s                           Save short-term keys to an aws credentials
+                                       profile. The print flag will supercede this
+                                       option.
 
   --help, -h                           Print usage text.
 ```
@@ -172,7 +205,7 @@ __Run Command:__
 ```text
 OPTIONS
 
-  --favorite val,  -fav val, -f val    Specify which favorite to run against.
+  --favorite val, --fav val, -f val    Specify which favorite to run against.
 
   --account val, -acc val, -a val      Specify which account to target, must be
                                        passed with --car.
@@ -193,26 +226,67 @@ Kion CLI follows standard precedence for defining configurations:
   `Flag > Environment Variable > Configuration File > Default Value`
 
 ```text
-KION_URL        URL of the Kion instance to interact with.
+KION_URL                 URL of the Kion instance to interact with.
 
-KION_USERNAME   Username used for authenticating with Kion.
+KION_USERNAME            Username used for authenticating with Kion.
 
-KION_PASSWORD   Passwrod used for authenticating with Kion.
+KION_PASSWORD            Passwrod used for authenticating with Kion.
 
-KION_IDMS_ID    IDMS ID with which to authenticate if using username and
-                password. If only one IDMS is configured that uses username and
-                password it is not required to specify its ID.
+KION_IDMS_ID             IDMS ID with which to authenticate if using username and
+                         password. If only one IDMS is configured that uses username and
+                         password it is not required to specify its ID.
 
-KION_API_KEY    API key used to authenticate. Corresponds to the `--token` flag.
+KION_API_KEY             API key used to authenticate. Corresponds to the `--token` flag.
 
 KION_SAML_METADATA_FILE  FILENAME or URL of the identity provider's XML metadata
                          document.  If a URL, this file will be downloaded
                          every time the CLI app is run.  If a local file, this
                          should be an absolute path to a file on your computer.
 
-KION_SAML_SP_ISSUER     The Kion IDMS issuer value, for example
-                        https://mykioninstance.example/api/v1/saml/auth/1
+KION_SAML_SP_ISSUER      The Kion IDMS issuer value, for example
+                         https://mykioninstance.example/api/v1/saml/auth/1
+
+
+The following are maintained for compatibility with older Kion utilities:
+
+CTKEY_USERNAME           Maps to KION_USERNAME.
+
+CTKEY_PASSWORD           Maps to KION_PASSWORD.
+
+CTKEY_APPAPIKEY          Maps to KION_API_KEY
 ```
+
+### Compatibility
+
+Kion-CLI is setup to be a drop in replacement for the older cloudtamer.io
+utility `ctkey` where possible. The one exception is the `--iam-role` options
+flag is no longer supported and must be replaced with `--cloud-access-role`,
+`--car`, or `-c` flag followed by a valid Cloud Access Role name.
+
+```bash
+# old ctkey usage to print short-term access keys
+ctkey setenv --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
+# new Kion-CLI example (drop in replacement)
+kion setenv --url=https://YOUR-KION-URL --account=121212121212 --cloud-access-role=admin
+# new Kion-CLI example (new usage, assumes use of ~/.kion.yml config)
+kion stak --print --account 121212121212 --car admin
+# new Kion-CLI example (short usage, assumes use of ~/.kion.yml config)
+kion s -p -a 121212121212 -c admin
+
+# old ctkey usage to store short-term access keys in an aws configuration profile
+ctkey savecreds --url=https://YOUR-CLOUDTAMER-URL --account=121212121212 --cloud-access-role=admin
+# new Kion-CLI example (drop in replacement)
+kion savecreds --url=https://YOUR-CLOUDTAMER-URL --account=121212121212 --cloud-access-role=admin
+# new Kion-CLI example (new usage, assumes use of ~/.kion.yml config)
+kion stak --save --account 121212121212 --car admin
+# new Kion-CLI example (short usage, assumes use of ~/.kion.yml config)
+kion s -s -a 121212121212 -c admin
+```
+
+While you can drop in Kion-CLI directly with old usage it is recommended that
+you familiarize yourself with the new methods of access as it is does not
+require modification of AWS CLI configuration files.
+
 
 ### SAML Setup
 

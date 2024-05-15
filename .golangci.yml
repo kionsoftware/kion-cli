@@ -6,44 +6,55 @@ output:
   print-issued-lines: true
   print-linter-name: true
 linters-settings:
+  dupl:
+    threshold: 150
   errcheck:
     check-type-assertions: false
     check-blank: false
-  govet:
-    enable:
-      - shadow
+  goconst:
+    min-len: 3
+    min-occurrences: 5
+  gocyclo:
+    min-complexity: 30
   gofmt:
     simplify: true
   goimports:
-    local-prefixes: github.com/org/project
-  gocyclo:
-    min-complexity: 30
-  dupl:
-    threshold: 150
-  goconst:
-    min-len: 3
-    min-occurrences: 3
+    local-prefixes: github.com/kionsoftware/kion-cli
+  govet:
+    enable:
+      - shadow
+  lll:
+    line-length: 120
+    tab-width: 1
   misspell:
     locale: US
     ignore-words:
       - cancelled
-  lll:
-    line-length: 120
-    tab-width: 1
+  sloglint:
+    attr-only: true
   unparam:
     check-exported: false
 linters:
   disable-all: true
   enable:
-    - govet
+    - asciicheck
+    # - dupl
     - errcheck
-    - ineffassign
-    - unconvert
-    - gofmt
-    - misspell
-    - unparam
-    - gosimple # normally implicit
     - bodyclose
+    - goconst
+    - gocyclo
+    - gofmt
+    # - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    # - lll
+    - misspell
+    - sloglint
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
 issues:
   exclude:
     - "shadow: declaration of .err. shadows declaration"
