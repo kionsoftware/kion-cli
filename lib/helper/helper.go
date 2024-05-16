@@ -310,25 +310,37 @@ func redirectServer(url string, typeID uint) {
           window.onload = function() {
             let redirectURL = '%v'
             let accountTypeID = '%v'
-            const logout_iframe = document.createElement('iframe');
-            logout_iframe.height = '0';
-            logout_iframe.width = '0';
+            let agent = navigator.userAgent;
             if (accountTypeID == '1') {
                 // commercial
-                logout_iframe.src = 'https://signin.aws.amazon.com/oauth?Action=logout';
+                logoutURL = 'https://signin.aws.amazon.com/oauth?Action=logout';
             } else if (accountTypeID == '2') {
                 // govcloud
-                logout_iframe.src = 'https://signin.amazonaws-us-gov.com/oauth?Action=logout';
+                logoutURL = 'https://signin.amazonaws-us-gov.com/oauth?Action=logout';
             } else if (accountTypeID == '4') {
-                logout_iframe.src = 'http://signin.c2shome.ic.gov/oauth?Action=logout';
+                logoutURL = 'http://signin.c2shome.ic.gov/oauth?Action=logout';
             } else if (accountTypeID == '5') {
-                logout_iframe.src = 'http://signin.sc2shome.sgov.gov/oauth?Action=logout';
+                logoutURL = 'http://signin.sc2shome.sgov.gov/oauth?Action=logout';
             }
-            logout_iframe.onload = () => {
-              callbackClose()
-              window.location.replace(redirectURL);
+            if (agent.includes('Firefox')) {
+              // popup blocked by default, user must allow
+              let tab = window.open(logoutURL, '_blank')
+              setTimeout(() => {
+                callbackClose()
+                tab.location.replace(redirectURL);
+                window.close()
+              }, 500);
+            } else {
+              const logout_iframe = document.createElement('iframe');
+              logout_iframe.height = '0';
+              logout_iframe.width = '0';
+              logout_iframe.src = logoutURL;
+              logout_iframe.onload = () => {
+                callbackClose()
+                window.location.replace(redirectURL);
+              }
+              document.body.appendChild(logout_iframe);
             }
-            document.body.appendChild(logout_iframe);
           }
         </script>
       </head>
