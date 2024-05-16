@@ -82,6 +82,7 @@ Setup
     kion stak
 
     # federate into a web console using a wizard to select a target account and Cloud Rule
+    # * note that Firefox users will have to approve pop-ups on the first run
     kion console
     ```
 
