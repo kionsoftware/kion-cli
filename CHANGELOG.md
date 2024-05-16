@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 Notes for upgrading...
 
 ### Added
+
 - Print metadata to stdout when federating into web consoles [https://github.com/kionsoftware/kion-cli/pull/20]
 - Add flags to support headless runs [https://github.com/kionsoftware/kion-cli/pull/22]
 - Fallback logic for users with restricted perms when using the `run` cmd [https://github.com/kionsoftware/kion-cli/pull/22]
@@ -37,6 +38,7 @@ Notes for upgrading...
 - Fix unexpected EOF when creating Bash subshells [https://github.com/kionsoftware/kion-cli/pull/14]
 - Improve CAR selection logic and usage wording [https://github.com/kionsoftware/kion-cli/pull/19]
 - Fix SAML auth around private network access checks [https://github.com/kionsoftware/kion-cli/pull/23]
+- Fixed automated logouts of AWS console sessions on Firefox [https://github.com/kionsoftware/kion-cli/pull/31]
 
 [0.0.2] - 2024-02-23
 --------------------
