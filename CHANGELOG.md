@@ -20,6 +20,13 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.1.1] - 2024-05-20
+--------------------
+
+### Fixed
+
+- Corrected version number when running `--version` flag []
+
 [0.1.0] - 2024-05-20
 --------------------
 
