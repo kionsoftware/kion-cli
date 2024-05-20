@@ -19,3 +19,5 @@ Thumbs.db
 /kion
 profile.cov
 tools/golangci-lint
+
+dist/
