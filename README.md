@@ -8,6 +8,9 @@ Kion CLI is a tool allowing Kion customers to generate short term access keys an
 Setup
 -----
 
+> [!TIP]
+> If you are on OSX and use Homebrew you can install with `brew install kionsoftware/tap/kion-cli`.
+
 1. Build the application and place it in your path:
 
     ```bash
