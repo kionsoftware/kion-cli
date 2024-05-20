@@ -5,7 +5,7 @@ on:
       - 'v*'
 
 jobs:
-  realease:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
