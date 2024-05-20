@@ -20,6 +20,13 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.1.1] - 2024-05-20
+--------------------
+
+### Fixed
+
+- Corrected version number when running `--version` flag [kionsoftware/kion-cli/pull/36]
+
 [0.1.0] - 2024-05-20
 --------------------
 
