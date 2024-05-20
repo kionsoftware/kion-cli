@@ -12,6 +12,19 @@ Notes for upgrading...
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+[0.1.0] - 2024-05-20
+--------------------
+
+### Added
+
 - Print metadata to stdout when federating into web consoles [kionsoftware/kion-cli/pull/20]
 - Add flags to support headless runs [kionsoftware/kion-cli/pull/22]
 - Fallback logic for users with restricted perms when using the `run` cmd [kionsoftware/kion-cli/pull/22]
@@ -29,10 +42,6 @@ Notes for upgrading...
 - Improve logic around web federation [kionsoftware/kion-cli/pull/21]
 - Dynamically output account name info if available [kionsoftware/kion-cli/pull/22]
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Fix unexpected EOF when creating Bash subshells [kionsoftware/kion-cli/pull/14]
@@ -46,12 +55,6 @@ Notes for upgrading...
 ### Added
 
 - Web console access! [kionsoftware/kion-cli/pull/10]
-
-### Changed
-
-### Deprecated
-
-### Removed
 
 ### Fixed
 
