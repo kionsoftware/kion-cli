@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-version"
+	"github.com/kionsoftware/kion-cli/lib/cache"
 	"github.com/kionsoftware/kion-cli/lib/helper"
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
@@ -29,6 +30,10 @@ var (
 	config     structs.Configuration
 	configPath string
 	configFile = ".kion.yml"
+
+	c         *cache.Cache
+	cachePath string
+	cacheKey  = []byte("0123456789abcdef")
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,6 +290,13 @@ func beforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
 	}
 
+	// initialize the cache
+	c = cache.NewCache(cacheKey)
+	err = c.LoadFromFile(cachePath)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -314,14 +326,40 @@ func genStaks(cCtx *cli.Context) error {
 		return err
 	}
 
+	// stub out placeholders
 	var car kion.CAR
+	var stak kion.STAK
+
+	// set vars for easier access
+	token := cCtx.String("token")
+	endpoint := cCtx.String("endpoint")
+	carName := cCtx.String("car")
+	account := cCtx.String("account")
+	cacheKey := fmt.Sprintf("%s-%s", carName, account)
+
+	// determine if we have a valid cached entry
+	if account != "" && carName != "" {
+		cachedSTAK, found := c.Get(cacheKey)
+		if found {
+			if cachedSTAK.Expiration.After(time.Now()) {
+				stak = cachedSTAK
+				fmt.Println("stak is good")
+			} else {
+				fmt.Println("stak is expired")
+			}
+		} else {
+			fmt.Println("no cache entry found")
+		}
+	}
 
 	// if we have what we need go look stuff up without prompts do it
-	if cCtx.String("account") != "" && cCtx.String("car") != "" {
-		// lookup the car details and populate the passed car
-		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"), cCtx.String("account"))
-		if err != nil {
-			return err
+	if account != "" && carName != "" {
+		if stak == (kion.STAK{}) {
+			// lookup the car details and populate the passed car
+			car, err = kion.GetCARByNameAndAccount(endpoint, token, carName, account)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		// run through the car selector to fill any gaps
@@ -329,12 +367,31 @@ func genStaks(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		cacheKey = fmt.Sprintf("%s-%s", car.Name, car.AccountNumber)
+
+		cachedSTAK, found := c.Get(cacheKey)
+		if found {
+			if cachedSTAK.Expiration.After(time.Now()) {
+				stak = cachedSTAK
+				fmt.Println("sub stak is good")
+			} else {
+				fmt.Println("sub stak is expired")
+			}
+		} else {
+			fmt.Println("sub no cache entry found")
+		}
 	}
 
-	// generate short term tokens
-	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car.Name, car.AccountNumber)
-	if err != nil {
-		return err
+	// grab a new stak if needed
+	if stak == (kion.STAK{}) {
+		// generate short term tokens
+		stak, err = kion.GetSTAK(endpoint, token, car.Name, car.AccountNumber)
+		if err != nil {
+			return err
+		}
+
+		// store the stak in the cache
+		c.Set(cacheKey, stak)
 	}
 
 	// grab the command usage [stak, s, setenv, savecreds, etc]
@@ -567,6 +624,12 @@ func runCommand(cCtx *cli.Context) error {
 
 // afterCommands run after any subcommands are executed.
 func afterCommands(cCtx *cli.Context) error {
+	// save our cache to disk
+	err := c.SaveToFile(cachePath)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -588,6 +651,9 @@ func main() {
 
 	// set global for config path
 	configPath = filepath.Join(home, configFile)
+
+	// set global for cache path
+	cachePath = filepath.Join(home, "/.kion/cache.gob")
 
 	// load configuration file
 	err = helper.LoadConfig(configPath, &config)

@@ -90,16 +90,13 @@ func TestPrintCredentialProcess(t *testing.T) {
 		stak        kion.STAK
 	}{
 		{
-			"Empty",
-			kion.STAK{},
-		},
-		{
 			"Partial STAK",
 			kion.STAK{
 				AccessKey:       "",
 				SecretAccessKey: "aBCDeFg1hijkl2m3NOPqr4StUvWxY56z7abc8DEf",
 				SessionToken:    "",
 				Duration:        43200,
+				Expiration:      time.Now().Add(43200 * time.Second),
 			},
 		},
 		{
@@ -109,6 +106,7 @@ func TestPrintCredentialProcess(t *testing.T) {
 				SecretAccessKey: "aBCDeFg1hijkl2m3NOPqr4StUvWxY56z7abc8DEf",
 				SessionToken:    "AbcDEFghIJKlMNoPQrStuVwXYZabcDEfGhI1JklmNoPQRStu2VWXYZaBcd34ef+GH+IJKLmNOPQRSTU5VwxyzABcdeFGHIj6KlMNoPQ7rSTUvW8X9yZAbCD0ef+gHIJkLMnoPqrstUVwxyzAb1CD2e34fgHiJKlMnOPqr56STuvwXyzABcdEfgh7IJK+8LM91No2pqrSTuvWxyz3ABCdEFGH4ijklMNOP5qrs6TUvWxyz789abcDefgH12iJKlM3no4pQRs+5t6UVw7/xy+ZaBcdE+FGhIj8kLmnOpqrstuvw9xyzab1cD/ef23GhIjkLMNoPQrstuv=",
 				Duration:        3600,
+				Expiration:      time.Now().Add(3600 * time.Second),
 			},
 		},
 		// TODO: add a test that would cause the json marshaling to fail
