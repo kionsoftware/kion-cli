@@ -50,7 +50,7 @@ func PrintCredentialProcess(w io.Writer, stak kion.STAK) error {
 	// handle older versions of Kion that do not return duration
 	duration := stak.Duration
 	if duration == 0 {
-		duration = 15
+		duration = 900
 	}
 
 	// create the credentials struct
@@ -65,7 +65,7 @@ func PrintCredentialProcess(w io.Writer, stak kion.STAK) error {
 		stak.AccessKey,
 		stak.SecretAccessKey,
 		stak.SessionToken,
-		time.Now().Add(time.Duration(duration) * time.Minute).Format(time.RFC3339),
+		time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339),
 	}
 
 	// marshal the credentials to json

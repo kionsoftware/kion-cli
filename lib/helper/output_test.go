@@ -58,6 +58,7 @@ func TestPrintSTAK(t *testing.T) {
 			"us-gov-west-1",
 			"export AWS_REGION=us-gov-west-1\nexport AWS_ACCESS_KEY_ID=ASIAABCDEFGHIJ1K23LM\nexport AWS_SECRET_ACCESS_KEY=aBCDeFg1hijkl2m3NOPqr4StUvWxY56z7abc8DEf\nexport AWS_SESSION_TOKEN=AbcDEFghIJKlMNoPQrStuVwXYZabcDEfGhI1JklmNoPQRStu2VWXYZaBcd34ef+GH+IJKLmNOPQRSTU5VwxyzABcdeFGHIj6KlMNoPQ7rSTUvW8X9yZAbCD0ef+gHIJkLMnoPqrstUVwxyzAb1CD2e34fgHiJKlMnOPqr56STuvwXyzABcdEfgh7IJK+8LM91No2pqrSTuvWxyz3ABCdEFGH4ijklMNOP5qrs6TUvWxyz789abcDefgH12iJKlM3no4pQRs+5t6UVw7/xy+ZaBcdE+FGhIj8kLmnOpqrstuvw9xyzab1cD/ef23GhIjkLMNoPQrstuv=\n",
 		},
+		// TODO: add test that would print SETs for windows
 	}
 
 	for _, test := range tests {
@@ -84,41 +85,72 @@ func TestPrintSTAK(t *testing.T) {
 }
 
 func TestPrintCredentialProcess(t *testing.T) {
-	stak := kion.STAK{
-		AccessKey:       "testAccessKey",
-		SecretAccessKey: "testSecretAccessKey",
-		SessionToken:    "testSessionToken",
-		Duration:        60,
+	tests := []struct {
+		description string
+		stak        kion.STAK
+	}{
+		{
+			"Empty",
+			kion.STAK{},
+		},
+		{
+			"Partial STAK",
+			kion.STAK{
+				AccessKey:       "",
+				SecretAccessKey: "aBCDeFg1hijkl2m3NOPqr4StUvWxY56z7abc8DEf",
+				SessionToken:    "",
+				Duration:        43200,
+			},
+		},
+		{
+			"Full STAK",
+			kion.STAK{
+				AccessKey:       "ASIAABCDEFGHIJ1K23LM",
+				SecretAccessKey: "aBCDeFg1hijkl2m3NOPqr4StUvWxY56z7abc8DEf",
+				SessionToken:    "AbcDEFghIJKlMNoPQrStuVwXYZabcDEfGhI1JklmNoPQRStu2VWXYZaBcd34ef+GH+IJKLmNOPQRSTU5VwxyzABcdeFGHIj6KlMNoPQ7rSTUvW8X9yZAbCD0ef+gHIJkLMnoPqrstUVwxyzAb1CD2e34fgHiJKlMnOPqr56STuvwXyzABcdEfgh7IJK+8LM91No2pqrSTuvWxyz3ABCdEFGH4ijklMNOP5qrs6TUvWxyz789abcDefgH12iJKlM3no4pQRs+5t6UVw7/xy+ZaBcdE+FGhIj8kLmnOpqrstuvw9xyzab1cD/ef23GhIjkLMNoPQrstuv=",
+				Duration:        3600,
+			},
+		},
+		// TODO: add a test that would cause the json marshaling to fail
 	}
 
-	var buf bytes.Buffer
-	err := PrintCredentialProcess(&buf, stak)
-	if err != nil {
-		t.Fatalf("PrintCredentialProcess returned an error: %v", err)
-	}
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			var buf bytes.Buffer
+			err := PrintCredentialProcess(&buf, test.stak)
+			if err != nil {
+				t.Fatalf("PrintCredentialProcess returned an error: %v", err)
+			}
 
-	// Unmarshal the output into a map
-	var output map[string]interface{}
-	err = json.Unmarshal(buf.Bytes(), &output)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal the output: %v", err)
-	}
+			// unmarshal the output into a map
+			var output map[string]interface{}
+			err = json.Unmarshal(buf.Bytes(), &output)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal the output: %v", err)
+			}
 
-	// Parse the Expiration field
-	expiration, err := time.Parse(time.RFC3339, output["Expiration"].(string))
-	if err != nil {
-		t.Fatalf("Failed to parse the Expiration field: %v", err)
-	}
+			// parse the expiration field
+			expiration, err := time.Parse(time.RFC3339, output["Expiration"].(string))
+			if err != nil {
+				t.Fatalf("Failed to parse the Expiration field: %v", err)
+			}
 
-	// Check if the Expiration field is within a 1-second tolerance
-	now := time.Now()
-	if expiration.Before(now) || expiration.After(now.Add(60*time.Minute+1*time.Second)) {
-		t.Fatalf("The Expiration field is not within the expected range")
-	}
+			// check if the expiration field is within a 1-second tolerance
+			now := time.Now()
+			duration := test.stak.Duration
+			if duration == 0 {
+				duration = 900
+			}
+			hardExpiration := now.Add(time.Duration(duration) * time.Second)
+			if expiration.Before(hardExpiration.Add(-1*time.Second)) || expiration.After(hardExpiration.Add(1*time.Second)) {
+				t.Fatalf("The 'Expiration' field is not within the expected range")
+			}
 
-	expected := fmt.Sprintf("{\n  \"Version\": 1,\n  \"AccessKeyId\": \"testAccessKey\",\n  \"SecretAccessKey\": \"testSecretAccessKey\",\n  \"SessionToken\": \"testSessionToken\",\n  \"Expiration\": \"%v\"\n}\n", output["Expiration"].(string))
+			expected := fmt.Sprintf("{\n  \"Version\": 1,\n  \"AccessKeyId\": \"%v\",\n  \"SecretAccessKey\": \"%v\",\n  \"SessionToken\": \"%v\",\n  \"Expiration\": \"%v\"\n}\n", test.stak.AccessKey, test.stak.SecretAccessKey, test.stak.SessionToken, output["Expiration"].(string))
 
-	if buf.String() != expected {
-		t.Fatalf("Expected %s, but got %s", expected, buf.String())
+			if buf.String() != expected {
+				t.Fatalf("Expected %s, but got %s", expected, buf.String())
+			}
+		})
 	}
 }
