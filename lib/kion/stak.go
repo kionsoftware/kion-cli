@@ -22,6 +22,7 @@ type STAK struct {
 	AccessKey       string `json:"access_key"`
 	SecretAccessKey string `json:"secret_access_key"`
 	SessionToken    string `json:"session_token"`
+	Duration        int64  `json:"duration"`
 }
 
 // STAKRequest maps to the required post body when interfacing with the Kion

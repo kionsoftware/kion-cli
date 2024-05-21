@@ -44,21 +44,39 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 	return nil
 }
 
-func PrintCredentialProcess(w io.Writer, stak kion.STAK, duration int) error {
-	credentials := map[string]interface{}{
-		"Version":         1,
-		"AccessKeyId":     stak.AccessKey,
-		"SecretAccessKey": stak.SecretAccessKey,
-		"SessionToken":    stak.SessionToken,
-		"Expiration":      time.Now().Add(time.Duration(duration) * time.Minute).Format(time.RFC3339),
+// PrintCredentialProcess prints out the short term access keys for use with
+// AWS profiles as a credential process subsystem.
+func PrintCredentialProcess(w io.Writer, stak kion.STAK) error {
+	// handle older versions of Kion that do not return duration
+	duration := stak.Duration
+	if duration == 0 {
+		duration = 15
 	}
 
+	// create the credentials struct
+	credentials := struct {
+		Version         int
+		AccessKeyId     string
+		SecretAccessKey string
+		SessionToken    string
+		Expiration      string
+	}{
+		1,
+		stak.AccessKey,
+		stak.SecretAccessKey,
+		stak.SessionToken,
+		time.Now().Add(time.Duration(duration) * time.Minute).Format(time.RFC3339),
+	}
+
+	// marshal the credentials to json
 	jsonData, err := json.MarshalIndent(credentials, "", "  ")
 	if err != nil {
 		return err
 	}
 
+	// print the json data
 	fmt.Fprintln(w, string(jsonData))
+
 	return nil
 }
 

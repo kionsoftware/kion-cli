@@ -342,12 +342,8 @@ func genStaks(cCtx *cli.Context) error {
 
 	// cred process output, print, save profile, or create sub-shell
 	if cCtx.Bool("credential-process") {
-		duration, err := kion.GetSessionDuration(cCtx.String("endpoint"), cCtx.String("token"))
-		if err != nil {
-			return err
-		}
 		// NOTE: do not use os.Stderr here else credentials can be written to logs
-		return helper.PrintCredentialProcess(os.Stdout, stak, duration)
+		return helper.PrintCredentialProcess(os.Stdout, stak)
 	} else if cCtx.Bool("print") || cmdUsed == "setenv" {
 		return helper.PrintSTAK(os.Stdout, stak, cCtx.String("region"))
 	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
@@ -412,12 +408,8 @@ func favorites(cCtx *cli.Context) error {
 		}
 		// cred process output, print, or create sub-shell
 		if cCtx.Bool("credential-process") {
-			duration, err := kion.GetSessionDuration(cCtx.String("endpoint"), cCtx.String("token"))
-			if err != nil {
-				return err
-			}
 			// NOTE: do not use os.Stderr here else credentials can be written to logs
-			return helper.PrintCredentialProcess(os.Stdout, stak, duration)
+			return helper.PrintCredentialProcess(os.Stdout, stak)
 		} else if cCtx.Bool("print") {
 			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)
 		} else {

@@ -2,7 +2,10 @@ package helper
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
 )
@@ -77,5 +80,45 @@ func TestPrintSTAK(t *testing.T) {
 				t.Errorf("\ngot:\n  %v\nwanted:\n  %v", output.String(), test.want)
 			}
 		})
+	}
+}
+
+func TestPrintCredentialProcess(t *testing.T) {
+	stak := kion.STAK{
+		AccessKey:       "testAccessKey",
+		SecretAccessKey: "testSecretAccessKey",
+		SessionToken:    "testSessionToken",
+		Duration:        60,
+	}
+
+	var buf bytes.Buffer
+	err := PrintCredentialProcess(&buf, stak)
+	if err != nil {
+		t.Fatalf("PrintCredentialProcess returned an error: %v", err)
+	}
+
+	// Unmarshal the output into a map
+	var output map[string]interface{}
+	err = json.Unmarshal(buf.Bytes(), &output)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal the output: %v", err)
+	}
+
+	// Parse the Expiration field
+	expiration, err := time.Parse(time.RFC3339, output["Expiration"].(string))
+	if err != nil {
+		t.Fatalf("Failed to parse the Expiration field: %v", err)
+	}
+
+	// Check if the Expiration field is within a 1-second tolerance
+	now := time.Now()
+	if expiration.Before(now) || expiration.After(now.Add(60*time.Minute+1*time.Second)) {
+		t.Fatalf("The Expiration field is not within the expected range")
+	}
+
+	expected := fmt.Sprintf("{\n  \"Version\": 1,\n  \"AccessKeyId\": \"testAccessKey\",\n  \"SecretAccessKey\": \"testSecretAccessKey\",\n  \"SessionToken\": \"testSessionToken\",\n  \"Expiration\": \"%v\"\n}\n", output["Expiration"].(string))
+
+	if buf.String() != expected {
+		t.Fatalf("Expected %s, but got %s", expected, buf.String())
 	}
 }
