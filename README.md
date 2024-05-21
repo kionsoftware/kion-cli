@@ -71,6 +71,8 @@ Setup
 
 4. Usage examples:
 
+    __Command Line:__
+
     ```sh
     # open the sandbox AWS console favorited in the config above
     kion fav sandbox
@@ -87,6 +89,16 @@ Setup
     # federate into a web console using a wizard to select a target account and Cloud Rule
     # * note that Firefox users will have to approve pop-ups on the first run
     kion console
+    ```
+
+    __AWS Profiles:__
+
+    ```toml
+    [profile one]
+    credential_process = /path/to/kion stak --credential-process --account 121212121212 --car DevOps
+
+    [profile two]
+    credential_process = /path/to/kion favorite --credential-process MyFavorite
     ```
 
 User Manual
@@ -182,6 +194,12 @@ OPTIONS
                                        profile. The print flag will supercede this
                                        option.
 
+  --credential-process                 For use with AWS credentials profiles to
+                                       setup Kion CLI as a credentials process
+                                       subsystem. Returns a json object in the
+                                       format needed for the `credential_process`
+                                       profile setting.
+
   --help, -h                           Print usage text.
 ```
 
@@ -200,6 +218,11 @@ OPTIONS
                                        favorites with an "access_type" of
                                        "web". (default: false)
 
+  --credential-process                 For use with AWS credentials profiles to
+                                       setup Kion CLI as a credentials process
+                                       subsystem. Returns a json object in the
+                                       format needed for the `credential_process`
+                                       profile setting.
 
   --help, -h                           Print usage text.
 ```

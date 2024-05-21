@@ -2,6 +2,7 @@ package helper
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -103,6 +104,24 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 	// print the stak
 	fmt.Fprintf(w, "%v AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", export, stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
 
+	return nil
+}
+
+func PrintCredentialProcess(w io.Writer, stak kion.STAK, duration int) error {
+	credentials := map[string]interface{}{
+		"Version":         1,
+		"AccessKeyId":     stak.AccessKey,
+		"SecretAccessKey": stak.SecretAccessKey,
+		"SessionToken":    stak.SessionToken,
+		"Expiration":      time.Now().Add(time.Duration(duration) * time.Minute).Format(time.RFC3339),
+	}
+
+	jsonData, err := json.MarshalIndent(credentials, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(w, string(jsonData))
 	return nil
 }
 

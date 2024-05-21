@@ -340,8 +340,15 @@ func genStaks(cCtx *cli.Context) error {
 	// grab the command usage [stak, s, setenv, savecreds, etc]
 	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
 
-	// print or create sub-shell
-	if cCtx.Bool("print") || cmdUsed == "setenv" {
+	// cred process output, print, save profile, or create sub-shell
+	if cCtx.Bool("credential-process") {
+		duration, err := kion.GetSessionDuration(cCtx.String("endpoint"), cCtx.String("token"))
+		if err != nil {
+			return err
+		}
+		// NOTE: do not use os.Stderr here else credentials can be written to logs
+		return helper.PrintCredentialProcess(os.Stdout, stak, duration)
+	} else if cCtx.Bool("print") || cmdUsed == "setenv" {
 		return helper.PrintSTAK(os.Stdout, stak, cCtx.String("region"))
 	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
 		return helper.SaveAWSCreds(stak, car)
@@ -403,8 +410,15 @@ func favorites(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		// print or create sub-shell
-		if cCtx.Bool("print") {
+		// cred process output, print, or create sub-shell
+		if cCtx.Bool("credential-process") {
+			duration, err := kion.GetSessionDuration(cCtx.String("endpoint"), cCtx.String("token"))
+			if err != nil {
+				return err
+			}
+			// NOTE: do not use os.Stderr here else credentials can be written to logs
+			return helper.PrintCredentialProcess(os.Stdout, stak, duration)
+		} else if cCtx.Bool("print") {
 			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)
 		} else {
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak, favorite.Region)
@@ -726,6 +740,10 @@ func main() {
 						Aliases: []string{"s"},
 						Usage:   "save short-term keys as aws credentials profile",
 					},
+					&cli.BoolFlag{
+						Name:  "credential-process",
+						Usage: "print stak json as AWS credential process",
+					},
 				},
 			},
 			{
@@ -745,6 +763,10 @@ func main() {
 						Name:    "print",
 						Aliases: []string{"p"},
 						Usage:   "print stak only",
+					},
+					&cli.BoolFlag{
+						Name:  "credential-process",
+						Usage: "print stak json as AWS credential process",
 					},
 				},
 				BashComplete: func(cCtx *cli.Context) {

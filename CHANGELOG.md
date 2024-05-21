@@ -12,6 +12,8 @@ Notes for upgrading...
 
 ### Added
 
+- Support to use Kion CLI as a credential process subsystem for AWS profiles []
+
 ### Changed
 
 ### Deprecated
