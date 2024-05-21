@@ -12,7 +12,7 @@ Notes for upgrading...
 
 ### Added
 
-- Support to use Kion CLI as a credential process subsystem for AWS profiles []
+- Support to use Kion CLI as a credential process subsystem for AWS profiles [kionsoftware/kion-cli/pull/38]
 
 ### Changed
 
