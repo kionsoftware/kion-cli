@@ -59,13 +59,13 @@ func (c *Cache) LoadFromFile(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// If the file does not exist, create all necessary directories.
+			// if the file does not exist, create all necessary directories
 			err = os.MkdirAll(filepath.Dir(filename), 0755)
 			if err != nil {
 				return err
 			}
 
-			// Create an empty file.
+			// create an empty file.
 			file, err = os.Create(filename)
 			if err != nil {
 				return err
@@ -81,7 +81,7 @@ func (c *Cache) LoadFromFile(filename string) error {
 	err = decoder.Decode(&encryptedData)
 	if err != nil {
 		if err == io.EOF {
-			// If the file is empty, return nil.
+			// if the file is empty, return nil
 			return nil
 		}
 		return err
