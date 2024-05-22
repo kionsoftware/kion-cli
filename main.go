@@ -336,26 +336,43 @@ func genStaks(cCtx *cli.Context) error {
 	carName := cCtx.String("car")
 	account := cCtx.String("account")
 	cacheKey := fmt.Sprintf("%s-%s", carName, account)
+	region := cCtx.String("region")
 
-	// determine if we have a valid cached entry
-	if account != "" && carName != "" {
-		cachedSTAK, found := c.Get(cacheKey)
-		if found {
-			if cachedSTAK.Expiration.After(time.Now()) {
-				stak = cachedSTAK
-				fmt.Println("stak is good")
-			} else {
-				fmt.Println("stak is expired")
-			}
-		} else {
-			fmt.Println("no cache entry found")
-		}
+	// grab the command usage [stak, s, setenv, savecreds, etc]
+	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
+
+	// determine action and set required cache validity buffer
+	var action string
+	var buffer time.Duration
+	if cCtx.Bool("credential-process") {
+		action = "credential-process"
+		buffer = 5
+	} else if cCtx.Bool("print") || cmdUsed == "setenv" {
+		action = "print"
+		buffer = 300
+	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
+		action = "save"
+		buffer = 600
+	} else {
+		action = "subshell"
+		buffer = 300
 	}
 
 	// if we have what we need go look stuff up without prompts do it
 	if account != "" && carName != "" {
-		if stak == (kion.STAK{}) {
-			// lookup the car details and populate the passed car
+		// determine if we have a valid cached entry
+		cachedSTAK, found := c.Get(cacheKey)
+		getCar := true
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
+			// cached stak found and is still valid
+			stak = cachedSTAK
+			if action != "subshell" {
+				getCar = false
+			}
+		}
+
+		// grab the car if needed
+		if getCar {
 			car, err = kion.GetCARByNameAndAccount(endpoint, token, carName, account)
 			if err != nil {
 				return err
@@ -367,18 +384,13 @@ func genStaks(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		cacheKey = fmt.Sprintf("%s-%s", car.Name, car.AccountNumber)
 
+		// rebuild cache key and determine if we have a valid cached entry
+		cacheKey = fmt.Sprintf("%s-%s", car.Name, car.AccountNumber)
 		cachedSTAK, found := c.Get(cacheKey)
-		if found {
-			if cachedSTAK.Expiration.After(time.Now()) {
-				stak = cachedSTAK
-				fmt.Println("sub stak is good")
-			} else {
-				fmt.Println("sub stak is expired")
-			}
-		} else {
-			fmt.Println("sub no cache entry found")
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
+			// cached stak found and is still valid
+			stak = cachedSTAK
 		}
 	}
 
@@ -394,19 +406,19 @@ func genStaks(cCtx *cli.Context) error {
 		c.Set(cacheKey, stak)
 	}
 
-	// grab the command usage [stak, s, setenv, savecreds, etc]
-	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
-
-	// cred process output, print, save profile, or create sub-shell
-	if cCtx.Bool("credential-process") {
+	// run the action
+	switch action {
+	case "credential-process":
 		// NOTE: do not use os.Stderr here else credentials can be written to logs
 		return helper.PrintCredentialProcess(os.Stdout, stak)
-	} else if cCtx.Bool("print") || cmdUsed == "setenv" {
-		return helper.PrintSTAK(os.Stdout, stak, cCtx.String("region"))
-	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
+	case "print":
+		return helper.PrintSTAK(os.Stdout, stak, region)
+	case "save":
 		return helper.SaveAWSCreds(stak, car)
-	} else {
-		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak, cCtx.String("region"))
+	case "subshell":
+		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak, region)
+	default:
+		return nil
 	}
 }
 
