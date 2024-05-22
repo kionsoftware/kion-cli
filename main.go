@@ -497,6 +497,9 @@ func favorites(cCtx *cli.Context) error {
 			if err != nil {
 				return err
 			}
+
+			// store the stak in the cache
+			c.Set(cacheKey, stak)
 		}
 
 		// cred process output, print, or create sub-shell
