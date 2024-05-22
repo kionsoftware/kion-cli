@@ -586,7 +586,7 @@ func runCommand(cCtx *cli.Context) error {
 	region := cCtx.String("region")
 
 	// fail fast if we don't have what we need
-	if favName == "" && (accNum == "" && carName == "") {
+	if favName == "" && (accNum == "" || carName == "") {
 		return errors.New("must specify either --fav OR --account and --car parameters")
 	}
 
