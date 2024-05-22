@@ -571,94 +571,91 @@ func listFavorites(cCtx *cli.Context) error {
 // runCommand generates creds for an AWS account then executes the user
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
-	if cCtx.String("favorite") != "" {
+	// handle auth
+	err := authCommand(cCtx)
+	if err != nil {
+		return err
+	}
+
+	// set vars for easier access
+	token := cCtx.String("token")
+	endpoint := cCtx.String("endpoint")
+	favName := cCtx.String("favorite")
+	accNum := cCtx.String("account")
+	carName := cCtx.String("car")
+	region := cCtx.String("region")
+
+	// fail fast if we don't have what we need
+	if favName == "" && (accNum == "" && carName == "") {
+		return errors.New("must specify either --fav OR --account and --car parameters")
+	}
+
+	// placeholder for our stak
+	var stak kion.STAK
+
+	// prefer favorites if specified, else use account and car
+	if favName != "" {
 		// map our favorites for ease of use
 		_, fMap := helper.MapFavs(config.Favorites)
 
 		// if arg passed is a valid favorite use it else prompt
 		var fav string
 		var err error
-		if fMap[cCtx.String("fav")] != (structs.Favorite{}) {
-			fav = cCtx.String("fav")
+		if fMap[favName] != (structs.Favorite{}) {
+			fav = favName
 		} else {
-			return errors.New("can't find fav")
+			return errors.New("can't find favorite")
 		}
 
-		// handle auth
-		err = authCommand(cCtx)
-		if err != nil {
-			return err
-		}
-
-		// generate stak
+		// grab our favorite
 		favorite := fMap[fav]
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
-		if err != nil {
-			return err
+
+		// check if we have a valid cached stak else grab a new one
+		cacheKey := fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
+		cachedSTAK, found := c.Get(cacheKey)
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
+			stak = cachedSTAK
+		} else {
+			stak, err = kion.GetSTAK(endpoint, token, favorite.CAR, favorite.Account)
+			if err != nil {
+				return err
+			}
+
+			// store the stak in the cache
+			c.Set(cacheKey, stak)
 		}
 
 		// take the region flag over the favorite region
-		targetRegion := cCtx.String("region")
+		targetRegion := region
 		if targetRegion == "" {
 			targetRegion = favorite.Region
 		}
 
-		err = helper.RunCommand(favorite.Account, favorite.Name, favorite.CAR, stak, targetRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
-		if err != nil {
-			return err
-		}
-
-	} else if cCtx.String("account") != "" && cCtx.String("car") != "" {
-		account, statusCode, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("account"))
-		if err != nil {
-			if statusCode == 403 || statusCode == 401 {
-				// try our way prone to collisions of car names
-				err := authCommand(cCtx)
-				if err != nil {
-					return err
-				}
-
-				car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"))
-				if err != nil {
-					return err
-				}
-
-				stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"), cCtx.String("account"))
-				if err != nil {
-					return err
-				}
-
-				err = helper.RunCommand(cCtx.String("account"), car.AccountName, car.Name, stak, cCtx.String("region"), cCtx.Args().First(), cCtx.Args().Tail()...)
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}
-			return err
-		}
-
-		// get a list of cloud access roles, then build a list of names and lookup map
-		cars, err := kion.GetCARSOnAccount(cCtx.String("endpoint"), cCtx.String("token"), account.ID)
-		if err != nil {
-			return err
-		}
-		car, err := helper.FindCARByName(cars, cCtx.String("car"))
-		if err != nil {
-			return err
-		}
-
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car.Name, account.Number)
-		if err != nil {
-			return err
-		}
-
-		err = helper.RunCommand(account.Number, account.Name, car.Name, stak, cCtx.String("region"), cCtx.Args().First(), cCtx.Args().Tail()...)
+		// run the command
+		err = helper.RunCommand(stak, targetRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
 		if err != nil {
 			return err
 		}
 	} else {
-		return errors.New("must specify either --fav OR --account and --car parameters")
+		// check if we have a valid cached stak else grab a new one
+		cacheKey := fmt.Sprintf("%s-%s", carName, accNum)
+		cachedSTAK, found := c.Get(cacheKey)
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
+			stak = cachedSTAK
+		} else {
+			stak, err = kion.GetSTAK(endpoint, token, carName, accNum)
+			if err != nil {
+				return err
+			}
+
+			// store the stak in the cache
+			c.Set(cacheKey, stak)
+		}
+
+		err = helper.RunCommand(stak, region, cCtx.Args().First(), cCtx.Args().Tail()...)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
