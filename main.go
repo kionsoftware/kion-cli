@@ -470,19 +470,46 @@ func favorites(cCtx *cli.Context) error {
 		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
 		return helper.OpenBrowser(url, car.AccountTypeID)
 	} else {
-		// generate stak
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
-		if err != nil {
-			return err
-		}
-		// cred process output, print, or create sub-shell
+		// placeholder for our stak
+		var stak kion.STAK
+
+		// determine action and set required cache validity buffer
+		var action string
+		var buffer time.Duration
 		if cCtx.Bool("credential-process") {
+			action = "credential-process"
+			buffer = 5
+		} else if cCtx.Bool("print") {
+			action = "print"
+			buffer = 300
+		} else {
+			action = "subshell"
+			buffer = 300
+		}
+
+		// check if we have a valid cached stak else grab a new one
+		cacheKey := fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
+		cachedSTAK, found := c.Get(cacheKey)
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
+			stak = cachedSTAK
+		} else {
+			stak, err = kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+			if err != nil {
+				return err
+			}
+		}
+
+		// cred process output, print, or create sub-shell
+		switch action {
+		case "credential-process":
 			// NOTE: do not use os.Stderr here else credentials can be written to logs
 			return helper.PrintCredentialProcess(os.Stdout, stak)
-		} else if cCtx.Bool("print") {
+		case "print":
 			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)
-		} else {
+		case "subshell":
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak, favorite.Region)
+		default:
+			return nil
 		}
 	}
 }
@@ -665,7 +692,7 @@ func main() {
 	configPath = filepath.Join(home, configFile)
 
 	// set global for cache path
-	cachePath = filepath.Join(home, "/.kion/cache.gob")
+	cachePath = filepath.Join(home, "/.kion/kion.cache")
 
 	// load configuration file
 	err = helper.LoadConfig(configPath, &config)
