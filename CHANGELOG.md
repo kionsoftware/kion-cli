@@ -8,7 +8,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 [Unreleased] - yyyy-mm-dd
 -------------------------
 
-Notes for upgrading...
+The following environment variables will no longer be set when using the `run` command to execute ad hoc commands:
+
+```bash
+KION_ACCOUNT_NUM
+KION_ACCOUNT_ALIAS
+KION_CAR
+```
 
 ### Added
 
@@ -20,6 +26,8 @@ Notes for upgrading...
 ### Deprecated
 
 ### Removed
+
+- `KION_` removed from subshell environments when using the `run` command [kionsoftware/kion-cli/pull/38]
 
 ### Fixed
 
