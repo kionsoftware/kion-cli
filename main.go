@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/99designs/keyring"
 	"github.com/hashicorp/go-version"
 	"github.com/kionsoftware/kion-cli/lib/cache"
 	"github.com/kionsoftware/kion-cli/lib/helper"
@@ -31,9 +32,7 @@ var (
 	configPath string
 	configFile = ".kion.yml"
 
-	c         *cache.Cache
-	cachePath string
-	cacheKey  = []byte("0123456789abcdef")
+	c *cache.Cache
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,11 +290,35 @@ func beforeCommands(cCtx *cli.Context) error {
 	}
 
 	// initialize the cache
-	c = cache.NewCache(cacheKey)
-	err = c.LoadFromFile(cachePath)
+	name := "kion-cli"
+	ring, err := keyring.Open(keyring.Config{
+		ServiceName: name,
+		KeyCtlScope: "session",
+
+		// osx
+		KeychainName:             "login",
+		KeychainTrustApplication: true,
+		KeychainSynchronizable:   false,
+
+		// kde wallet
+		KWalletAppID:  name,
+		KWalletFolder: name,
+
+		// windows
+		WinCredPrefix: name,
+
+		// password store
+		PassPrefix: name,
+
+		//  encrypted file fallback
+		FileDir:          "~/.kion",
+		FilePasswordFunc: helper.PromptPassword,
+	})
 	if err != nil {
 		return err
 	}
+
+	c = cache.NewCache(ring)
 
 	return nil
 }
@@ -361,7 +384,10 @@ func genStaks(cCtx *cli.Context) error {
 	// if we have what we need go look stuff up without prompts do it
 	if account != "" && carName != "" {
 		// determine if we have a valid cached entry
-		cachedSTAK, found := c.Get(cacheKey)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
+		if err != nil {
+			return err
+		}
 		getCar := true
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
 			// cached stak found and is still valid
@@ -387,7 +413,10 @@ func genStaks(cCtx *cli.Context) error {
 
 		// rebuild cache key and determine if we have a valid cached entry
 		cacheKey = fmt.Sprintf("%s-%s", car.Name, car.AccountNumber)
-		cachedSTAK, found := c.Get(cacheKey)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
+		if err != nil {
+			return err
+		}
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
 			// cached stak found and is still valid
 			stak = cachedSTAK
@@ -403,7 +432,10 @@ func genStaks(cCtx *cli.Context) error {
 		}
 
 		// store the stak in the cache
-		c.Set(cacheKey, stak)
+		err = c.SetStak(cacheKey, stak)
+		if err != nil {
+			return err
+		}
 	}
 
 	// run the action
@@ -489,7 +521,10 @@ func favorites(cCtx *cli.Context) error {
 
 		// check if we have a valid cached stak else grab a new one
 		cacheKey := fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
-		cachedSTAK, found := c.Get(cacheKey)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
+		if err != nil {
+			return err
+		}
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
 			stak = cachedSTAK
 		} else {
@@ -499,7 +534,10 @@ func favorites(cCtx *cli.Context) error {
 			}
 
 			// store the stak in the cache
-			c.Set(cacheKey, stak)
+			err = c.SetStak(cacheKey, stak)
+			if err != nil {
+				return err
+			}
 		}
 
 		// cred process output, print, or create sub-shell
@@ -612,7 +650,10 @@ func runCommand(cCtx *cli.Context) error {
 
 		// check if we have a valid cached stak else grab a new one
 		cacheKey := fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
-		cachedSTAK, found := c.Get(cacheKey)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
+		if err != nil {
+			return err
+		}
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
 			stak = cachedSTAK
 		} else {
@@ -622,7 +663,10 @@ func runCommand(cCtx *cli.Context) error {
 			}
 
 			// store the stak in the cache
-			c.Set(cacheKey, stak)
+			err = c.SetStak(cacheKey, stak)
+			if err != nil {
+				return err
+			}
 		}
 
 		// take the region flag over the favorite region
@@ -639,7 +683,10 @@ func runCommand(cCtx *cli.Context) error {
 	} else {
 		// check if we have a valid cached stak else grab a new one
 		cacheKey := fmt.Sprintf("%s-%s", carName, accNum)
-		cachedSTAK, found := c.Get(cacheKey)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
+		if err != nil {
+			return err
+		}
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
 			stak = cachedSTAK
 		} else {
@@ -649,7 +696,10 @@ func runCommand(cCtx *cli.Context) error {
 			}
 
 			// store the stak in the cache
-			c.Set(cacheKey, stak)
+			err = c.SetStak(cacheKey, stak)
+			if err != nil {
+				return err
+			}
 		}
 
 		err = helper.RunCommand(stak, region, cCtx.Args().First(), cCtx.Args().Tail()...)
@@ -663,12 +713,6 @@ func runCommand(cCtx *cli.Context) error {
 
 // afterCommands run after any subcommands are executed.
 func afterCommands(cCtx *cli.Context) error {
-	// save our cache to disk
-	err := c.SaveToFile(cachePath)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -681,7 +725,6 @@ func afterCommands(cCtx *cli.Context) error {
 // main defines the command line utilities API. This should probably be broken
 // out into its own function some day.
 func main() {
-
 	// get home directory
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -690,9 +733,6 @@ func main() {
 
 	// set global for config path
 	configPath = filepath.Join(home, configFile)
-
-	// set global for cache path
-	cachePath = filepath.Join(home, "/.kion/kion.cache")
 
 	// load configuration file
 	err = helper.LoadConfig(configPath, &config)

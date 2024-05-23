@@ -1,159 +1,120 @@
 package cache
 
 import (
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"encoding/gob"
-	"io"
-	"os"
-	"path/filepath"
+	"encoding/json"
+	"time"
 
+	"github.com/99designs/keyring"
 	"github.com/kionsoftware/kion-cli/lib/kion"
 )
 
+// Cache is our cache object for passing the keychain to receiver methods.
 type Cache struct {
-	data map[string]kion.STAK
-	key  []byte
+	keyring keyring.Keyring
 }
 
-func NewCache(key []byte) *Cache {
+// CacheData is a nested structure for storing kion-cli data.
+type CacheData struct {
+	STAK map[string]kion.STAK
+	// TODO: extend for kion session data
+}
+
+// NewCache creates a new cache.
+func NewCache(keyring keyring.Keyring) *Cache {
 	return &Cache{
-		data: make(map[string]kion.STAK),
-		key:  key,
+		keyring: keyring,
 	}
 }
 
-// Set stores new STAK entries into the cache.
-func (c *Cache) Set(key string, value kion.STAK) {
-	c.data[key] = value
-}
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  STAKs                                                                     //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
-// Get retrieves existing STAK entries from the cache.
-func (c *Cache) Get(key string) (kion.STAK, bool) {
-	value, found := c.data[key]
-	return value, found
-}
-
-// SaveToFile stores the current cache into the specified file.
-func (c *Cache) SaveToFile(filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	encryptedData, err := c.encrypt()
-	if err != nil {
+// SetStak stores a STAK in the cache.
+func (c *Cache) SetStak(key string, value kion.STAK) error {
+	// pull our stak cache
+	cacheName := "Kion-CLI Cache"
+	cache, err := c.keyring.Get(cacheName)
+	if err != nil && err != keyring.ErrKeyNotFound {
 		return err
 	}
 
-	encoder := gob.NewEncoder(file)
-	return encoder.Encode(encryptedData)
-}
-
-// LoadFromFile retrieves the full cache from the specified file. It handles
-// creation of the path and file as needed.
-func (c *Cache) LoadFromFile(filename string) error {
-	file, err := os.Open(filename)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// if the file does not exist, create all necessary directories
-			err = os.MkdirAll(filepath.Dir(filename), 0755)
-			if err != nil {
-				return err
-			}
-
-			// create an empty file.
-			file, err = os.Create(filename)
-			if err != nil {
-				return err
-			}
-		} else {
+	// unmarshal the json data
+	var cacheData CacheData
+	if len(cache.Data) > 0 {
+		err = json.Unmarshal(cache.Data, &cacheData)
+		if err != nil {
 			return err
 		}
 	}
-	defer file.Close()
 
-	decoder := gob.NewDecoder(file)
-	var encryptedData []byte
-	err = decoder.Decode(&encryptedData)
-	if err != nil {
-		if err == io.EOF {
-			// if the file is empty, return nil
-			return nil
+	// initialize the map if it is still nil
+	if cacheData.STAK == nil {
+		cacheData.STAK = make(map[string]kion.STAK)
+	}
+
+	// clean expired entries
+	now := time.Now()
+	for key, stak := range cacheData.STAK {
+		if stak.Expiration.Before(now) {
+			delete(cacheData.STAK, key)
 		}
+	}
+
+	// create our entry
+	cacheData.STAK[key] = value
+
+	// marshal the stack cache to json
+	data, err := json.Marshal(cacheData)
+	if err != nil {
 		return err
 	}
 
-	return c.decrypt(encryptedData)
+	// build the keyring item
+	cache = keyring.Item{
+		Key:         cacheName,
+		Data:        data,
+		Label:       cacheName,
+		Description: "Cache data for the Kion-CLI.",
+	}
+
+	// store it
+	err = c.keyring.Set(cache)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// encrypt handles the encryption of the cache.
-func (c *Cache) encrypt() ([]byte, error) {
-	block, err := aes.NewCipher(c.key)
+// GetStak retrieves a STAK from the cache.
+func (c *Cache) GetStak(key string) (kion.STAK, bool, error) {
+	// pull our stak cache
+	cache, err := c.keyring.Get("Kion-CLI Cache")
 	if err != nil {
-		return nil, err
+		if err == keyring.ErrKeyNotFound {
+			return kion.STAK{}, false, nil
+		}
+		return kion.STAK{}, false, err
 	}
 
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
+	// unmarshal the json data
+	var cacheData CacheData
+	if len(cache.Data) > 0 {
+		err = json.Unmarshal(cache.Data, &cacheData)
+		if err != nil {
+			return kion.STAK{}, false, err
+		}
 	}
 
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, err
+	// return the stak if found
+	stak, found := cacheData.STAK[key]
+	if found {
+		return stak, true, nil
 	}
 
-	data, err := gobEncode(c.data)
-	if err != nil {
-		return nil, err
-	}
-
-	return gcm.Seal(nonce, nonce, data, nil), nil
-}
-
-// decrypt handles the decryption of the cache.
-func (c *Cache) decrypt(encryptedData []byte) error {
-	block, err := aes.NewCipher(c.key)
-	if err != nil {
-		return err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return err
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(encryptedData) < nonceSize {
-		return err
-	}
-
-	nonce, ciphertext := encryptedData[:nonceSize], encryptedData[nonceSize:]
-	data, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return err
-	}
-
-	return gobDecode(data, &c.data)
-}
-
-// gobEncode encodes an arbitrary value into a byte slice array.
-func gobEncode(value interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(value)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// gobDecode decodes a byte slice array into a value.
-func gobDecode(data []byte, value interface{}) error {
-	dec := gob.NewDecoder(bytes.NewBuffer(data))
-	return dec.Decode(value)
+	// return empty stak if not found
+	return kion.STAK{}, false, nil
 }
