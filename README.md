@@ -58,6 +58,7 @@ Setup
       idms_id:
       saml_metadata_file:
       saml_sp_issuer:
+      disable_cache: true              # defaults false
     favorites:
       - name: sandbox
         account: "111122223333"
@@ -169,6 +170,8 @@ __Global Options:__
                                        https://mykioninstance.example/api/v1/saml/auth/1
 
 --token TOKEN, -t TOKEN                Token (API or Bearer) used to authenticate.
+
+--disable-cache                        Disable the use of cache for Kion CLI.
 
 --help, -h                             Print usage text.
 
