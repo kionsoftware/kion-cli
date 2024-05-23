@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 [Unreleased] - yyyy-mm-dd
 -------------------------
 
+Notes for upgrading...
+
 ### Added
 
 ### Changed
@@ -21,15 +23,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 [0.2.0] - 2024-05-24
 --------------------
 
-1. The following environment variables will no longer be set when using the `run` command to execute ad hoc commands:
+The following environment variables will no longer be set when using the `run` command to execute ad hoc commands:
 
-```bash
-KION_ACCOUNT_NUM
-KION_ACCOUNT_ALIAS
-KION_CAR
-```
+  ```bash
+  KION_ACCOUNT_NUM
+  KION_ACCOUNT_ALIAS
+  KION_CAR
+  ```
 
-2. Caching of STAKs has been added to Kion-CLI. The tool will attempt to receive token durations from Kion and if not available will default to a token duration of 15 minutes. Kion is expected to start returning temporary token durations along with the credentials starting on versions 3.6.29, 3.7.19, 3.8.13, and 3.9.5. The cache will be stored in the systems keychain and depending on your operating system you may be prompted to allow Kion-CLI to access the cache entry. Cached STAKs will be used by default unless:
+Caching of STAKs has been added to Kion-CLI. The tool will attempt to receive token durations from Kion and if not available will default to a token duration of 15 minutes. Kion is expected to start returning temporary token durations along with the credentials starting on versions 3.6.29, 3.7.19, 3.8.13, and 3.9.5. The cache will be stored in the systems keychain and depending on your operating system you may be prompted to allow Kion-CLI to access the cache entry. Cached STAKs will be used by default unless:
 
   - Caching is disabled via the `--disable-cache` global flag
   - Caching is disabled in the `~/.kion.yml` configuration file by setting `kion.disable_cache: true`
