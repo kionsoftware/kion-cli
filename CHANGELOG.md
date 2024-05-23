@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 [Unreleased] - yyyy-mm-dd
 -------------------------
 
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+[0.2.0] - 2024-05-24
+--------------------
+
 1. The following environment variables will no longer be set when using the `run` command to execute ad hoc commands:
 
 ```bash
@@ -29,17 +42,11 @@ KION_CAR
 ### Added
 
 - Support to use Kion CLI as a credential process subsystem for AWS profiles [kionsoftware/kion-cli/pull/38]
-- Add STAK caching for faster operations [kionsoftware/kion-cli/pull/38]
-
-### Changed
-
-### Deprecated
+- Add caching for faster operations [kionsoftware/kion-cli/pull/38]
 
 ### Removed
 
-- `KION_` removed from subshell environments when using the `run` command [kionsoftware/kion-cli/pull/38]
-
-### Fixed
+- `KION_*` env variables removed from subshell environments when using the `run` command [kionsoftware/kion-cli/pull/38]
 
 [0.1.1] - 2024-05-20
 --------------------
