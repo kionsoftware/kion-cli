@@ -347,18 +347,11 @@ func authCommand(cCtx *cli.Context) error {
 // interactive prompt. Short term access keys are either printed to stdout or a
 // sub-shell is created with them set in the environment.
 func genStaks(cCtx *cli.Context) error {
-	// handle auth
-	err := authCommand(cCtx)
-	if err != nil {
-		return err
-	}
-
 	// stub out placeholders
 	var car kion.CAR
 	var stak kion.STAK
 
 	// set vars for easier access
-	token := cCtx.String("token")
 	endpoint := cCtx.String("endpoint")
 	carName := cCtx.String("car")
 	account := cCtx.String("account")
@@ -403,12 +396,24 @@ func genStaks(cCtx *cli.Context) error {
 
 		// grab the car if needed
 		if getCar {
-			car, err = kion.GetCARByNameAndAccount(endpoint, token, carName, account)
+			// handle auth
+			err := authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			car, err = kion.GetCARByNameAndAccount(endpoint, cCtx.String("token"), carName, account)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
+		// handle auth
+		err := authCommand(cCtx)
+		if err != nil {
+			return err
+		}
+
 		// run through the car selector to fill any gaps
 		err = helper.CARSelector(cCtx, &car)
 		if err != nil {
@@ -429,8 +434,14 @@ func genStaks(cCtx *cli.Context) error {
 
 	// grab a new stak if needed
 	if stak == (kion.STAK{}) {
+		// handle auth
+		err := authCommand(cCtx)
+		if err != nil {
+			return err
+		}
+
 		// generate short term tokens
-		stak, err = kion.GetSTAK(endpoint, token, car.Name, car.AccountNumber)
+		stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), car.Name, car.AccountNumber)
 		if err != nil {
 			return err
 		}
@@ -478,17 +489,17 @@ func favorites(cCtx *cli.Context) error {
 		}
 	}
 
-	// handle auth
-	err = authCommand(cCtx)
-	if err != nil {
-		return err
-	}
-
 	// grab the favorite object
 	favorite := fMap[fav]
 
 	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
+		// handle auth
+		err = authCommand(cCtx)
+		if err != nil {
+			return err
+		}
+
 		var car kion.CAR
 		// attempt to find exact match then fallback to first match
 		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
@@ -532,6 +543,13 @@ func favorites(cCtx *cli.Context) error {
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
 			stak = cachedSTAK
 		} else {
+			// handle auth
+			err = authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			// grab a new stak
 			stak, err = kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
 			if err != nil {
 				return err
@@ -613,14 +631,7 @@ func listFavorites(cCtx *cli.Context) error {
 // runCommand generates creds for an AWS account then executes the user
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
-	// handle auth
-	err := authCommand(cCtx)
-	if err != nil {
-		return err
-	}
-
 	// set vars for easier access
-	token := cCtx.String("token")
 	endpoint := cCtx.String("endpoint")
 	favName := cCtx.String("favorite")
 	accNum := cCtx.String("account")
@@ -661,7 +672,14 @@ func runCommand(cCtx *cli.Context) error {
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
 			stak = cachedSTAK
 		} else {
-			stak, err = kion.GetSTAK(endpoint, token, favorite.CAR, favorite.Account)
+			// handle auth
+			err := authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			// grab a new stak
+			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), favorite.CAR, favorite.Account)
 			if err != nil {
 				return err
 			}
@@ -694,7 +712,14 @@ func runCommand(cCtx *cli.Context) error {
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
 			stak = cachedSTAK
 		} else {
-			stak, err = kion.GetSTAK(endpoint, token, carName, accNum)
+			// handle auth
+			err := authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			// grab a new stak
+			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), carName, accNum)
 			if err != nil {
 				return err
 			}
