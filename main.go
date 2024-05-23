@@ -32,7 +32,7 @@ var (
 	configPath string
 	configFile = ".kion.yml"
 
-	c *cache.Cache
+	c cache.Cache
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -290,35 +290,39 @@ func beforeCommands(cCtx *cli.Context) error {
 	}
 
 	// initialize the cache
-	name := "kion-cli"
-	ring, err := keyring.Open(keyring.Config{
-		ServiceName: name,
-		KeyCtlScope: "session",
+	if cCtx.Bool("disable-cache") {
+		c = cache.NewNullCache()
+	} else {
+		name := "kion-cli"
+		ring, err := keyring.Open(keyring.Config{
+			ServiceName: name,
+			KeyCtlScope: "session",
 
-		// osx
-		KeychainName:             "login",
-		KeychainTrustApplication: true,
-		KeychainSynchronizable:   false,
+			// osx
+			KeychainName:             "login",
+			KeychainTrustApplication: true,
+			KeychainSynchronizable:   false,
 
-		// kde wallet
-		KWalletAppID:  name,
-		KWalletFolder: name,
+			// kde wallet
+			KWalletAppID:  name,
+			KWalletFolder: name,
 
-		// windows
-		WinCredPrefix: name,
+			// windows
+			WinCredPrefix: name,
 
-		// password store
-		PassPrefix: name,
+			// password store
+			PassPrefix: name,
 
-		//  encrypted file fallback
-		FileDir:          "~/.kion",
-		FilePasswordFunc: helper.PromptPassword,
-	})
-	if err != nil {
-		return err
+			//  encrypted file fallback
+			FileDir:          "~/.kion",
+			FilePasswordFunc: helper.PromptPassword,
+		})
+		if err != nil {
+			return err
+		}
+
+		c = cache.NewCache(ring)
 	}
-
-	c = cache.NewCache(ring)
 
 	return nil
 }
@@ -838,6 +842,12 @@ func main() {
 				Usage:       "`TOKEN` for authentication",
 				Destination: &config.Kion.ApiKey,
 				DefaultText: apiKeyDefaultText,
+			},
+			&cli.BoolFlag{
+				Name:        "disable-cache",
+				Value:       config.Kion.DisableCache,
+				Usage:       "disable the use of caching",
+				Destination: &config.Kion.DisableCache,
 			},
 		},
 
