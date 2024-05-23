@@ -286,6 +286,18 @@ CTKEY_PASSWORD           Maps to KION_PASSWORD.
 CTKEY_APPAPIKEY          Maps to KION_API_KEY
 ```
 
+__Caching:__
+
+The Kion CLI has caching enabled by default. The cache is stored in the system keychain and can be disabled by either passing the `--disable-cache` global flag or by setting `kion.disable_cache: true` in the `~/.kion.yml` configuration file. The Kion CLI attempts to receive temporary credential expirations from Kion however if nothing is returned a default credential duration of 15 minutes is set. Cached credentials will be used by default unless:
+
+  - Caching is disabled via the `--disable-cache` global flag
+  - Caching is disabled in the `~/.kion.yml` configuration file by setting `disable_cache: true`
+  - The credential has less than 5 seconds left and Kion CLI is being used as an AWS credential provider
+  - The credential has less than 5 minutes left and Kion CLI is being used to print keys
+  - The credential has less than 10 minutes left and Kion CLI is being used to create an AWS configuration profile
+  - The credential has less than 5 minutes left and Kion CLI is being used to create an authenticated subshell
+  - The credential has less than 5 seconds left and Kion CLI is being used to run an ad hoc command
+
 ### Compatibility
 
 Kion-CLI is setup to be a drop in replacement for the older cloudtamer.io
