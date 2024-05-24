@@ -8,6 +8,12 @@ import (
 	"github.com/kionsoftware/kion-cli/lib/kion"
 )
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Real Cacher                                                               //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 // SetStak stores a STAK in the cache.
 func (c *RealCache) SetStak(key string, value kion.STAK) error {
 	// pull our stak cache
@@ -56,7 +62,7 @@ func (c *RealCache) SetStak(key string, value kion.STAK) error {
 		Description: "Cache data for the Kion-CLI.",
 	}
 
-	// store it
+	// store the cache
 	err = c.keyring.Set(cache)
 	if err != nil {
 		return err
@@ -92,5 +98,21 @@ func (c *RealCache) GetStak(key string) (kion.STAK, bool, error) {
 	}
 
 	// return empty stak if not found
+	return kion.STAK{}, false, nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Null Cacher                                                               //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// SetStak does nothing.
+func (c *NullCache) SetStak(key string, value kion.STAK) error {
+	return nil
+}
+
+// GetStak returns an empty STAK, false, and a nil error.
+func (c *NullCache) GetStak(key string) (kion.STAK, bool, error) {
 	return kion.STAK{}, false, nil
 }
