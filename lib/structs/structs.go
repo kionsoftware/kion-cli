@@ -1,7 +1,5 @@
 package structs
 
-import "github.com/kionsoftware/kion-cli/lib/kion"
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Structs                                                                   //
@@ -11,9 +9,8 @@ import "github.com/kionsoftware/kion-cli/lib/kion"
 // Configuration holds the CLI tool values needed to run. The struct maps to
 // the applications configured dotfile for persistence between sessions.
 type Configuration struct {
-	Kion      Kion         `yaml:"kion"`
-	Session   kion.Session `yaml:"session"`
-	Favorites []Favorite   `yaml:"favorites"`
+	Kion      Kion       `yaml:"kion"`
+	Favorites []Favorite `yaml:"favorites"`
 }
 
 // Kion holds information about the instance of Kion with which the application

@@ -101,18 +101,18 @@ func AuthUNPW(cCtx *cli.Context) error {
 	}
 
 	// auth and capture our session
-	config.Session, err = kion.Authenticate(cCtx.String("endpoint"), idmsID, un, pw)
+	session, err := kion.Authenticate(cCtx.String("endpoint"), idmsID, un, pw)
 	if err != nil {
 		return err
 	}
-	config.Session.IDMSID = idmsID
-	config.Session.UserName = un
-	err = helper.SaveSession(configPath, config)
+	session.IDMSID = idmsID
+	session.UserName = un
+	err = c.SetSession(session)
 	if err != nil {
 		return err
 	}
 
-	return cCtx.Set("token", config.Session.Access.Token)
+	return cCtx.Set("token", session.Access.Token)
 }
 
 // AuthSAML directs the user to authenticate via SAML in a web browser.
@@ -160,51 +160,76 @@ func AuthSAML(cCtx *cli.Context) error {
 		return err
 	}
 
+	// cache the session for 9.5 minutes, tokens are valid for 10 minutes
+	timeFormat := "2006-01-02T15:04:05-0700"
+	session := kion.Session{
+		Access: struct {
+			Expiry string `json:"expiry"`
+			Token  string `json:"token"`
+		}{
+			Token:  authData.AuthToken,
+			Expiry: time.Now().Add(570 * time.Second).Format(timeFormat),
+		},
+	}
+	err = c.SetSession(session)
+	if err != nil {
+		return err
+	}
+
 	return cCtx.Set("token", authData.AuthToken)
 }
 
 // setAuthToken sets the token to be used for querying the Kion API. If not
 // passed to the tool as an argument, set in the env, or present in the
-// configuration dotfile it will prompt the users to authenticate.
+// configuration dotfile it will prompt the users to authenticate. Auth methods
+// are prioritized as follows: api/bearer token -> username/password -> saml.
+// If flags are set for multiple methods the highest priority method will be
+// used.
 func setAuthToken(cCtx *cli.Context) error {
 	if cCtx.Value("token") == "" {
 		// if we still have an active session use it
-		if config.Session.Access.Expiry != "" {
+		session, found, err := c.GetSession()
+		if err != nil {
+			return err
+		}
+		if found && session.Access.Expiry != "" {
 			timeFormat := "2006-01-02T15:04:05-0700"
 			now := time.Now()
-			expiration, err := time.Parse(timeFormat, config.Session.Access.Expiry)
+			expiration, err := time.Parse(timeFormat, session.Access.Expiry)
 			if err != nil {
 				return err
 			}
 			if expiration.After(now) {
-				err := cCtx.Set("token", config.Session.Access.Token)
+				err := cCtx.Set("token", session.Access.Token)
 				if err != nil {
 					return err
 				}
 				return nil
 			}
+
 			// TODO: uncomment when / if the application supports refresh tokens
-			// see if we can use the refresh token
-			// refresh_exp, err := time.Parse(timeFormat, config.Session.Refresh.Expiry)
+
+			// // see if we can use the refresh token
+			// refreshExp, err := time.Parse(timeFormat, session.Refresh.Expiry)
 			// if err != nil {
 			// 	return err
 			// }
 
-			// if refresh_exp.After(now) {
-			// 	un := config.Session.UserName
-			// 	idmsId := config.Session.IDMSID
-			// 	config.Session, err = kion.Authenticate(cCtx.String("endpoint"), idmsId, un, config.Session.Refresh.Token)
+			// if refreshExp.After(now) {
+			// 	un := session.UserName
+			// 	idmsId := session.IDMSID
+			// 	session, err = kion.Authenticate(cCtx.String("endpoint"), idmsId, un, session.Refresh.Token)
 			// 	if err != nil {
 			// 		return err
 			// 	}
-			// 	config.Session.UserName = un
-			// 	config.Session.IDMSID = idmsId
-			// 	err = helper.SaveSession(configPath, config)
+			// 	session.UserName = un
+			// 	session.IDMSID = idmsId
+			// 	err = c.SetSession(session)
 			// 	if err != nil {
 			// 		return err
 			// 	}
 
-			// 	return cCtx.Set("token", config.Session.Access.Token)
+			// 	return cCtx.Set("token", session.Access.Token)
 			// }
 		}
 
@@ -214,6 +239,7 @@ func setAuthToken(cCtx *cli.Context) error {
 			return err
 		}
 
+		// check if saml auth flags set and auth with saml if so
 		if cCtx.String("saml-metadata-file") != "" && cCtx.String("saml-sp-issuer") != "" {
 			err := AuthSAML(cCtx)
 			return err
@@ -289,38 +315,39 @@ func beforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
 	}
 
+	// initialize the keyring
+	name := "kion-cli"
+	ring, err := keyring.Open(keyring.Config{
+		ServiceName: name,
+		KeyCtlScope: "session",
+
+		// osx
+		KeychainName:             "login",
+		KeychainTrustApplication: true,
+		KeychainSynchronizable:   false,
+
+		// kde wallet
+		KWalletAppID:  name,
+		KWalletFolder: name,
+
+		// windows
+		WinCredPrefix: name,
+
+		// password store
+		PassPrefix: name,
+
+		//  encrypted file fallback
+		FileDir:          "~/.kion",
+		FilePasswordFunc: helper.PromptPassword,
+	})
+	if err != nil {
+		return err
+	}
+
 	// initialize the cache
 	if cCtx.Bool("disable-cache") {
-		c = cache.NewNullCache()
+		c = cache.NewNullCache(ring)
 	} else {
-		name := "kion-cli"
-		ring, err := keyring.Open(keyring.Config{
-			ServiceName: name,
-			KeyCtlScope: "session",
-
-			// osx
-			KeychainName:             "login",
-			KeychainTrustApplication: true,
-			KeychainSynchronizable:   false,
-
-			// kde wallet
-			KWalletAppID:  name,
-			KWalletFolder: name,
-
-			// windows
-			WinCredPrefix: name,
-
-			// password store
-			PassPrefix: name,
-
-			//  encrypted file fallback
-			FileDir:          "~/.kion",
-			FilePasswordFunc: helper.PromptPassword,
-		})
-		if err != nil {
-			return err
-		}
-
 		c = cache.NewCache(ring)
 	}
 
