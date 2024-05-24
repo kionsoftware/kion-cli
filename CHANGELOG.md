@@ -23,13 +23,7 @@ Notes for upgrading...
 [0.2.0] - 2024-05-24
 --------------------
 
-The following environment variables will no longer be set when using the `run` command to execute ad hoc commands:
-
-  ```bash
-  KION_ACCOUNT_NUM
-  KION_ACCOUNT_ALIAS
-  KION_CAR
-  ```
+Caching and AWS `credential_process` support has been added to the Kion CLI! See the AWS docs [HERE](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html) for more information as well as the `README.md` document in this repo for examples on how to use Kion CLI as a credential provider.
 
 Caching of STAKs has been added to Kion-CLI. The tool will attempt to receive token durations from Kion and if not available will default to a token duration of 15 minutes. Kion is expected to start returning temporary token durations along with the credentials starting on versions 3.6.29, 3.7.19, 3.8.13, and 3.9.5. The cache will be stored in the systems keychain and depending on your operating system you may be prompted to allow Kion-CLI to access the cache entry. Cached STAKs will be used by default unless:
 
@@ -41,10 +35,23 @@ Caching of STAKs has been added to Kion-CLI. The tool will attempt to receive to
   - The credential has less than 5 minutes left and Kion CLI is being used to create an authenticated subshell
   - The credential has less than 5 seconds left and Kion CLI is being used to run an ad hoc command
 
+The following environment variables will no longer be set when using the `run` command to execute ad hoc commands:
+
+  ```bash
+  KION_ACCOUNT_NUM
+  KION_ACCOUNT_ALIAS
+  KION_CAR
+  ```
+
 ### Added
 
 - Support to use Kion CLI as a credential process subsystem for AWS profiles [kionsoftware/kion-cli/pull/38]
 - Add caching for faster operations [kionsoftware/kion-cli/pull/38]
+- SAML tokens are now cached for 9.5 minutes [kionsoftware/kion-cli/pull/39]
+
+### Changed
+
+- Kion session data has moved from the `~/.kion.yml` configuration file to the cache [kionsoftware/kion-cli/pull/39]
 
 ### Removed
 
