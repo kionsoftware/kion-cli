@@ -27,7 +27,7 @@ Caching and AWS `credential_process` support has been added to the Kion CLI! See
 
 Kion CLI will now use cached STAKs by default to improve performance and reduce the number of calls to Kion. STAKs will be considered as valid for 15 minutes unless Kion reports back a longer STAK duration. Note that Kion is expected to start returning the duration of a STAK along with the STAK itself starting on versions 3.6.29, 3.7.19, 3.8.13, and 3.9.5.
 
-The cache will be stored in the system's keychain, and depending on your operating system, you may be prompted to allow Kion-CLI to access the cache entry on your first run.
+The cache will be stored in the system's keychain, and depending on your operating system, you may be prompted to allow Kion CLI to access the cache entry on your first run.
 
 Cached STAKs will be used by default unless:
 - Caching is disabled via the `--disable-cache` global flag
