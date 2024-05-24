@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"time"
 )
@@ -176,6 +178,55 @@ func OpenBrowser(url string, typeID uint) error {
 
 	// give ourselves up to 5 seconds to complete
 	time.Sleep(5 * time.Second)
+
+	return err
+}
+
+func OpenBrowserDirect(target string, typeID uint) error {
+	var err error
+	var logoutURL string
+	var replacement string
+
+	switch typeID {
+	case 1:
+		// commmercial
+		logoutURL = "https://signin.aws.amazon.com/oauth?Action=logout&redirect_uri="
+		replacement = "://us-east-1.signin"
+	case 2:
+		// govcloud
+		logoutURL = "https://signin.amazonaws-us-gov.com/oauth?Action=logout&redirect_uri="
+		replacement = "://us-gov-east-1.signin"
+	case 4:
+		// c2s
+		logoutURL = "http://signin.c2shome.ic.gov/oauth?Action=logout&redirect_uri="
+		replacement = "://us-iso-east-1.signin"
+	case 5:
+		// sc2s
+		logoutURL = "http://signin.sc2shome.sgov.gov/oauth?Action=logout&redirect_uri="
+		replacement = "://us-isob-east-1.signin"
+	}
+
+	// update url to one that supports a redirect uri
+	re := regexp.MustCompile(`:\/\/signin`)
+	target = re.ReplaceAllString(target, replacement)
+
+	// escape the target url
+	encodedUrl := url.QueryEscape(target)
+
+	// generate the federation link
+	federationLink := fmt.Sprintf("%s%s", logoutURL, encodedUrl)
+
+	// open the browser
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", federationLink).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", federationLink).Start()
+	case "darwin":
+		err = exec.Command("open", federationLink).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
 
 	return err
 }
