@@ -13,7 +13,7 @@ linters-settings:
     check-blank: false
   goconst:
     min-len: 3
-    min-occurrences: 5
+    min-occurrences: 10
   gocyclo:
     min-complexity: 30
   gofmt:

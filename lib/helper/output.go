@@ -2,15 +2,16 @@ package helper
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
 )
@@ -42,6 +43,36 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 	return nil
 }
 
+// PrintCredentialProcess prints out the short term access keys for use with
+// AWS profiles as a credential process subsystem.
+func PrintCredentialProcess(w io.Writer, stak kion.STAK) error {
+	// create the credentials struct
+	credentials := struct {
+		Version         int
+		AccessKeyId     string
+		SecretAccessKey string
+		SessionToken    string
+		Expiration      string
+	}{
+		1,
+		stak.AccessKey,
+		stak.SecretAccessKey,
+		stak.SessionToken,
+		stak.Expiration.Format(time.RFC3339),
+	}
+
+	// marshal the credentials to json
+	jsonData, err := json.MarshalIndent(credentials, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// print the json data
+	fmt.Fprintln(w, string(jsonData))
+
+	return nil
+}
+
 // SaveAWSCreds saves the short term access keys for AWS auth to the users AWS
 // configuration file.
 func SaveAWSCreds(stak kion.STAK, car kion.CAR) error {
@@ -60,7 +91,7 @@ func SaveAWSCreds(stak kion.STAK, car kion.CAR) error {
 		// create directory
 		errDir := os.MkdirAll(awsCredsDir, 0755)
 		if errDir != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 	if _, err := os.Stat(awsCredsFile); os.IsNotExist(err) {

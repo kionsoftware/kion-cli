@@ -20,6 +20,36 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.2.0] - 2024-05-24
+--------------------
+
+The following environment variables will no longer be set when using the `run` command to execute ad hoc commands:
+
+  ```bash
+  KION_ACCOUNT_NUM
+  KION_ACCOUNT_ALIAS
+  KION_CAR
+  ```
+
+Caching of STAKs has been added to Kion-CLI. The tool will attempt to receive token durations from Kion and if not available will default to a token duration of 15 minutes. Kion is expected to start returning temporary token durations along with the credentials starting on versions 3.6.29, 3.7.19, 3.8.13, and 3.9.5. The cache will be stored in the systems keychain and depending on your operating system you may be prompted to allow Kion-CLI to access the cache entry. Cached STAKs will be used by default unless:
+
+  - Caching is disabled via the `--disable-cache` global flag
+  - Caching is disabled in the `~/.kion.yml` configuration file by setting `kion.disable_cache: true`
+  - The credential has less than 5 seconds left and Kion CLI is being used as an AWS credential provider
+  - The credential has less than 5 minutes left and Kion CLI is being used to print keys
+  - The credential has less than 10 minutes left and Kion CLI is being used to create an AWS configuration profile
+  - The credential has less than 5 minutes left and Kion CLI is being used to create an authenticated subshell
+  - The credential has less than 5 seconds left and Kion CLI is being used to run an ad hoc command
+
+### Added
+
+- Support to use Kion CLI as a credential process subsystem for AWS profiles [kionsoftware/kion-cli/pull/38]
+- Add caching for faster operations [kionsoftware/kion-cli/pull/38]
+
+### Removed
+
+- `KION_*` env variables removed from subshell environments when using the `run` command [kionsoftware/kion-cli/pull/38]
+
 [0.1.1] - 2024-05-20
 --------------------
 

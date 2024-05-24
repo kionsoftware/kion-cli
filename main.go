@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/99designs/keyring"
 	"github.com/hashicorp/go-version"
+	"github.com/kionsoftware/kion-cli/lib/cache"
 	"github.com/kionsoftware/kion-cli/lib/helper"
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
@@ -29,6 +31,8 @@ var (
 	config     structs.Configuration
 	configPath string
 	configFile = ".kion.yml"
+
+	c cache.Cache
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,6 +289,41 @@ func beforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
 	}
 
+	// initialize the cache
+	if cCtx.Bool("disable-cache") {
+		c = cache.NewNullCache()
+	} else {
+		name := "kion-cli"
+		ring, err := keyring.Open(keyring.Config{
+			ServiceName: name,
+			KeyCtlScope: "session",
+
+			// osx
+			KeychainName:             "login",
+			KeychainTrustApplication: true,
+			KeychainSynchronizable:   false,
+
+			// kde wallet
+			KWalletAppID:  name,
+			KWalletFolder: name,
+
+			// windows
+			WinCredPrefix: name,
+
+			// password store
+			PassPrefix: name,
+
+			//  encrypted file fallback
+			FileDir:          "~/.kion",
+			FilePasswordFunc: helper.PromptPassword,
+		})
+		if err != nil {
+			return err
+		}
+
+		c = cache.NewCache(ring)
+	}
+
 	return nil
 }
 
@@ -308,45 +347,125 @@ func authCommand(cCtx *cli.Context) error {
 // interactive prompt. Short term access keys are either printed to stdout or a
 // sub-shell is created with them set in the environment.
 func genStaks(cCtx *cli.Context) error {
-	// handle auth
-	err := authCommand(cCtx)
-	if err != nil {
-		return err
+	// stub out placeholders
+	var car kion.CAR
+	var stak kion.STAK
+
+	// set vars for easier access
+	endpoint := cCtx.String("endpoint")
+	carName := cCtx.String("car")
+	account := cCtx.String("account")
+	cacheKey := fmt.Sprintf("%s-%s", carName, account)
+	region := cCtx.String("region")
+
+	// grab the command usage [stak, s, setenv, savecreds, etc]
+	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
+
+	// determine action and set required cache validity buffer
+	var action string
+	var buffer time.Duration
+	if cCtx.Bool("credential-process") {
+		action = "credential-process"
+		buffer = 5
+	} else if cCtx.Bool("print") || cmdUsed == "setenv" {
+		action = "print"
+		buffer = 300
+	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
+		action = "save"
+		buffer = 600
+	} else {
+		action = "subshell"
+		buffer = 300
 	}
 
-	var car kion.CAR
-
 	// if we have what we need go look stuff up without prompts do it
-	if cCtx.String("account") != "" && cCtx.String("car") != "" {
-		// lookup the car details and populate the passed car
-		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"), cCtx.String("account"))
+	if account != "" && carName != "" {
+		// determine if we have a valid cached entry
+		cachedSTAK, found, err := c.GetStak(cacheKey)
 		if err != nil {
 			return err
 		}
+		getCar := true
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
+			// cached stak found and is still valid
+			stak = cachedSTAK
+			if action != "subshell" {
+				getCar = false
+			}
+		}
+
+		// grab the car if needed
+		if getCar {
+			// handle auth
+			err := authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			car, err = kion.GetCARByNameAndAccount(endpoint, cCtx.String("token"), carName, account)
+			if err != nil {
+				return err
+			}
+		}
 	} else {
+		// handle auth
+		err := authCommand(cCtx)
+		if err != nil {
+			return err
+		}
+
 		// run through the car selector to fill any gaps
 		err = helper.CARSelector(cCtx, &car)
 		if err != nil {
 			return err
 		}
+
+		// rebuild cache key and determine if we have a valid cached entry
+		cacheKey = fmt.Sprintf("%s-%s", car.Name, car.AccountNumber)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
+		if err != nil {
+			return err
+		}
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
+			// cached stak found and is still valid
+			stak = cachedSTAK
+		}
 	}
 
-	// generate short term tokens
-	stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car.Name, car.AccountNumber)
-	if err != nil {
-		return err
+	// grab a new stak if needed
+	if stak == (kion.STAK{}) {
+		// handle auth
+		err := authCommand(cCtx)
+		if err != nil {
+			return err
+		}
+
+		// generate short term tokens
+		stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), car.Name, car.AccountNumber)
+		if err != nil {
+			return err
+		}
+
+		// store the stak in the cache
+		err = c.SetStak(cacheKey, stak)
+		if err != nil {
+			return err
+		}
 	}
 
-	// grab the command usage [stak, s, setenv, savecreds, etc]
-	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
-
-	// print or create sub-shell
-	if cCtx.Bool("print") || cmdUsed == "setenv" {
-		return helper.PrintSTAK(os.Stdout, stak, cCtx.String("region"))
-	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
+	// run the action
+	switch action {
+	case "credential-process":
+		// NOTE: do not use os.Stderr here else credentials can be written to logs
+		return helper.PrintCredentialProcess(os.Stdout, stak)
+	case "print":
+		return helper.PrintSTAK(os.Stdout, stak, region)
+	case "save":
 		return helper.SaveAWSCreds(stak, car)
-	} else {
-		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak, cCtx.String("region"))
+	case "subshell":
+		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak, region)
+	default:
+		return nil
 	}
 }
 
@@ -370,17 +489,17 @@ func favorites(cCtx *cli.Context) error {
 		}
 	}
 
-	// handle auth
-	err = authCommand(cCtx)
-	if err != nil {
-		return err
-	}
-
 	// grab the favorite object
 	favorite := fMap[fav]
 
 	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
+		// handle auth
+		err = authCommand(cCtx)
+		if err != nil {
+			return err
+		}
+
 		var car kion.CAR
 		// attempt to find exact match then fallback to first match
 		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
@@ -398,16 +517,62 @@ func favorites(cCtx *cli.Context) error {
 		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
 		return helper.OpenBrowser(url, car.AccountTypeID)
 	} else {
-		// generate stak
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+		// placeholder for our stak
+		var stak kion.STAK
+
+		// determine action and set required cache validity buffer
+		var action string
+		var buffer time.Duration
+		if cCtx.Bool("credential-process") {
+			action = "credential-process"
+			buffer = 5
+		} else if cCtx.Bool("print") {
+			action = "print"
+			buffer = 300
+		} else {
+			action = "subshell"
+			buffer = 300
+		}
+
+		// check if we have a valid cached stak else grab a new one
+		cacheKey := fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
 		if err != nil {
 			return err
 		}
-		// print or create sub-shell
-		if cCtx.Bool("print") {
-			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
+			stak = cachedSTAK
 		} else {
+			// handle auth
+			err = authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			// grab a new stak
+			stak, err = kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+			if err != nil {
+				return err
+			}
+
+			// store the stak in the cache
+			err = c.SetStak(cacheKey, stak)
+			if err != nil {
+				return err
+			}
+		}
+
+		// cred process output, print, or create sub-shell
+		switch action {
+		case "credential-process":
+			// NOTE: do not use os.Stderr here else credentials can be written to logs
+			return helper.PrintCredentialProcess(os.Stdout, stak)
+		case "print":
+			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)
+		case "subshell":
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak, favorite.Region)
+		default:
+			return nil
 		}
 	}
 }
@@ -466,94 +631,110 @@ func listFavorites(cCtx *cli.Context) error {
 // runCommand generates creds for an AWS account then executes the user
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
-	if cCtx.String("favorite") != "" {
+	// set vars for easier access
+	endpoint := cCtx.String("endpoint")
+	favName := cCtx.String("favorite")
+	accNum := cCtx.String("account")
+	carName := cCtx.String("car")
+	region := cCtx.String("region")
+
+	// fail fast if we don't have what we need
+	if favName == "" && (accNum == "" || carName == "") {
+		return errors.New("must specify either --fav OR --account and --car parameters")
+	}
+
+	// placeholder for our stak
+	var stak kion.STAK
+
+	// prefer favorites if specified, else use account and car
+	if favName != "" {
 		// map our favorites for ease of use
 		_, fMap := helper.MapFavs(config.Favorites)
 
 		// if arg passed is a valid favorite use it else prompt
 		var fav string
 		var err error
-		if fMap[cCtx.String("fav")] != (structs.Favorite{}) {
-			fav = cCtx.String("fav")
+		if fMap[favName] != (structs.Favorite{}) {
+			fav = favName
 		} else {
-			return errors.New("can't find fav")
+			return errors.New("can't find favorite")
 		}
 
-		// handle auth
-		err = authCommand(cCtx)
-		if err != nil {
-			return err
-		}
-
-		// generate stak
+		// grab our favorite
 		favorite := fMap[fav]
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+
+		// check if we have a valid cached stak else grab a new one
+		cacheKey := fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
 		if err != nil {
 			return err
+		}
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
+			stak = cachedSTAK
+		} else {
+			// handle auth
+			err := authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			// grab a new stak
+			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), favorite.CAR, favorite.Account)
+			if err != nil {
+				return err
+			}
+
+			// store the stak in the cache
+			err = c.SetStak(cacheKey, stak)
+			if err != nil {
+				return err
+			}
 		}
 
 		// take the region flag over the favorite region
-		targetRegion := cCtx.String("region")
+		targetRegion := region
 		if targetRegion == "" {
 			targetRegion = favorite.Region
 		}
 
-		err = helper.RunCommand(favorite.Account, favorite.Name, favorite.CAR, stak, targetRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
-		if err != nil {
-			return err
-		}
-
-	} else if cCtx.String("account") != "" && cCtx.String("car") != "" {
-		account, statusCode, err := kion.GetAccount(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("account"))
-		if err != nil {
-			if statusCode == 403 || statusCode == 401 {
-				// try our way prone to collisions of car names
-				err := authCommand(cCtx)
-				if err != nil {
-					return err
-				}
-
-				car, err := kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"))
-				if err != nil {
-					return err
-				}
-
-				stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), cCtx.String("car"), cCtx.String("account"))
-				if err != nil {
-					return err
-				}
-
-				err = helper.RunCommand(cCtx.String("account"), car.AccountName, car.Name, stak, cCtx.String("region"), cCtx.Args().First(), cCtx.Args().Tail()...)
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}
-			return err
-		}
-
-		// get a list of cloud access roles, then build a list of names and lookup map
-		cars, err := kion.GetCARSOnAccount(cCtx.String("endpoint"), cCtx.String("token"), account.ID)
-		if err != nil {
-			return err
-		}
-		car, err := helper.FindCARByName(cars, cCtx.String("car"))
-		if err != nil {
-			return err
-		}
-
-		stak, err := kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), car.Name, account.Number)
-		if err != nil {
-			return err
-		}
-
-		err = helper.RunCommand(account.Number, account.Name, car.Name, stak, cCtx.String("region"), cCtx.Args().First(), cCtx.Args().Tail()...)
+		// run the command
+		err = helper.RunCommand(stak, targetRegion, cCtx.Args().First(), cCtx.Args().Tail()...)
 		if err != nil {
 			return err
 		}
 	} else {
-		return errors.New("must specify either --fav OR --account and --car parameters")
+		// check if we have a valid cached stak else grab a new one
+		cacheKey := fmt.Sprintf("%s-%s", carName, accNum)
+		cachedSTAK, found, err := c.GetStak(cacheKey)
+		if err != nil {
+			return err
+		}
+		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
+			stak = cachedSTAK
+		} else {
+			// handle auth
+			err := authCommand(cCtx)
+			if err != nil {
+				return err
+			}
+
+			// grab a new stak
+			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), carName, accNum)
+			if err != nil {
+				return err
+			}
+
+			// store the stak in the cache
+			err = c.SetStak(cacheKey, stak)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = helper.RunCommand(stak, region, cCtx.Args().First(), cCtx.Args().Tail()...)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -573,7 +754,6 @@ func afterCommands(cCtx *cli.Context) error {
 // main defines the command line utilities API. This should probably be broken
 // out into its own function some day.
 func main() {
-
 	// get home directory
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -618,7 +798,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.1.1",
+		Version:              "v0.2.0",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
@@ -688,6 +868,12 @@ func main() {
 				Destination: &config.Kion.ApiKey,
 				DefaultText: apiKeyDefaultText,
 			},
+			&cli.BoolFlag{
+				Name:        "disable-cache",
+				Value:       config.Kion.DisableCache,
+				Usage:       "disable the use of caching",
+				Destination: &config.Kion.DisableCache,
+			},
 		},
 
 		////////////////
@@ -726,6 +912,10 @@ func main() {
 						Aliases: []string{"s"},
 						Usage:   "save short-term keys as aws credentials profile",
 					},
+					&cli.BoolFlag{
+						Name:  "credential-process",
+						Usage: "print stak json as AWS credential process",
+					},
 				},
 			},
 			{
@@ -745,6 +935,10 @@ func main() {
 						Name:    "print",
 						Aliases: []string{"p"},
 						Usage:   "print stak only",
+					},
+					&cli.BoolFlag{
+						Name:  "credential-process",
+						Usage: "print stak json as AWS credential process",
 					},
 				},
 				BashComplete: func(cCtx *cli.Context) {

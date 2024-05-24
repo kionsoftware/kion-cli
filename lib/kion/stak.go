@@ -3,6 +3,7 @@ package kion
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,6 +23,8 @@ type STAK struct {
 	AccessKey       string `json:"access_key"`
 	SecretAccessKey string `json:"secret_access_key"`
 	SessionToken    string `json:"session_token"`
+	Duration        int64  `json:"duration"`
+	Expiration      time.Time
 }
 
 // STAKRequest maps to the required post body when interfacing with the Kion
@@ -51,6 +54,13 @@ func GetSTAK(host string, token string, carName string, accNum string) (STAK, er
 	if err != nil {
 		return STAK{}, err
 	}
+
+	// set the expiration time, buffer by 30 seconds
+	duration := stakResp.STAK.Duration
+	if duration == 0 {
+		duration = 900
+	}
+	stakResp.STAK.Expiration = time.Now().Add(time.Duration(duration-30) * time.Second)
 
 	return stakResp.STAK, nil
 }

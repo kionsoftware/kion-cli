@@ -94,7 +94,7 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 
 // RunCommand executes a one time command with AWS credentials set within the
 // environment. Command output is sent directly to stdout / stderr.
-func RunCommand(accountNumber string, accountAlias string, carName string, stak kion.STAK, region string, cmd string, args ...string) error {
+func RunCommand(stak kion.STAK, region string, cmd string, args ...string) error {
 	// stub out an empty command stack
 	newCmd := make([]string, 0)
 
@@ -114,9 +114,6 @@ func RunCommand(accountNumber string, accountAlias string, carName string, stak 
 	env = append(env, fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", stak.AccessKey))
 	env = append(env, fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", stak.SecretAccessKey))
 	env = append(env, fmt.Sprintf("AWS_SESSION_TOKEN=%s", stak.SessionToken))
-	env = append(env, fmt.Sprintf("KION_ACCOUNT_NUM=%s", accountNumber))
-	env = append(env, fmt.Sprintf("KION_ACCOUNT_ALIAS=%s", accountAlias))
-	env = append(env, fmt.Sprintf("KION_CAR=%s", carName))
 
 	// set region if one was passed
 	if region != "" {

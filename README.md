@@ -58,6 +58,7 @@ Setup
       idms_id:
       saml_metadata_file:
       saml_sp_issuer:
+      disable_cache: true              # defaults false
     favorites:
       - name: sandbox
         account: "111122223333"
@@ -70,6 +71,8 @@ Setup
     ```
 
 4. Usage examples:
+
+    __Command Line:__
 
     ```sh
     # open the sandbox AWS console favorited in the config above
@@ -87,6 +90,16 @@ Setup
     # federate into a web console using a wizard to select a target account and Cloud Rule
     # * note that Firefox users will have to approve pop-ups on the first run
     kion console
+    ```
+
+    __AWS Profiles:__
+
+    ```toml
+    [profile one]
+    credential_process = /path/to/kion stak --credential-process --account 121212121212 --car DevOps
+
+    [profile two]
+    credential_process = /path/to/kion favorite --credential-process MyFavorite
     ```
 
 User Manual
@@ -158,6 +171,8 @@ __Global Options:__
 
 --token TOKEN, -t TOKEN                Token (API or Bearer) used to authenticate.
 
+--disable-cache                        Disable the use of cache for Kion CLI.
+
 --help, -h                             Print usage text.
 
 --version, -v                          Print the Kion CLI version.
@@ -182,6 +197,12 @@ OPTIONS
                                        profile. The print flag will supercede this
                                        option.
 
+  --credential-process                 For use with AWS credentials profiles to
+                                       setup Kion CLI as a credentials process
+                                       subsystem. Returns a json object in the
+                                       format needed for the `credential_process`
+                                       profile setting.
+
   --help, -h                           Print usage text.
 ```
 
@@ -200,6 +221,11 @@ OPTIONS
                                        favorites with an "access_type" of
                                        "web". (default: false)
 
+  --credential-process                 For use with AWS credentials profiles to
+                                       setup Kion CLI as a credentials process
+                                       subsystem. Returns a json object in the
+                                       format needed for the `credential_process`
+                                       profile setting.
 
   --help, -h                           Print usage text.
 ```
@@ -259,6 +285,18 @@ CTKEY_PASSWORD           Maps to KION_PASSWORD.
 
 CTKEY_APPAPIKEY          Maps to KION_API_KEY
 ```
+
+__Caching:__
+
+The Kion CLI has caching enabled by default. The cache is stored in the system keychain and can be disabled by either passing the `--disable-cache` global flag or by setting `kion.disable_cache: true` in the `~/.kion.yml` configuration file. The Kion CLI attempts to receive temporary credential expirations from Kion however if nothing is returned a default credential duration of 15 minutes is set. Cached credentials will be used by default unless:
+
+  - Caching is disabled via the `--disable-cache` global flag
+  - Caching is disabled in the `~/.kion.yml` configuration file by setting `disable_cache: true`
+  - The credential has less than 5 seconds left and Kion CLI is being used as an AWS credential provider
+  - The credential has less than 5 minutes left and Kion CLI is being used to print keys
+  - The credential has less than 10 minutes left and Kion CLI is being used to create an AWS configuration profile
+  - The credential has less than 5 minutes left and Kion CLI is being used to create an authenticated subshell
+  - The credential has less than 5 seconds left and Kion CLI is being used to run an ad hoc command
 
 ### Compatibility
 
