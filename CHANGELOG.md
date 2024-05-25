@@ -14,6 +14,8 @@ Notes for upgrading...
 
 ### Changed
 
+- Federating into the web console is now handled without iframes or javascript [kionsoftware/kion-cli/pull/40]
+
 ### Deprecated
 
 ### Removed
