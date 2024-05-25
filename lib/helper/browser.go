@@ -155,7 +155,9 @@ func redirectServer(url string, typeID uint) {
 	log.Fatal(server.ListenAndServe())
 }
 
-// OpenBrowser opens up a URL in the users system default browser.
+// OpenBrowser opens up a URL in the users system default browser. It uses a
+// local webserver to host a page that handles logging users out of existing
+// sessions then redirecting to the federated login page.
 func OpenBrowser(url string, typeID uint) error {
 	var err error
 
@@ -182,7 +184,10 @@ func OpenBrowser(url string, typeID uint) error {
 	return err
 }
 
-func OpenBrowserDirect(target string, typeID uint) error {
+// OpenBrowserDirect opens up a URL in the users system default browser. It
+// uses the redirect_uri query parameter to handle the logout and redirect to
+// the federated login page.
+func OpenBrowserRedirect(target string, typeID uint) error {
 	var err error
 	var logoutURL string
 	var replacement string
