@@ -158,6 +158,8 @@ func redirectServer(url string, typeID uint) {
 // OpenBrowser opens up a URL in the users system default browser. It uses a
 // local webserver to host a page that handles logging users out of existing
 // sessions then redirecting to the federated login page.
+//
+// Deprecated: Use OpenBrowserRedirect instead.
 func OpenBrowser(url string, typeID uint) error {
 	var err error
 
