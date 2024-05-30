@@ -20,6 +20,13 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.2.1] - 2024-05-30
+--------------------
+
+### Changed
+
+- Federating into the web console is now handled without iframes or javascript [kionsoftware/kion-cli/pull/40]
+
 [0.2.0] - 2024-05-24
 --------------------
 

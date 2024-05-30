@@ -542,7 +542,7 @@ func favorites(cCtx *cli.Context) error {
 			return err
 		}
 		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
-		return helper.OpenBrowser(url, car.AccountTypeID)
+		return helper.OpenBrowserRedirect(url, car.AccountTypeID)
 	} else {
 		// placeholder for our stak
 		var stak kion.STAK
@@ -625,7 +625,7 @@ func fedConsole(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	return helper.OpenBrowser(url, car.AccountTypeID)
+	return helper.OpenBrowserRedirect(url, car.AccountTypeID)
 }
 
 // listFavorites prints out the users stored favorites. Extra information is
@@ -825,7 +825,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.2.0",
+		Version:              "v0.2.1",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
