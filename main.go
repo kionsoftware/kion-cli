@@ -825,7 +825,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.2.0",
+		Version:              "v0.2.1",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
