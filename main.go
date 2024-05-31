@@ -59,8 +59,8 @@ func setEndpoint() error {
 // Kion, stores the session data, and sets the context token.
 func AuthUNPW(cCtx *cli.Context) error {
 	var err error
-	un := cCtx.String("user")
-	pw := cCtx.String("password")
+	un := config.Kion.Username
+	pw := config.Kion.Password
 	idmsID := cCtx.Uint("idms")
 
 	// prompt idms if needed
@@ -109,16 +109,18 @@ func AuthUNPW(cCtx *cli.Context) error {
 		return err
 	}
 
-	return cCtx.Set("token", session.Access.Token)
+	// set our token in the config
+	config.Kion.ApiKey = session.Access.Token
+	return nil
 }
 
 // AuthSAML directs the user to authenticate via SAML in a web browser.
 // The SAML assertion is posted to this app which is forwarded to Kion and
 // exchanged for the context token.
-func AuthSAML(cCtx *cli.Context) error {
+func AuthSAML() error {
 	var err error
-	samlMetadataFile := cCtx.String("saml-metadata-file")
-	samlServiceProviderIssuer := cCtx.String("saml-sp-issuer")
+	samlMetadataFile := config.Kion.SamlMetadataFile
+	samlServiceProviderIssuer := config.Kion.SamlIssuer
 
 	// prompt metadata url if needed
 	if samlMetadataFile == "" {
@@ -173,7 +175,9 @@ func AuthSAML(cCtx *cli.Context) error {
 		return err
 	}
 
-	return cCtx.Set("token", authData.AuthToken)
+	// set our token in the config
+	config.Kion.ApiKey = authData.AuthToken
+	return nil
 }
 
 // setAuthToken sets the token to be used for querying the Kion API. If not
@@ -183,7 +187,7 @@ func AuthSAML(cCtx *cli.Context) error {
 // If flags are set for multiple methods the highest priority method will be
 // used.
 func setAuthToken(cCtx *cli.Context) error {
-	if cCtx.Value("token") == "" {
+	if config.Kion.ApiKey == "" {
 		// if we still have an active session use it
 		session, found, err := c.GetSession()
 		if err != nil {
@@ -197,10 +201,11 @@ func setAuthToken(cCtx *cli.Context) error {
 				return err
 			}
 			if expiration.After(now) {
-				err := cCtx.Set("token", session.Access.Token)
-				if err != nil {
-					return err
-				}
+				// TODO: test token is good with an endpoint that is accessible to all
+				// user permission levels, if you get a 401 then assume token is bad
+				// due to caching a cred when a users password expired, and flush the
+				// cache instead...
+				config.Kion.ApiKey = session.Access.Token
 				return nil
 			}
 
@@ -226,19 +231,20 @@ func setAuthToken(cCtx *cli.Context) error {
 			// 		return err
 			// 	}
 
-			// 	return cCtx.Set("token", session.Access.Token)
+			//  config.Kion.ApiKey = session.Access.Token
+			// 	return nil
 			// }
 		}
 
 		// check un / pw were set via flags and infer auth method
-		if cCtx.String("user") != "" || cCtx.String("password") != "" {
+		if config.Kion.Username != "" || config.Kion.Password != "" {
 			err := AuthUNPW(cCtx)
 			return err
 		}
 
 		// check if saml auth flags set and auth with saml if so
-		if cCtx.String("saml-metadata-file") != "" && cCtx.String("saml-sp-issuer") != "" {
-			err := AuthSAML(cCtx)
+		if config.Kion.SamlMetadataFile != "" && config.Kion.SamlIssuer != "" {
+			err := AuthSAML()
 			return err
 		}
 
@@ -260,17 +266,14 @@ func setAuthToken(cCtx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-			err = cCtx.Set("token", apiKey)
-			if err != nil {
-				return err
-			}
+			config.Kion.ApiKey = apiKey
 		case "Password":
 			err := AuthUNPW(cCtx)
 			if err != nil {
 				return err
 			}
 		case "SAML":
-			err := AuthSAML(cCtx)
+			err := AuthSAML()
 			if err != nil {
 				return err
 			}
@@ -471,7 +474,7 @@ func genStaks(cCtx *cli.Context) error {
 				return err
 			}
 
-			car, err = kion.GetCARByNameAndAccount(endpoint, cCtx.String("token"), carName, account)
+			car, err = kion.GetCARByNameAndAccount(endpoint, config.Kion.ApiKey, carName, account)
 			if err != nil {
 				return err
 			}
@@ -510,7 +513,7 @@ func genStaks(cCtx *cli.Context) error {
 		}
 
 		// generate short term tokens
-		stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), car.Name, car.AccountNumber)
+		stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, car.Name, car.AccountNumber)
 		if err != nil {
 			return err
 		}
@@ -571,15 +574,15 @@ func favorites(cCtx *cli.Context) error {
 
 		var car kion.CAR
 		// attempt to find exact match then fallback to first match
-		car, err = kion.GetCARByNameAndAccount(config.Kion.Url, cCtx.String("token"), favorite.CAR, favorite.Account)
+		car, err = kion.GetCARByNameAndAccount(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 		if err != nil {
-			car, err = kion.GetCARByName(config.Kion.Url, cCtx.String("token"), favorite.CAR)
+			car, err = kion.GetCARByName(config.Kion.Url, config.Kion.ApiKey, favorite.CAR)
 			if err != nil {
 				return err
 			}
 			car.AccountNumber = favorite.Account
 		}
-		url, err := kion.GetFederationURL(config.Kion.Url, cCtx.String("token"), car)
+		url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
 		if err != nil {
 			return err
 		}
@@ -619,7 +622,7 @@ func favorites(cCtx *cli.Context) error {
 			}
 
 			// grab a new stak
-			stak, err = kion.GetSTAK(config.Kion.Url, cCtx.String("token"), favorite.CAR, favorite.Account)
+			stak, err = kion.GetSTAK(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 			if err != nil {
 				return err
 			}
@@ -663,7 +666,7 @@ func fedConsole(cCtx *cli.Context) error {
 	}
 
 	// grab the csp federation url
-	url, err := kion.GetFederationURL(config.Kion.Url, cCtx.String("token"), car)
+	url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
 	if err != nil {
 		return err
 	}
@@ -748,7 +751,7 @@ func runCommand(cCtx *cli.Context) error {
 			}
 
 			// grab a new stak
-			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), favorite.CAR, favorite.Account)
+			stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 			if err != nil {
 				return err
 			}
@@ -788,7 +791,7 @@ func runCommand(cCtx *cli.Context) error {
 			}
 
 			// grab a new stak
-			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), carName, accNum)
+			stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, carName, accNum)
 			if err != nil {
 				return err
 			}
