@@ -294,6 +294,55 @@ func beforeCommands(cCtx *cli.Context) error {
 		return nil
 	}
 
+	// switch profiles if specified
+	profileName := cCtx.String("profile")
+	if profileName != "" {
+
+		// grab all manually set global flags so we can honor them over the chosen
+		// profiles values
+		setStrings := make(map[string]string)
+		var disableCacheFlagged bool
+		setGlobalFlags := cCtx.FlagNames()
+		for _, flag := range setGlobalFlags {
+			switch flag {
+			case "endpoint":
+				setStrings["endpoint"] = config.Kion.Url
+			case "user":
+				setStrings["user"] = config.Kion.Username
+			case "password":
+				setStrings["password"] = config.Kion.Password
+			case "idms":
+				setStrings["idms"] = config.Kion.IDMS
+			case "saml-metadata-file":
+				setStrings["saml-metadata-file"] = config.Kion.SamlMetadataFile
+			case "saml-sp-issuer":
+				setStrings["saml-sp-issuer"] = config.Kion.SamlIssuer
+			case "token":
+				setStrings["token"] = config.Kion.ApiKey
+			case "disable-cache":
+				disableCacheFlagged = true
+			}
+		}
+
+		// grab the profile and if found and not empty override the default config
+		profile, found := config.Profiles[profileName]
+		if found {
+			config.Kion = profile.Kion
+			config.Favorites = profile.Favorites
+		}
+
+		// honor any global flags that were set to maintain precedence
+		for key, value := range setStrings {
+			err := cCtx.Set(key, value)
+			if err != nil {
+				return err
+			}
+		}
+		if disableCacheFlagged {
+			config.Kion.DisableCache = true
+		}
+	}
+
 	// grab the kion url if not already set
 	err := setEndpoint()
 	if err != nil {
@@ -893,6 +942,11 @@ func main() {
 				Usage:       "`TOKEN` for authentication",
 				Destination: &config.Kion.ApiKey,
 				DefaultText: apiKeyDefaultText,
+			},
+			&cli.StringFlag{
+				Name:    "profile",
+				EnvVars: []string{"KION_PROFILE"},
+				Usage:   "configuration `PROFILE` to use",
 			},
 			&cli.BoolFlag{
 				Name:        "disable-cache",
