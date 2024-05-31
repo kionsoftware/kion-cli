@@ -44,16 +44,13 @@ var (
 // setEndpoint sets the target Kion installation to interact with. If not
 // passed to the tool as an argument, set in the env, or present in the
 // configuration dotfile it will prompt the user to provide it.
-func setEndpoint(cCtx *cli.Context) error {
-	if cCtx.Value("endpoint") == "" {
+func setEndpoint() error {
+	if config.Kion.Url == "" {
 		kionURL, err := helper.PromptInput("Kion URL:")
 		if err != nil {
 			return err
 		}
-		err = cCtx.Set("endpoint", kionURL)
-		if err != nil {
-			return err
-		}
+		config.Kion.Url = kionURL
 	}
 	return nil
 }
@@ -68,7 +65,7 @@ func AuthUNPW(cCtx *cli.Context) error {
 
 	// prompt idms if needed
 	if idmsID == 0 {
-		idmss, err := kion.GetIDMSs(cCtx.String("endpoint"))
+		idmss, err := kion.GetIDMSs(config.Kion.Url)
 		if err != nil {
 			return err
 		}
@@ -101,7 +98,7 @@ func AuthUNPW(cCtx *cli.Context) error {
 	}
 
 	// auth and capture our session
-	session, err := kion.Authenticate(cCtx.String("endpoint"), idmsID, un, pw)
+	session, err := kion.Authenticate(config.Kion.Url, idmsID, un, pw)
 	if err != nil {
 		return err
 	}
@@ -153,7 +150,7 @@ func AuthSAML(cCtx *cli.Context) error {
 	}
 
 	authData, err := kion.AuthenticateSAML(
-		cCtx.String("endpoint"),
+		config.Kion.Url,
 		samlMetadata,
 		samlServiceProviderIssuer)
 	if err != nil {
@@ -218,7 +215,7 @@ func setAuthToken(cCtx *cli.Context) error {
 			// if refreshExp.After(now) {
 			// 	un := session.UserName
 			// 	idmsId := session.IDMSID
-			// 	session, err = kion.Authenticate(cCtx.String("endpoint"), idmsId, un, session.Refresh.Token)
+			// 	session, err = kion.Authenticate(config.Kion.Url, idmsId, un, session.Refresh.Token)
 			// 	if err != nil {
 			// 		return err
 			// 	}
@@ -345,7 +342,7 @@ func beforeCommands(cCtx *cli.Context) error {
 	}
 
 	// initialize the cache
-	if cCtx.Bool("disable-cache") {
+	if config.Kion.DisableCache {
 		c = cache.NewNullCache(ring)
 	} else {
 		c = cache.NewCache(ring)
@@ -379,7 +376,7 @@ func genStaks(cCtx *cli.Context) error {
 	var stak kion.STAK
 
 	// set vars for easier access
-	endpoint := cCtx.String("endpoint")
+	endpoint := config.Kion.Url
 	carName := cCtx.String("car")
 	account := cCtx.String("account")
 	cacheKey := fmt.Sprintf("%s-%s", carName, account)
@@ -529,15 +526,15 @@ func favorites(cCtx *cli.Context) error {
 
 		var car kion.CAR
 		// attempt to find exact match then fallback to first match
-		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+		car, err = kion.GetCARByNameAndAccount(config.Kion.Url, cCtx.String("token"), favorite.CAR, favorite.Account)
 		if err != nil {
-			car, err = kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+			car, err = kion.GetCARByName(config.Kion.Url, cCtx.String("token"), favorite.CAR)
 			if err != nil {
 				return err
 			}
 			car.AccountNumber = favorite.Account
 		}
-		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+		url, err := kion.GetFederationURL(config.Kion.Url, cCtx.String("token"), car)
 		if err != nil {
 			return err
 		}
@@ -577,7 +574,7 @@ func favorites(cCtx *cli.Context) error {
 			}
 
 			// grab a new stak
-			stak, err = kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+			stak, err = kion.GetSTAK(config.Kion.Url, cCtx.String("token"), favorite.CAR, favorite.Account)
 			if err != nil {
 				return err
 			}
@@ -621,7 +618,7 @@ func fedConsole(cCtx *cli.Context) error {
 	}
 
 	// grab the csp federation url
-	url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+	url, err := kion.GetFederationURL(config.Kion.Url, cCtx.String("token"), car)
 	if err != nil {
 		return err
 	}
@@ -659,7 +656,7 @@ func listFavorites(cCtx *cli.Context) error {
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
 	// set vars for easier access
-	endpoint := cCtx.String("endpoint")
+	endpoint := config.Kion.Url
 	favName := cCtx.String("favorite")
 	accNum := cCtx.String("account")
 	carName := cCtx.String("car")
