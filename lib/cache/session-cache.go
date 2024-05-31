@@ -9,7 +9,7 @@ import (
 
 // SetSession is a common func for all Cache implementations and stores a
 // Session in the cache.
-func SetSession(k keyring.Keyring, session kion.Session) error {
+func setSession(k keyring.Keyring, session kion.Session) error {
 	// pull our stak cache
 	cacheName := "Kion-CLI Cache"
 	cache, err := k.Get(cacheName)
@@ -55,7 +55,7 @@ func SetSession(k keyring.Keyring, session kion.Session) error {
 
 // GetSession is a common func for all Cache implementations and retrieves a
 // Session in the cache.
-func GetSession(k keyring.Keyring) (kion.Session, bool, error) {
+func getSession(k keyring.Keyring) (kion.Session, bool, error) {
 	// pull our stak cache
 	cache, err := k.Get("Kion-CLI Cache")
 	if err != nil {
@@ -93,13 +93,13 @@ func GetSession(k keyring.Keyring) (kion.Session, bool, error) {
 // SetSession implements the Cache interface for RealCache and wraps a common
 // function for storing session data.
 func (c *RealCache) SetSession(session kion.Session) error {
-	return SetSession(c.keyring, session)
+	return setSession(c.keyring, session)
 }
 
 // GetSession implements the Cache interface for RealCache and wraps a common
 // function for retrieving session data.
 func (c *RealCache) GetSession() (kion.Session, bool, error) {
-	return GetSession(c.keyring)
+	return getSession(c.keyring)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,11 +111,11 @@ func (c *RealCache) GetSession() (kion.Session, bool, error) {
 // SetSession implements the Cache interface for NullCache and wraps a common
 // function for storing session data.
 func (c *NullCache) SetSession(session kion.Session) error {
-	return SetSession(c.keyring, session)
+	return setSession(c.keyring, session)
 }
 
 // GetSession implements the Cache interface for NullCache and wraps a common
 // function for retrieving session data.
 func (c *NullCache) GetSession() (kion.Session, bool, error) {
-	return GetSession(c.keyring)
+	return getSession(c.keyring)
 }
