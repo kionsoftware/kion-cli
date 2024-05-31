@@ -774,13 +774,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// set global for config path
-	configPath = filepath.Join(home, configFile)
+	// allow config file to be overridden by an env var, else use default
+	userConfigFile := os.Getenv("KION_CONFIG")
+	if userConfigFile != "" {
+		configPath = filepath.Clean(userConfigFile)
+	} else {
+		configPath = filepath.Join(home, configFile)
+	}
 
 	// load configuration file
 	err = helper.LoadConfig(configPath, &config)
-	if err != nil {
-		log.Fatal(err)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		color.Red(" Error: %v", err)
+		os.Exit(1)
 	}
 
 	// prep default text for password
