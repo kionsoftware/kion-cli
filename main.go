@@ -288,6 +288,12 @@ func setAuthToken(cCtx *cli.Context) error {
 // beforeCommands run after the context is ready but before any subcommands are
 // executed. Currently used to test feature compatibility with targeted Kion.
 func beforeCommands(cCtx *cli.Context) error {
+	// skip before bits if we don't need them (ie we're just printing help)
+	args := cCtx.Args().Slice()
+	if len(args) == 0 || args[0] == "help" || args[0] == "h" {
+		return nil
+	}
+
 	// grab the kion url if not already set
 	err := setEndpoint()
 	if err != nil {
