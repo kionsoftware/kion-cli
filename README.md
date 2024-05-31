@@ -50,6 +50,12 @@ Setup
 3. (optional) Create a configuration file in your home directory named `.kion.yml`:
 
     ```yaml
+    ################################################################################
+    ##                                                                            ##
+    ##  Default Profile                                                           ##
+    ##                                                                            ##
+    ################################################################################
+
     kion:
       url: https://mykion.example
       api_key: [api key]
@@ -68,6 +74,13 @@ Setup
       - name: prod
         account: "111122224444"
         cloud_access_role: ReadOnly
+
+    ################################################################################
+    ##                                                                            ##
+    ##  Alternate Profiles                                                        ##
+    ##                                                                            ##
+    ################################################################################
+
     profiles:
       dev:
         kion:
