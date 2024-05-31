@@ -68,7 +68,34 @@ Setup
       - name: prod
         account: "111122224444"
         cloud_access_role: ReadOnly
+    profiles:
+      dev:
+        kion:
+          url: https://dev.mykion.example
+          api_key: [api key]
+          username:
+          password:
+          idms_id:
+          saml_metadata_file:
+          saml_sp_issuer:
+          disable_cache:
+        favorites:
+          - name: sandbox
+            account: 212121212121
+            cloud_access_role: Dev
+      test:
+        kion:
+          url: http://test.mykion.example
+          api_key: [api key]
+          username:
+          password:
+          idms_id:
+          saml_metadata_file:
+          saml_sp_issuer:
+          disable_cache:
     ```
+
+    You can also point Kion CLI to another configuration file by setting the `KION_CONFIG` environment variable to the desired path.
 
 4. Usage examples:
 
@@ -173,6 +200,10 @@ __Global Options:__
 
 --disable-cache                        Disable the use of cache for Kion CLI.
 
+--profile PROFILE                      Use the specified PROFILE from the Kion CLI
+                                       configuration file. If no profile is specified
+                                       the default will be used.
+
 --help, -h                             Print usage text.
 
 --version, -v                          Print the Kion CLI version.
@@ -256,6 +287,9 @@ Kion CLI follows standard precedence for defining configurations:
   `Flag > Environment Variable > Configuration File > Default Value`
 
 ```text
+KION_CONFIG              Path to the Kion CLI configuration file.
+                         Defaults to `~/.kion.yml`
+
 KION_URL                 URL of the Kion instance to interact with.
 
 KION_USERNAME            Username used for authenticating with Kion.
