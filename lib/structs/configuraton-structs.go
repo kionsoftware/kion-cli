@@ -9,8 +9,9 @@ package structs
 // Configuration holds the CLI tool values needed to run. The struct maps to
 // the applications configured dotfile for persistence between sessions.
 type Configuration struct {
-	Kion      Kion       `yaml:"kion"`
-	Favorites []Favorite `yaml:"favorites"`
+	Kion      Kion               `yaml:"kion"`
+	Favorites []Favorite         `yaml:"favorites"`
+	Profiles  map[string]Profile `yaml:"profiles"`
 }
 
 // Kion holds information about the instance of Kion with which the application
@@ -34,4 +35,10 @@ type Favorite struct {
 	CAR        string `yaml:"cloud_access_role"`
 	AccessType string `yaml:"access_type"`
 	Region     string `yaml:"region"`
+}
+
+// Profile holds an alternate configuration for Kion and Favorites.
+type Profile struct {
+	Kion      Kion       `yaml:"kion"`
+	Favorites []Favorite `yaml:"favorites"`
 }
