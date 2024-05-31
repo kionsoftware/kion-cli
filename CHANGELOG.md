@@ -12,6 +12,9 @@ Notes for upgrading...
 
 ### Added
 
+- Users can now set a custom config file with the `KION_CONFIG` environment variable [kionsoftware/kion-cli/pull/42]
+- Users can define profiles to use Kion CLI with multiple Kion instances [kionsoftware/kion-cli/pull/42]
+
 ### Changed
 
 ### Deprecated
@@ -19,6 +22,8 @@ Notes for upgrading...
 ### Removed
 
 ### Fixed
+
+- Corrected an issue where the Kion CLI configuration file was not actually optional [kionsoftware/kion-cli/pull/42]
 
 [0.2.1] - 2024-05-30
 --------------------
