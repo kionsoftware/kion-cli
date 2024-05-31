@@ -799,7 +799,7 @@ func main() {
 	samlMetadataFile := config.Kion.SamlMetadataFile
 	if samlMetadataFile != "" && !strings.HasPrefix(samlMetadataFile, "http") {
 		if !filepath.IsAbs(samlMetadataFile) {
-			// Resolve the file path relative to the config path, which is the home directory
+			// resolve the file path relative to the config path, which is the home directory
 			samlMetadataFile = filepath.Join(filepath.Dir(configPath), samlMetadataFile)
 		}
 	}
