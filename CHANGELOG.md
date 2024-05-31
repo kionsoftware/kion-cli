@@ -14,6 +14,7 @@ Notes for upgrading...
 
 - Users can now set a custom config file with the `KION_CONFIG` environment variable [kionsoftware/kion-cli/pull/42]
 - Users can define profiles to use Kion CLI with multiple Kion instances [kionsoftware/kion-cli/pull/42]
+- Created a `util` command and `flush-cache` subcommand to flush the cache [kionsoftware/kion-cli/pull/42]
 
 ### Changed
 

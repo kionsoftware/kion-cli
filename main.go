@@ -809,6 +809,11 @@ func runCommand(cCtx *cli.Context) error {
 	return nil
 }
 
+// flushCache clears the Kion CLI cache.
+func flushCache(cCtx *cli.Context) error {
+	return c.FlushCache()
+}
+
 // afterCommands run after any subcommands are executed.
 func afterCommands(cCtx *cli.Context) error {
 	return nil
@@ -1072,6 +1077,17 @@ func main() {
 						Name:    "region",
 						Aliases: []string{"r"},
 						Usage:   "target region",
+					},
+				},
+			},
+			{
+				Name:  "util",
+				Usage: "Utility commands",
+				Subcommands: []*cli.Command{
+					{
+						Name:   "flush-cache",
+						Usage:  "Flush the Kion CLI cache",
+						Action: flushCache,
 					},
 				},
 			},
