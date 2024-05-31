@@ -288,6 +288,12 @@ func setAuthToken(cCtx *cli.Context) error {
 // beforeCommands run after the context is ready but before any subcommands are
 // executed. Currently used to test feature compatibility with targeted Kion.
 func beforeCommands(cCtx *cli.Context) error {
+	// grab the kion url if not already set
+	err := setEndpoint()
+	if err != nil {
+		return err
+	}
+
 	// gather the targeted kion version
 	kionVer, err := kion.GetVersion(config.Kion.Url)
 	if err != nil {
@@ -351,22 +357,6 @@ func beforeCommands(cCtx *cli.Context) error {
 	return nil
 }
 
-// authCommand prompts for authentication as needed and ensures an auth token
-// is set.
-func authCommand(cCtx *cli.Context) error {
-	// run prompts for any missing items
-	err := setEndpoint(cCtx)
-	if err != nil {
-		return err
-	}
-	err = setAuthToken(cCtx)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // genStaks generates short term access keys by walking users through an
 // interactive prompt. Short term access keys are either printed to stdout or a
 // sub-shell is created with them set in the environment.
@@ -421,7 +411,7 @@ func genStaks(cCtx *cli.Context) error {
 		// grab the car if needed
 		if getCar {
 			// handle auth
-			err := authCommand(cCtx)
+			err := setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
@@ -433,7 +423,7 @@ func genStaks(cCtx *cli.Context) error {
 		}
 	} else {
 		// handle auth
-		err := authCommand(cCtx)
+		err := setAuthToken(cCtx)
 		if err != nil {
 			return err
 		}
@@ -459,7 +449,7 @@ func genStaks(cCtx *cli.Context) error {
 	// grab a new stak if needed
 	if stak == (kion.STAK{}) {
 		// handle auth
-		err := authCommand(cCtx)
+		err := setAuthToken(cCtx)
 		if err != nil {
 			return err
 		}
@@ -519,7 +509,7 @@ func favorites(cCtx *cli.Context) error {
 	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
 		// handle auth
-		err = authCommand(cCtx)
+		err = setAuthToken(cCtx)
 		if err != nil {
 			return err
 		}
@@ -568,7 +558,7 @@ func favorites(cCtx *cli.Context) error {
 			stak = cachedSTAK
 		} else {
 			// handle auth
-			err = authCommand(cCtx)
+			err = setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
@@ -605,7 +595,7 @@ func favorites(cCtx *cli.Context) error {
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
-	err := authCommand(cCtx)
+	err := setAuthToken(cCtx)
 	if err != nil {
 		return err
 	}
@@ -697,7 +687,7 @@ func runCommand(cCtx *cli.Context) error {
 			stak = cachedSTAK
 		} else {
 			// handle auth
-			err := authCommand(cCtx)
+			err := setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
@@ -737,7 +727,7 @@ func runCommand(cCtx *cli.Context) error {
 			stak = cachedSTAK
 		} else {
 			// handle auth
-			err := authCommand(cCtx)
+			err := setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
