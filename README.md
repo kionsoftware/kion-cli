@@ -153,6 +153,8 @@ console, con, c    Federate into the cloud service provider console.
 
 run                Run a command with short-term access keys
 
+util               Tools for managing Kion CLI.
+
 help, h            Print usage text.
 
 
@@ -277,6 +279,14 @@ OPTIONS
   --region val, -r val                 Specify which region to target.
 
   --help, -h                           Print usage text.
+```
+
+__Util Commands:__
+
+```text
+SUB COMMANDS
+
+  flush-cache                          Clear out all cache entries for the Kion CLI.
 ```
 
 __Environment:__
