@@ -292,7 +292,7 @@ func setAuthToken(cCtx *cli.Context) error {
 // executed. Currently used to test feature compatibility with targeted Kion.
 func beforeCommands(cCtx *cli.Context) error {
 	// gather the targeted kion version
-	kionVer, err := kion.GetVersion(cCtx.String("endpoint"), cCtx.String("token"))
+	kionVer, err := kion.GetVersion(config.Kion.Url)
 	if err != nil {
 		return err
 	}
