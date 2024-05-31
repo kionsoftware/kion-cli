@@ -332,6 +332,8 @@ func beforeCommands(cCtx *cli.Context) error {
 		if found {
 			config.Kion = profile.Kion
 			config.Favorites = profile.Favorites
+		} else {
+			return fmt.Errorf("profile not found: %s", profileName)
 		}
 
 		// honor any global flags that were set to maintain precedence
