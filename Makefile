@@ -51,7 +51,7 @@ init:
 
 build:
 	@printf "${B}${UN}${BLU}Building Kion CLI:${NRM}\n"
-	go build -o kion
+	go build -ldflags "-X main.kionCliVersion=$$(cat VERSION.md)" -o kion
 
 gofmt:
 	@printf "${B}${UN}${BLU}Running gofmt:${NRM}\n"

@@ -33,6 +33,8 @@ var (
 	configFile = ".kion.yml"
 
 	c cache.Cache
+
+	kionCliVersion string
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -883,7 +885,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.3.0",
+		Version:              kionCliVersion,
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
