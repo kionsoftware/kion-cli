@@ -11,6 +11,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Validate Release
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          RELEASED_VERSIONS=$(gh release list --repo ${{ github.repository }} --json tagName --jq '.[] | .tagName')
+          if echo "${RELEASED_VERSIONS}" | grep -q "^${TAG_NAME}$"; then
+            echo "::error::Version ${TAG_NAME} has already been released!"
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create GitHub Release
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
