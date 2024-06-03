@@ -50,6 +50,12 @@ Setup
 3. (optional) Create a configuration file in your home directory named `.kion.yml`:
 
     ```yaml
+    ################################################################################
+    ##                                                                            ##
+    ##  Default Profile                                                           ##
+    ##                                                                            ##
+    ################################################################################
+
     kion:
       url: https://mykion.example
       api_key: [api key]
@@ -68,7 +74,41 @@ Setup
       - name: prod
         account: "111122224444"
         cloud_access_role: ReadOnly
+
+    ################################################################################
+    ##                                                                            ##
+    ##  Alternate Profiles                                                        ##
+    ##                                                                            ##
+    ################################################################################
+
+    profiles:
+      dev:
+        kion:
+          url: https://dev.mykion.example
+          api_key: [api key]
+          username:
+          password:
+          idms_id:
+          saml_metadata_file:
+          saml_sp_issuer:
+          disable_cache:
+        favorites:
+          - name: sandbox
+            account: 212121212121
+            cloud_access_role: Dev
+      test:
+        kion:
+          url: http://test.mykion.example
+          api_key: [api key]
+          username:
+          password:
+          idms_id:
+          saml_metadata_file:
+          saml_sp_issuer:
+          disable_cache:
     ```
+
+    You can also point Kion CLI to another configuration file by setting the `KION_CONFIG` environment variable to the desired path.
 
 4. Usage examples:
 
@@ -126,6 +166,8 @@ console, con, c    Federate into the cloud service provider console.
 
 run                Run a command with short-term access keys
 
+util               Tools for managing Kion CLI.
+
 help, h            Print usage text.
 
 
@@ -172,6 +214,10 @@ __Global Options:__
 --token TOKEN, -t TOKEN                Token (API or Bearer) used to authenticate.
 
 --disable-cache                        Disable the use of cache for Kion CLI.
+
+--profile PROFILE                      Use the specified PROFILE from the Kion CLI
+                                       configuration file. If no profile is specified
+                                       the default will be used.
 
 --help, -h                             Print usage text.
 
@@ -248,6 +294,14 @@ OPTIONS
   --help, -h                           Print usage text.
 ```
 
+__Util Commands:__
+
+```text
+SUB COMMANDS
+
+  flush-cache                          Clear out all cache entries for the Kion CLI.
+```
+
 __Environment:__
 
 Environment variables can be set to enable other modalities of Kion CLI usage.
@@ -256,6 +310,9 @@ Kion CLI follows standard precedence for defining configurations:
   `Flag > Environment Variable > Configuration File > Default Value`
 
 ```text
+KION_CONFIG              Path to the Kion CLI configuration file.
+                         Defaults to `~/.kion.yml`
+
 KION_URL                 URL of the Kion instance to interact with.
 
 KION_USERNAME            Username used for authenticating with Kion.

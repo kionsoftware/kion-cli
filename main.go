@@ -44,16 +44,13 @@ var (
 // setEndpoint sets the target Kion installation to interact with. If not
 // passed to the tool as an argument, set in the env, or present in the
 // configuration dotfile it will prompt the user to provide it.
-func setEndpoint(cCtx *cli.Context) error {
-	if cCtx.Value("endpoint") == "" {
+func setEndpoint() error {
+	if config.Kion.Url == "" {
 		kionURL, err := helper.PromptInput("Kion URL:")
 		if err != nil {
 			return err
 		}
-		err = cCtx.Set("endpoint", kionURL)
-		if err != nil {
-			return err
-		}
+		config.Kion.Url = kionURL
 	}
 	return nil
 }
@@ -62,13 +59,13 @@ func setEndpoint(cCtx *cli.Context) error {
 // Kion, stores the session data, and sets the context token.
 func AuthUNPW(cCtx *cli.Context) error {
 	var err error
-	un := cCtx.String("user")
-	pw := cCtx.String("password")
+	un := config.Kion.Username
+	pw := config.Kion.Password
 	idmsID := cCtx.Uint("idms")
 
 	// prompt idms if needed
 	if idmsID == 0 {
-		idmss, err := kion.GetIDMSs(cCtx.String("endpoint"))
+		idmss, err := kion.GetIDMSs(config.Kion.Url)
 		if err != nil {
 			return err
 		}
@@ -101,7 +98,7 @@ func AuthUNPW(cCtx *cli.Context) error {
 	}
 
 	// auth and capture our session
-	session, err := kion.Authenticate(cCtx.String("endpoint"), idmsID, un, pw)
+	session, err := kion.Authenticate(config.Kion.Url, idmsID, un, pw)
 	if err != nil {
 		return err
 	}
@@ -112,16 +109,18 @@ func AuthUNPW(cCtx *cli.Context) error {
 		return err
 	}
 
-	return cCtx.Set("token", session.Access.Token)
+	// set our token in the config
+	config.Kion.ApiKey = session.Access.Token
+	return nil
 }
 
 // AuthSAML directs the user to authenticate via SAML in a web browser.
 // The SAML assertion is posted to this app which is forwarded to Kion and
 // exchanged for the context token.
-func AuthSAML(cCtx *cli.Context) error {
+func AuthSAML() error {
 	var err error
-	samlMetadataFile := cCtx.String("saml-metadata-file")
-	samlServiceProviderIssuer := cCtx.String("saml-sp-issuer")
+	samlMetadataFile := config.Kion.SamlMetadataFile
+	samlServiceProviderIssuer := config.Kion.SamlIssuer
 
 	// prompt metadata url if needed
 	if samlMetadataFile == "" {
@@ -153,7 +152,7 @@ func AuthSAML(cCtx *cli.Context) error {
 	}
 
 	authData, err := kion.AuthenticateSAML(
-		cCtx.String("endpoint"),
+		config.Kion.Url,
 		samlMetadata,
 		samlServiceProviderIssuer)
 	if err != nil {
@@ -176,7 +175,9 @@ func AuthSAML(cCtx *cli.Context) error {
 		return err
 	}
 
-	return cCtx.Set("token", authData.AuthToken)
+	// set our token in the config
+	config.Kion.ApiKey = authData.AuthToken
+	return nil
 }
 
 // setAuthToken sets the token to be used for querying the Kion API. If not
@@ -186,7 +187,7 @@ func AuthSAML(cCtx *cli.Context) error {
 // If flags are set for multiple methods the highest priority method will be
 // used.
 func setAuthToken(cCtx *cli.Context) error {
-	if cCtx.Value("token") == "" {
+	if config.Kion.ApiKey == "" {
 		// if we still have an active session use it
 		session, found, err := c.GetSession()
 		if err != nil {
@@ -200,10 +201,11 @@ func setAuthToken(cCtx *cli.Context) error {
 				return err
 			}
 			if expiration.After(now) {
-				err := cCtx.Set("token", session.Access.Token)
-				if err != nil {
-					return err
-				}
+				// TODO: test token is good with an endpoint that is accessible to all
+				// user permission levels, if you get a 401 then assume token is bad
+				// due to caching a cred when a users password expired, and flush the
+				// cache instead...
+				config.Kion.ApiKey = session.Access.Token
 				return nil
 			}
 
@@ -218,7 +220,7 @@ func setAuthToken(cCtx *cli.Context) error {
 			// if refreshExp.After(now) {
 			// 	un := session.UserName
 			// 	idmsId := session.IDMSID
-			// 	session, err = kion.Authenticate(cCtx.String("endpoint"), idmsId, un, session.Refresh.Token)
+			// 	session, err = kion.Authenticate(config.Kion.Url, idmsId, un, session.Refresh.Token)
 			// 	if err != nil {
 			// 		return err
 			// 	}
@@ -229,19 +231,20 @@ func setAuthToken(cCtx *cli.Context) error {
 			// 		return err
 			// 	}
 
-			// 	return cCtx.Set("token", session.Access.Token)
+			//  config.Kion.ApiKey = session.Access.Token
+			// 	return nil
 			// }
 		}
 
 		// check un / pw were set via flags and infer auth method
-		if cCtx.String("user") != "" || cCtx.String("password") != "" {
+		if config.Kion.Username != "" || config.Kion.Password != "" {
 			err := AuthUNPW(cCtx)
 			return err
 		}
 
 		// check if saml auth flags set and auth with saml if so
-		if cCtx.String("saml-metadata-file") != "" && cCtx.String("saml-sp-issuer") != "" {
-			err := AuthSAML(cCtx)
+		if config.Kion.SamlMetadataFile != "" && config.Kion.SamlIssuer != "" {
+			err := AuthSAML()
 			return err
 		}
 
@@ -263,17 +266,14 @@ func setAuthToken(cCtx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-			err = cCtx.Set("token", apiKey)
-			if err != nil {
-				return err
-			}
+			config.Kion.ApiKey = apiKey
 		case "Password":
 			err := AuthUNPW(cCtx)
 			if err != nil {
 				return err
 			}
 		case "SAML":
-			err := AuthSAML(cCtx)
+			err := AuthSAML()
 			if err != nil {
 				return err
 			}
@@ -291,8 +291,71 @@ func setAuthToken(cCtx *cli.Context) error {
 // beforeCommands run after the context is ready but before any subcommands are
 // executed. Currently used to test feature compatibility with targeted Kion.
 func beforeCommands(cCtx *cli.Context) error {
+	// skip before bits if we don't need them (ie we're just printing help)
+	args := cCtx.Args().Slice()
+	if len(args) == 0 || args[0] == "help" || args[0] == "h" {
+		return nil
+	}
+
+	// switch profiles if specified
+	profileName := cCtx.String("profile")
+	if profileName != "" {
+
+		// grab all manually set global flags so we can honor them over the chosen
+		// profiles values
+		setStrings := make(map[string]string)
+		var disableCacheFlagged bool
+		setGlobalFlags := cCtx.FlagNames()
+		for _, flag := range setGlobalFlags {
+			switch flag {
+			case "endpoint":
+				setStrings["endpoint"] = config.Kion.Url
+			case "user":
+				setStrings["user"] = config.Kion.Username
+			case "password":
+				setStrings["password"] = config.Kion.Password
+			case "idms":
+				setStrings["idms"] = config.Kion.IDMS
+			case "saml-metadata-file":
+				setStrings["saml-metadata-file"] = config.Kion.SamlMetadataFile
+			case "saml-sp-issuer":
+				setStrings["saml-sp-issuer"] = config.Kion.SamlIssuer
+			case "token":
+				setStrings["token"] = config.Kion.ApiKey
+			case "disable-cache":
+				disableCacheFlagged = true
+			}
+		}
+
+		// grab the profile and if found and not empty override the default config
+		profile, found := config.Profiles[profileName]
+		if found {
+			config.Kion = profile.Kion
+			config.Favorites = profile.Favorites
+		} else {
+			return fmt.Errorf("profile not found: %s", profileName)
+		}
+
+		// honor any global flags that were set to maintain precedence
+		for key, value := range setStrings {
+			err := cCtx.Set(key, value)
+			if err != nil {
+				return err
+			}
+		}
+		if disableCacheFlagged {
+			config.Kion.DisableCache = true
+		}
+	}
+
+	// grab the kion url if not already set
+	err := setEndpoint()
+	if err != nil {
+		return err
+	}
+
 	// gather the targeted kion version
-	kionVer, err := kion.GetVersion(cCtx.String("endpoint"), cCtx.String("token"))
+	kionVer, err := kion.GetVersion(config.Kion.Url)
 	if err != nil {
 		return err
 	}
@@ -345,26 +408,10 @@ func beforeCommands(cCtx *cli.Context) error {
 	}
 
 	// initialize the cache
-	if cCtx.Bool("disable-cache") {
+	if config.Kion.DisableCache {
 		c = cache.NewNullCache(ring)
 	} else {
 		c = cache.NewCache(ring)
-	}
-
-	return nil
-}
-
-// authCommand prompts for authentication as needed and ensures an auth token
-// is set.
-func authCommand(cCtx *cli.Context) error {
-	// run prompts for any missing items
-	err := setEndpoint(cCtx)
-	if err != nil {
-		return err
-	}
-	err = setAuthToken(cCtx)
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -379,7 +426,7 @@ func genStaks(cCtx *cli.Context) error {
 	var stak kion.STAK
 
 	// set vars for easier access
-	endpoint := cCtx.String("endpoint")
+	endpoint := config.Kion.Url
 	carName := cCtx.String("car")
 	account := cCtx.String("account")
 	cacheKey := fmt.Sprintf("%s-%s", carName, account)
@@ -424,19 +471,19 @@ func genStaks(cCtx *cli.Context) error {
 		// grab the car if needed
 		if getCar {
 			// handle auth
-			err := authCommand(cCtx)
+			err := setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
 
-			car, err = kion.GetCARByNameAndAccount(endpoint, cCtx.String("token"), carName, account)
+			car, err = kion.GetCARByNameAndAccount(endpoint, config.Kion.ApiKey, carName, account)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		// handle auth
-		err := authCommand(cCtx)
+		err := setAuthToken(cCtx)
 		if err != nil {
 			return err
 		}
@@ -462,13 +509,13 @@ func genStaks(cCtx *cli.Context) error {
 	// grab a new stak if needed
 	if stak == (kion.STAK{}) {
 		// handle auth
-		err := authCommand(cCtx)
+		err := setAuthToken(cCtx)
 		if err != nil {
 			return err
 		}
 
 		// generate short term tokens
-		stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), car.Name, car.AccountNumber)
+		stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, car.Name, car.AccountNumber)
 		if err != nil {
 			return err
 		}
@@ -522,22 +569,22 @@ func favorites(cCtx *cli.Context) error {
 	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
 		// handle auth
-		err = authCommand(cCtx)
+		err = setAuthToken(cCtx)
 		if err != nil {
 			return err
 		}
 
 		var car kion.CAR
 		// attempt to find exact match then fallback to first match
-		car, err = kion.GetCARByNameAndAccount(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+		car, err = kion.GetCARByNameAndAccount(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 		if err != nil {
-			car, err = kion.GetCARByName(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR)
+			car, err = kion.GetCARByName(config.Kion.Url, config.Kion.ApiKey, favorite.CAR)
 			if err != nil {
 				return err
 			}
 			car.AccountNumber = favorite.Account
 		}
-		url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+		url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
 		if err != nil {
 			return err
 		}
@@ -571,13 +618,13 @@ func favorites(cCtx *cli.Context) error {
 			stak = cachedSTAK
 		} else {
 			// handle auth
-			err = authCommand(cCtx)
+			err = setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
 
 			// grab a new stak
-			stak, err = kion.GetSTAK(cCtx.String("endpoint"), cCtx.String("token"), favorite.CAR, favorite.Account)
+			stak, err = kion.GetSTAK(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 			if err != nil {
 				return err
 			}
@@ -608,7 +655,7 @@ func favorites(cCtx *cli.Context) error {
 // role in the users default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
-	err := authCommand(cCtx)
+	err := setAuthToken(cCtx)
 	if err != nil {
 		return err
 	}
@@ -621,7 +668,7 @@ func fedConsole(cCtx *cli.Context) error {
 	}
 
 	// grab the csp federation url
-	url, err := kion.GetFederationURL(cCtx.String("endpoint"), cCtx.String("token"), car)
+	url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
 	if err != nil {
 		return err
 	}
@@ -659,7 +706,7 @@ func listFavorites(cCtx *cli.Context) error {
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
 	// set vars for easier access
-	endpoint := cCtx.String("endpoint")
+	endpoint := config.Kion.Url
 	favName := cCtx.String("favorite")
 	accNum := cCtx.String("account")
 	carName := cCtx.String("car")
@@ -700,13 +747,13 @@ func runCommand(cCtx *cli.Context) error {
 			stak = cachedSTAK
 		} else {
 			// handle auth
-			err := authCommand(cCtx)
+			err := setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
 
 			// grab a new stak
-			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), favorite.CAR, favorite.Account)
+			stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 			if err != nil {
 				return err
 			}
@@ -740,13 +787,13 @@ func runCommand(cCtx *cli.Context) error {
 			stak = cachedSTAK
 		} else {
 			// handle auth
-			err := authCommand(cCtx)
+			err := setAuthToken(cCtx)
 			if err != nil {
 				return err
 			}
 
 			// grab a new stak
-			stak, err = kion.GetSTAK(endpoint, cCtx.String("token"), carName, accNum)
+			stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, carName, accNum)
 			if err != nil {
 				return err
 			}
@@ -765,6 +812,11 @@ func runCommand(cCtx *cli.Context) error {
 	}
 
 	return nil
+}
+
+// flushCache clears the Kion CLI cache.
+func flushCache(cCtx *cli.Context) error {
+	return c.FlushCache()
 }
 
 // afterCommands run after any subcommands are executed.
@@ -787,13 +839,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// set global for config path
-	configPath = filepath.Join(home, configFile)
+	// allow config file to be overridden by an env var, else use default
+	userConfigFile := os.Getenv("KION_CONFIG")
+	if userConfigFile != "" {
+		configPath = filepath.Clean(userConfigFile)
+	} else {
+		configPath = filepath.Join(home, configFile)
+	}
 
 	// load configuration file
 	err = helper.LoadConfig(configPath, &config)
-	if err != nil {
-		log.Fatal(err)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		color.Red(" Error: %v", err)
+		os.Exit(1)
 	}
 
 	// prep default text for password
@@ -812,7 +870,7 @@ func main() {
 	samlMetadataFile := config.Kion.SamlMetadataFile
 	if samlMetadataFile != "" && !strings.HasPrefix(samlMetadataFile, "http") {
 		if !filepath.IsAbs(samlMetadataFile) {
-			// Resolve the file path relative to the config path, which is the home directory
+			// resolve the file path relative to the config path, which is the home directory
 			samlMetadataFile = filepath.Join(filepath.Dir(configPath), samlMetadataFile)
 		}
 	}
@@ -825,7 +883,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.2.1",
+		Version:              "v0.3.0",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,
@@ -894,6 +952,11 @@ func main() {
 				Usage:       "`TOKEN` for authentication",
 				Destination: &config.Kion.ApiKey,
 				DefaultText: apiKeyDefaultText,
+			},
+			&cli.StringFlag{
+				Name:    "profile",
+				EnvVars: []string{"KION_PROFILE"},
+				Usage:   "configuration `PROFILE` to use",
 			},
 			&cli.BoolFlag{
 				Name:        "disable-cache",
@@ -1019,6 +1082,17 @@ func main() {
 						Name:    "region",
 						Aliases: []string{"r"},
 						Usage:   "target region",
+					},
+				},
+			},
+			{
+				Name:  "util",
+				Usage: "Utility commands",
+				Subcommands: []*cli.Command{
+					{
+						Name:   "flush-cache",
+						Usage:  "Flush the Kion CLI cache",
+						Action: flushCache,
 					},
 				},
 			},

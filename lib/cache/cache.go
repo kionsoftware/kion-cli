@@ -11,6 +11,7 @@ type Cache interface {
 	GetStak(key string) (kion.STAK, bool, error)
 	SetSession(value kion.Session) error
 	GetSession() (kion.Session, bool, error)
+	FlushCache() error
 }
 
 ////////////////////////////////////////////////////////////////////////////////
