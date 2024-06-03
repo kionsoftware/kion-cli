@@ -14,9 +14,18 @@ jobs:
       - name: Validate Release
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
+          VERSION=${GITHUB_REF#refs/tags/v}
           RELEASED_VERSIONS=$(gh release list --repo ${{ github.repository }} --json tagName --jq '.[] | .tagName')
+          ERRORS=false
           if echo "${RELEASED_VERSIONS}" | grep -q "^${TAG_NAME}$"; then
-            echo "::error::Version ${TAG_NAME} has already been released!"
+            echo "::error::Version ${TAG_NAME} has already been released."
+            ERRORS=true
+          fi
+          if ! grep -q "\[${VERSION}\]" CHANGELOG.md; then
+            echo "::error::Release notes for ${VERSION} not found in CHANGELOG.md."
+            ERRORS=true
+          fi
+          if [ "${ERRORS}" == "true" ]; then
             exit 1
           fi
         env:
