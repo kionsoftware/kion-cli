@@ -883,7 +883,7 @@ func main() {
 		////////////////
 
 		Name:                 "Kion CLI",
-		Version:              "v0.2.1",
+		Version:              "v0.3.0",
 		Usage:                "Kion federation on the command line!",
 		EnableBashCompletion: true,
 		Before:               beforeCommands,

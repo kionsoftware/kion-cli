@@ -12,15 +12,54 @@ Notes for upgrading...
 
 ### Added
 
-- Users can now set a custom config file with the `KION_CONFIG` environment variable [kionsoftware/kion-cli/pull/42]
-- Users can define profiles to use Kion CLI with multiple Kion instances [kionsoftware/kion-cli/pull/42]
-- Created a `util` command and `flush-cache` subcommand to flush the cache [kionsoftware/kion-cli/pull/42]
-
 ### Changed
 
 ### Deprecated
 
 ### Removed
+
+### Fixed
+
+[0.3.0] - 2024-06-03
+--------------------
+
+You can now use Kion CLI with multiple instances of Kion through the use of configuration profiles or by pointing to alternate configuration files. Here are some usage examples:
+
+```bash
+# point to another configuration file
+KION_CONFIG=~/.kion.development.yml kion stak
+
+# use a 'development' profile within your ~/.kion.yml configuration file
+kion --profile development fav sandbox
+```
+
+An configuration file for the profile usage example above would look something like this:
+
+```yaml
+kion:
+  url: https://kion.mycompany.com
+  api_key: "app_123"
+favorites:
+  - name: production
+    account: "232323232323"
+    cloud_access_role: ReadOnly
+
+profiles:
+  development:
+    kion:
+      url: https://dev.kion.mycompany.com
+      api_key: "app_abc"
+    favorites:
+      - name: sandbox
+        account: "121212121212"
+        cloud_access_role: Admin
+```
+
+### Added
+
+- Users can now set a custom config file with the `KION_CONFIG` environment variable [kionsoftware/kion-cli/pull/42]
+- Users can define profiles to use Kion CLI with multiple Kion instances [kionsoftware/kion-cli/pull/42]
+- Created a `util` command and `flush-cache` subcommand to flush the cache [kionsoftware/kion-cli/pull/42]
 
 ### Fixed
 
