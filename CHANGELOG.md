@@ -33,9 +33,10 @@ KION_CONFIG=~/.kion.development.yml kion stak
 kion --profile development fav sandbox
 ```
 
-An configuration file for the profile usage example above would look something like this:
+A configuration file for the profile usage example above would look something like this:
 
 ```yaml
+# default profile if none specified
 kion:
   url: https://kion.mycompany.com
   api_key: "app_123"
@@ -44,6 +45,7 @@ favorites:
     account: "232323232323"
     cloud_access_role: ReadOnly
 
+# alternate profiles called with the global `--profile [name]` flag
 profiles:
   development:
     kion:
