@@ -25,6 +25,7 @@ type Kion struct {
 	SamlMetadataFile string `yaml:"saml_metadata_file"`
 	SamlIssuer       string `yaml:"saml_sp_issuer"`
 	DisableCache     bool   `yaml:"disable_cache"`
+	CopyToClipboard  bool   `yaml:"copy_to_clipboard"`
 }
 
 // Favorite holds information about user defined favorites used to quickly

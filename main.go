@@ -533,7 +533,7 @@ func genStaks(cCtx *cli.Context) error {
 		// NOTE: do not use os.Stderr here else credentials can be written to logs
 		return helper.PrintCredentialProcess(os.Stdout, stak)
 	case "print":
-		return helper.PrintSTAK(os.Stdout, stak, region)
+		return helper.PrintSTAK(os.Stdout, stak, region, config.Kion.CopyToClipboard)
 	case "save":
 		return helper.SaveAWSCreds(stak, car)
 	case "subshell":
@@ -642,7 +642,7 @@ func favorites(cCtx *cli.Context) error {
 			// NOTE: do not use os.Stderr here else credentials can be written to logs
 			return helper.PrintCredentialProcess(os.Stdout, stak)
 		case "print":
-			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)
+			return helper.PrintSTAK(os.Stdout, stak, favorite.Region, config.Kion.CopyToClipboard)
 		case "subshell":
 			return helper.CreateSubShell(favorite.Account, favorite.Name, favorite.CAR, stak, favorite.Region)
 		default:

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
+	"golang.design/x/clipboard"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,7 +24,7 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // PrintSTAK prints out the short term access keys for AWS auth.
-func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
+func PrintSTAK(w io.Writer, stak kion.STAK, region string, cb bool) error {
 	// handle windows vs linux for exports
 	var export string
 	if runtime.GOOS == "windows" {
@@ -32,13 +33,25 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 		export = "export"
 	}
 
+	output := ""
+
 	// conditionally print region
 	if region != "" {
-		fmt.Fprintf(w, "export AWS_REGION=%v\n", region)
+		output += fmt.Sprintf("export AWS_REGION=%v\n", region)
 	}
 
 	// print the stak
-	fmt.Fprintf(w, "%v AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", export, stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
+	output += fmt.Sprintf("%v AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", export, stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
+	fmt.Fprint(w, output)
+
+	// copy to clipboard if requested
+	if cb {
+		err := clipboard.Init()
+		if err != nil {
+			return err
+		}
+		clipboard.Write(clipboard.FmtText, []byte(output))
+	}
 
 	return nil
 }

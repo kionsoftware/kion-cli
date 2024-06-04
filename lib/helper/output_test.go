@@ -73,7 +73,7 @@ func TestPrintSTAK(t *testing.T) {
 			}()
 
 			var output bytes.Buffer
-			err := PrintSTAK(&output, test.stak, test.region)
+			err := PrintSTAK(&output, test.stak, test.region, false)
 			if err != nil {
 				t.Error(err)
 			}
