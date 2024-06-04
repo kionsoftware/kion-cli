@@ -59,12 +59,6 @@ Setup
     kion:
       url: https://mykion.example
       api_key: [api key]
-      username:
-      password:
-      idms_id:
-      saml_metadata_file:
-      saml_sp_issuer:
-      disable_cache: true              # defaults false
     favorites:
       - name: sandbox
         account: "111122223333"
@@ -86,12 +80,7 @@ Setup
         kion:
           url: https://dev.mykion.example
           api_key: [api key]
-          username:
-          password:
-          idms_id:
-          saml_metadata_file:
-          saml_sp_issuer:
-          disable_cache:
+          disable_cache: true              # defaults false
         favorites:
           - name: sandbox
             account: 212121212121
@@ -100,15 +89,9 @@ Setup
         kion:
           url: http://test.mykion.example
           api_key: [api key]
-          username:
-          password:
-          idms_id:
-          saml_metadata_file:
-          saml_sp_issuer:
-          disable_cache:
     ```
 
-    You can also point Kion CLI to another configuration file by setting the `KION_CONFIG` environment variable to the desired path.
+    You can also point Kion CLI to another configuration file by setting the `KION_CONFIG` environment variable to the desired path. See the "Configuration File" section below for all options.
 
 4. Usage examples:
 
@@ -341,6 +324,33 @@ CTKEY_USERNAME           Maps to KION_USERNAME.
 CTKEY_PASSWORD           Maps to KION_PASSWORD.
 
 CTKEY_APPAPIKEY          Maps to KION_API_KEY
+```
+
+__Configuration File:__
+
+```text
+KION
+----
+kion.url                           URL to the target Kion instance.
+kion.api_key                       API key used to authenticate.
+kion.username                      Username for authentication, to be paried with password.
+kion.password                      Password for authentication, to be paired with username.
+kion.idms_id                       IDMS ID, if using a custom IDMS in Kion.
+kion.saml_metadata_file            SAML metadata file location, URL or path.
+kion.saml_sp_issuer                Entity ID for the Kion SAML IDMS.
+kion.disable_cache                 Prevents Kion CLI from caching STAK if 'true', defaults 'false'.
+
+FAVORITES
+---------
+favorites[N].name                  Favorite name, used when calling `kion fav [name]`
+favorites[N].account               Account number associated with the favorite.
+favorites[N].cloud_access_role     Cloud Access Role used to authenicate with the favorite.
+favorites[N].access_type           Favorite access type, 'web' or 'cli', defaults 'cli'.
+
+PROFILES
+--------
+profiles[NAME].KION                An instance of KION as defined above.
+profiles[NAME].FAVORITES           An instance of FAVORITES as defined above.
 ```
 
 __Caching:__
