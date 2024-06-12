@@ -121,7 +121,7 @@ Setup
 
     __AWS Profiles:__
 
-    ```toml
+    ```config
     [profile one]
     credential_process = /path/to/kion stak --credential-process --account 121212121212 --car DevOps
 
