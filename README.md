@@ -14,7 +14,11 @@ Setup
 1. Build the application and place it in your path:
 
     ```bash
-    go build -o kion
+    brew install kionsoftware/tap/kion-cli
+
+    # or
+
+    go build -ldflags "-X main.kionCliVersion=$(cat VERSION.md)" -o kion
     ln -s $(pwd)/kion /usr/local/bin/
 
     # or
