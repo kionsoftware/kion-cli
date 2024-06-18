@@ -28,7 +28,7 @@ class REPLACE_CLASSNAME < Formula
       if build.head?
         version = "nightly-" + `git rev-parse --short HEAD`.chomp
       else
-        version = File.read("#{buildpath}/VERSION.md").chomp
+        version = File.read("#{buildpath}/src/github.com/kionsoftware/kion-cli/VERSION.md").chomp
       end
       system "go", "build", "-ldflags", "-X main.kionCliVersion=#{version}", "-o", "#{bin}/kion", "."
     end
