@@ -155,8 +155,8 @@ func AuthSAML(cCtx *cli.Context) error {
 	var authData *kion.AuthData
 
 	// We only need to check for existence - the value is irrelevant
-	if _, ok := cCtx.App.Metadata["useOldSAML"]; !ok {
-		authData, err = kion.AuthenticateSAML(
+	if cCtx.App.Metadata["useOldSAML"] == true {
+		authData, err = kion.AuthenticateSAMLOld(
 			config.Kion.Url,
 			samlMetadata,
 			samlServiceProviderIssuer)
@@ -164,7 +164,7 @@ func AuthSAML(cCtx *cli.Context) error {
 			return err
 		}
 	} else {
-		authData, err = kion.AuthenticateSAMLOld(
+		authData, err = kion.AuthenticateSAML(
 			config.Kion.Url,
 			samlMetadata,
 			samlServiceProviderIssuer)
@@ -908,6 +908,7 @@ func main() {
 		After:                afterCommands,
 		Metadata: map[string]interface{}{
 			"useUpdatedCloudAccessRoleAPI": false,
+			"useOldSAML":                   false,
 		},
 
 		////////////////////
