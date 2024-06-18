@@ -119,7 +119,7 @@ func AuthUNPW(cCtx *cli.Context) error {
 // AuthSAML directs the user to authenticate via SAML in a web browser.
 // The SAML assertion is posted to this app which is forwarded to Kion and
 // exchanged for the context token.
-func AuthSAML() error {
+func AuthSAML(cCtx *cli.Context) error {
 	var err error
 	samlMetadataFile := config.Kion.SamlMetadataFile
 	samlServiceProviderIssuer := config.Kion.SamlIssuer
@@ -152,13 +152,25 @@ func AuthSAML() error {
 			return err
 		}
 	}
+	var authData *kion.AuthData
 
-	authData, err := kion.AuthenticateSAML(
-		config.Kion.Url,
-		samlMetadata,
-		samlServiceProviderIssuer)
-	if err != nil {
-		return err
+	// We only need to check for existence - the value is irrelevant
+	if _, ok := cCtx.App.Metadata["useOldSAML"]; !ok {
+		authData, err = kion.AuthenticateSAML(
+			config.Kion.Url,
+			samlMetadata,
+			samlServiceProviderIssuer)
+		if err != nil {
+			return err
+		}
+	} else {
+		authData, err = kion.AuthenticateSAMLOld(
+			config.Kion.Url,
+			samlMetadata,
+			samlServiceProviderIssuer)
+		if err != nil {
+			return err
+		}
 	}
 
 	// cache the session for 9.5 minutes, tokens are valid for 10 minutes
@@ -246,7 +258,7 @@ func setAuthToken(cCtx *cli.Context) error {
 
 		// check if saml auth flags set and auth with saml if so
 		if config.Kion.SamlMetadataFile != "" && config.Kion.SamlIssuer != "" {
-			err := AuthSAML()
+			err := AuthSAML(cCtx)
 			return err
 		}
 
@@ -275,7 +287,7 @@ func setAuthToken(cCtx *cli.Context) error {
 				return err
 			}
 		case "SAML":
-			err := AuthSAML()
+			err := AuthSAML(cCtx)
 			if err != nil {
 				return err
 			}
@@ -380,6 +392,10 @@ func beforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
 	}
 
+	newSaml, _ := version.NewConstraint(">=3.8.0")
+	if !newSaml.Check(curVer) {
+		cCtx.App.Metadata["useOldSAML"] = true
+	}
 	// initialize the keyring
 	name := "kion-cli"
 	ring, err := keyring.Open(keyring.Config{
