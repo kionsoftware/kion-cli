@@ -20,6 +20,14 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.4.0] - 2024-06-18
+-------------------------
+
+SAML Authentication is now supported for Kion versions < `3.8.0`. No additional configuration is required for use, see `README.md` for details on SAML authentication with the CLI.
+
+### Added
+- A new version constraint will switch between SAML authentication behaviors based on the target Kion version.
+
 [0.3.0] - 2024-06-03
 --------------------
 
