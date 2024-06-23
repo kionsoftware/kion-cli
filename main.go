@@ -411,6 +411,9 @@ func beforeCommands(cCtx *cli.Context) error {
 		KWalletAppID:  name,
 		KWalletFolder: name,
 
+		// gnome wallet (libsecret)
+		LibSecretCollectionName: "login",
+
 		// windows
 		WinCredPrefix: name,
 
