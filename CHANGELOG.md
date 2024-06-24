@@ -20,13 +20,22 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.4.0] - 2024-06-18
--------------------------
+[0.4.1] - 2024-06-24
+--------------------
 
-SAML Authentication is now supported for Kion versions < `3.8.0`. No additional configuration is required for use, see `README.md` for details on SAML authentication with the CLI.
+### Fixed
+
+- Patched the package `github.com/dvsekhvalnov/jose2go` to version 1.6.0 to address Dependabot security findings [kionsoftware/kion-cli/pull/48]
+
+
+[0.4.0] - 2024-06-18
+--------------------
+
+SAML Authentication is now supported for Kion versions `< 3.8.0`. No additional configuration is required for use, see `README.md` for details on SAML authentication with the CLI.
 
 ### Added
-- A new version constraint will switch between SAML authentication behaviors based on the target Kion version.
+
+- A new version constraint will switch between SAML authentication behaviors based on the target Kion version. [kionsoftware/kion-cli/pull/46]
 
 [0.3.0] - 2024-06-03
 --------------------
