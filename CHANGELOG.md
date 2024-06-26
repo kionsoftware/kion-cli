@@ -20,6 +20,16 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.5.0] - 2024-06-24
+--------------------
+
+This release changes how caching is handled for Gnome users. After upgrading a new empty cache in the default `login` keyring will be used. The old `kion-cli` keyring can be safely removed.
+
+### Changed
+
+- Updated keyring config for Gnome Wallet (libsecret) to use the default `login` keyring [kionsoftware/kion-cli/pull/49]
+
+
 [0.4.1] - 2024-06-24
 --------------------
 
