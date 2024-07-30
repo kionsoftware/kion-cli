@@ -638,9 +638,8 @@ func favorites(cCtx *cli.Context) error {
 			return err
 		}
 
-		var car kion.CAR
 		// attempt to find exact match then fallback to first match
-		car, err = kion.GetCARByNameAndAccount(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
+		car, err := kion.GetCARByNameAndAccount(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 		if err != nil {
 			car, err = kion.GetCARByName(config.Kion.Url, config.Kion.ApiKey, favorite.CAR)
 			if err != nil {
