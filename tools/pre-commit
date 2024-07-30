@@ -54,7 +54,6 @@ if ! make lint; then
 fi
 
 # test
-make test
 if ! make test; then
   echo
   echo "${BOLD}${RED}The above testing errors were found, please correct before committing.${NORM}"
