@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +90,10 @@ func GetVersion(host string) (string, error) {
 		return "", err
 	}
 
-	return response.Version, nil
+	// remove any dev suffixes
+	version := strings.Split(response.Version, "-")[0]
+
+	return version, nil
 }
 
 // GetSessionDuration returns the AWS session duration configuration Kion uses
