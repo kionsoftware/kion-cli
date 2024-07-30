@@ -603,7 +603,13 @@ func genStaks(cCtx *cli.Context) error {
 	case "save":
 		return helper.SaveAWSCreds(stak, car)
 	case "subshell":
-		return helper.CreateSubShell(car.AccountNumber, car.AccountName, car.Name, stak, region)
+		var displayAlais string
+		if accAlias != "" {
+			displayAlais = accAlias
+		} else {
+			displayAlais = car.AccountName
+		}
+		return helper.CreateSubShell(car.AccountNumber, displayAlais, car.Name, stak, region)
 	default:
 		return nil
 	}
