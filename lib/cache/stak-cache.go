@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/99designs/keyring"
@@ -22,7 +23,7 @@ func (c *RealCache) SetStak(carName string, accNum string, accAlias string, valu
 	if accNum != "" {
 		key = fmt.Sprintf("%s-%s", carName, accNum)
 	} else {
-		key = fmt.Sprintf("%s-%s", carName, accAlias)
+		key = fmt.Sprintf("%s-%s", carName, strings.ToLower(accAlias))
 	}
 
 	// pull our stak cache
@@ -87,7 +88,7 @@ func (c *RealCache) GetStak(carName string, accNum string, accAlias string) (kio
 	if accNum != "" {
 		key = fmt.Sprintf("%s-%s", carName, accNum)
 	} else {
-		key = fmt.Sprintf("%s-%s", carName, accAlias)
+		key = fmt.Sprintf("%s-%s", carName, strings.ToLower(accAlias))
 	}
 
 	// pull our stak cache

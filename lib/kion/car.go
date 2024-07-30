@@ -3,6 +3,7 @@ package kion
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -166,7 +167,7 @@ func GetCARByNameAndAlias(host string, token string, carName string, accountAlia
 
 	// find our match
 	for _, car := range allCars {
-		if car.Name == carName && car.AccountAlias == accountAlias {
+		if car.Name == carName && strings.EqualFold(car.AccountAlias, accountAlias) {
 			return car, nil
 		}
 	}
