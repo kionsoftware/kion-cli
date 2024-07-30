@@ -7,8 +7,8 @@ import (
 
 // Cache is an interface for storing and receiving data.
 type Cache interface {
-	SetStak(key string, value kion.STAK) error
-	GetStak(key string) (kion.STAK, bool, error)
+	SetStak(carName string, accNum string, accAlias string, value kion.STAK) error
+	GetStak(carName string, accNum string, accAlias string) (kion.STAK, bool, error)
 	SetSession(value kion.Session) error
 	GetSession() (kion.Session, bool, error)
 	FlushCache() error

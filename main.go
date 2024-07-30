@@ -447,7 +447,6 @@ func genStaks(cCtx *cli.Context) error {
 	var stak kion.STAK
 
 	// set vars for easier access
-	var cacheKey string
 	endpoint := config.Kion.Url
 	carName := cCtx.String("car")
 	accNum := cCtx.String("account")
@@ -483,15 +482,8 @@ func genStaks(cCtx *cli.Context) error {
 
 	// if we have what we need go look stuff up without prompts do it
 	if (accNum != "" || accAlias != "") && carName != "" {
-		// set the cache key based on what was passed
-		if accNum != "" {
-			cacheKey = fmt.Sprintf("%s-%s", carName, accNum)
-		} else {
-			cacheKey = fmt.Sprintf("%s-%s", carName, accAlias)
-		}
-
 		// determine if we have a valid cached entry
-		cachedSTAK, found, err := c.GetStak(cacheKey)
+		cachedSTAK, found, err := c.GetStak(carName, accNum, accAlias)
 		if err != nil {
 			return err
 		}
@@ -539,8 +531,7 @@ func genStaks(cCtx *cli.Context) error {
 		}
 
 		// rebuild cache key and determine if we have a valid cached entry
-		cacheKey = fmt.Sprintf("%s-%s", car.Name, car.AccountNumber)
-		cachedSTAK, found, err := c.GetStak(cacheKey)
+		cachedSTAK, found, err := c.GetStak(car.Name, car.AccountNumber, "")
 		if err != nil {
 			return err
 		}
@@ -565,7 +556,7 @@ func genStaks(cCtx *cli.Context) error {
 		}
 
 		// store the stak in the cache
-		err = c.SetStak(cacheKey, stak)
+		err = c.SetStak(car.Name, car.AccountNumber, car.AccountAlias, stak)
 		if err != nil {
 			return err
 		}
@@ -653,8 +644,7 @@ func favorites(cCtx *cli.Context) error {
 		}
 
 		// check if we have a valid cached stak else grab a new one
-		cacheKey := fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
-		cachedSTAK, found, err := c.GetStak(cacheKey)
+		cachedSTAK, found, err := c.GetStak(favorite.CAR, favorite.Account, "")
 		if err != nil {
 			return err
 		}
@@ -674,7 +664,7 @@ func favorites(cCtx *cli.Context) error {
 			}
 
 			// store the stak in the cache
-			err = c.SetStak(cacheKey, stak)
+			err = c.SetStak(favorite.CAR, favorite.Account, "", stak)
 			if err != nil {
 				return err
 			}
@@ -750,7 +740,6 @@ func listFavorites(cCtx *cli.Context) error {
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
 	// set vars for easier access
-	var cacheKey string
 	endpoint := config.Kion.Url
 	favName := cCtx.String("favorite")
 	accNum := cCtx.String("account")
@@ -784,8 +773,7 @@ func runCommand(cCtx *cli.Context) error {
 		favorite := fMap[fav]
 
 		// check if we have a valid cached stak else grab a new one
-		cacheKey = fmt.Sprintf("%s-%s", favorite.CAR, favorite.Account)
-		cachedSTAK, found, err := c.GetStak(cacheKey)
+		cachedSTAK, found, err := c.GetStak(favorite.CAR, favorite.Account, "")
 		if err != nil {
 			return err
 		}
@@ -805,7 +793,7 @@ func runCommand(cCtx *cli.Context) error {
 			}
 
 			// store the stak in the cache
-			err = c.SetStak(cacheKey, stak)
+			err = c.SetStak(favorite.CAR, favorite.Account, "", stak)
 			if err != nil {
 				return err
 			}
@@ -823,15 +811,8 @@ func runCommand(cCtx *cli.Context) error {
 			return err
 		}
 	} else {
-		// set the cache key based on what was passed
-		if accNum != "" {
-			cacheKey = fmt.Sprintf("%s-%s", carName, accNum)
-		} else {
-			cacheKey = fmt.Sprintf("%s-%s", carName, accAlias)
-		}
-
 		// check if we have a valid cached stak else grab a new one
-		cachedSTAK, found, err := c.GetStak(cacheKey)
+		cachedSTAK, found, err := c.GetStak(carName, accNum, accAlias)
 		if err != nil {
 			return err
 		}
@@ -860,7 +841,7 @@ func runCommand(cCtx *cli.Context) error {
 			}
 
 			// store the stak in the cache
-			err = c.SetStak(cacheKey, stak)
+			err = c.SetStak(carName, accNum, accAlias, stak)
 			if err != nil {
 				return err
 			}
