@@ -12,6 +12,8 @@ Notes for upgrading...
 
 ### Added
 
+- Added support for account aliases introduced in Kion 3.10.2 [kionsoftware/kion-cli/pull/51]
+
 ### Changed
 
 ### Deprecated
