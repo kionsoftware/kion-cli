@@ -364,6 +364,14 @@ func validateCmdStak(cCtx *cli.Context) error {
 	return nil
 }
 
+// validateCmdRun validates the flags passed to the run command.
+func validateCmdRun(cCtx *cli.Context) error {
+	if cCtx.String("favorite") == "" && ((cCtx.String("account") == "" && cCtx.String("alias") == "") || cCtx.String("car") == "") {
+		return errors.New("must specify either --fav OR --account and --car  OR --alias and --car parameters")
+	}
+	return nil
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Commands                                                                  //
@@ -753,11 +761,6 @@ func runCommand(cCtx *cli.Context) error {
 	carName := cCtx.String("car")
 	region := cCtx.String("region")
 
-	// fail fast if we don't have what we need
-	if favName == "" && ((accNum == "" && accAlias == "") || carName == "") {
-		return errors.New("must specify either --fav OR --account and --car  OR --alias and --car parameters")
-	}
-
 	// placeholder for our stak
 	var stak kion.STAK
 
@@ -1081,6 +1084,7 @@ func main() {
 				Name:      "run",
 				Usage:     "Run a command with short-term access keys",
 				ArgsUsage: "[COMMAND]",
+				Before:    validateCmdRun,
 				Action:    runCommand,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
