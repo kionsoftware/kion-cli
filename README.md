@@ -221,8 +221,12 @@ OPTIONS
   --account val, --acc val, -a val     Target account number, used to bypass
                                        prompts, must be passed with --car.
 
+  --alias val, --aka val, -l val       Target account alias, used to bypass
+                                       prompts, must be passed with --car.
+
   --car val, --cloud-access-role val,  Target cloud access role, used to bypass
-    -c val                             prompts, must be passed with --account.
+    -c val                             prompts, must be passed with --account
+                                       or --alias.
 
   --region val, -r val                 Specify which region to target.
 
@@ -273,8 +277,11 @@ OPTIONS
   --account val, -acc val, -a val      Specify which account to target, must be
                                        passed with --car.
 
+  --alias val, --aka val, -l val       Target account alias, used to bypass
+                                       prompts, must be passed with --car.
+
   --car val, -c val                    Specify which Cloud Access Role to use,
-                                       must be passed with --account.
+                                       must be passed with --account or --alias.
 
   --region val, -r val                 Specify which region to target.
 
