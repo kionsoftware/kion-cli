@@ -330,17 +330,8 @@ func authStakCache(cCtx *cli.Context, carName string, accNum string, accAlias st
 		return kion.STAK{}, err
 	}
 
-	// grab car if alias used since we need the account number to run GenSTAK
-	if accAlias != "" {
-		car, err := kion.GetCARByNameAndAlias(config.Kion.Url, config.Kion.ApiKey, carName, accAlias)
-		if err != nil {
-			return kion.STAK{}, err
-		}
-		accNum = car.AccountNumber
-	}
-
 	// generate short term tokens
-	stak, err := kion.GetSTAK(config.Kion.Url, config.Kion.ApiKey, carName, accNum)
+	stak, err := kion.GetSTAK(config.Kion.Url, config.Kion.ApiKey, carName, accNum, accAlias)
 	if err != nil {
 		return kion.STAK{}, err
 	}
