@@ -296,6 +296,31 @@ func setAuthToken(cCtx *cli.Context) error {
 	return nil
 }
 
+// getActionAndBuffer determines the action based on the passed flags and sets
+// a buffer for the associated action used to determine the cache validity.
+func getActionAndBuffer(cCtx *cli.Context) (string, time.Duration) {
+	// grab the command usage [stak, s, setenv, savecreds, etc]
+	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
+
+	var action string
+	var buffer time.Duration
+	if cCtx.Bool("credential-process") {
+		action = "credential-process"
+		buffer = 5
+	} else if cCtx.Bool("print") || cmdUsed == "setenv" {
+		action = "print"
+		buffer = 300
+	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
+		action = "save"
+		buffer = 600
+	} else {
+		action = "subshell"
+		buffer = 300
+	}
+
+	return action, buffer
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Commands                                                                  //
@@ -460,25 +485,8 @@ func genStaks(cCtx *cli.Context) error {
 		return errors.New("must specify --account OR --alias parameter when using --car")
 	}
 
-	// grab the command usage [stak, s, setenv, savecreds, etc]
-	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
-
-	// determine action and set required cache validity buffer
-	var action string
-	var buffer time.Duration
-	if cCtx.Bool("credential-process") {
-		action = "credential-process"
-		buffer = 5
-	} else if cCtx.Bool("print") || cmdUsed == "setenv" {
-		action = "print"
-		buffer = 300
-	} else if cCtx.Bool("save") || cmdUsed == "savecreds" {
-		action = "save"
-		buffer = 600
-	} else {
-		action = "subshell"
-		buffer = 300
-	}
+	// get command used and set cache validity buffer
+	action, buffer := getActionAndBuffer(cCtx)
 
 	// if we have what we need go look stuff up without prompts do it
 	if (accNum != "" || accAlias != "") && carName != "" {
@@ -630,18 +638,7 @@ func favorites(cCtx *cli.Context) error {
 		var stak kion.STAK
 
 		// determine action and set required cache validity buffer
-		var action string
-		var buffer time.Duration
-		if cCtx.Bool("credential-process") {
-			action = "credential-process"
-			buffer = 5
-		} else if cCtx.Bool("print") {
-			action = "print"
-			buffer = 300
-		} else {
-			action = "subshell"
-			buffer = 300
-		}
+		action, buffer := getActionAndBuffer(cCtx)
 
 		// check if we have a valid cached stak else grab a new one
 		cachedSTAK, found, err := c.GetStak(favorite.CAR, favorite.Account, "")
