@@ -354,6 +354,16 @@ func authStakCache(cCtx *cli.Context, carName string, accNum string, accAlias st
 	return stak, err
 }
 
+// validateCmdStak validates the flags passed to the stak command.
+func validateCmdStak(cCtx *cli.Context) error {
+	if (cCtx.String("account") != "" || cCtx.String("alias") != "") && cCtx.String("car") == "" {
+		return errors.New("must specify --car parameter when using --account or --alias")
+	} else if cCtx.String("car") != "" && cCtx.String("account") == "" && cCtx.String("alias") == "" {
+		return errors.New("must specify --account OR --alias parameter when using --car")
+	}
+	return nil
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Commands                                                                  //
@@ -510,13 +520,6 @@ func genStaks(cCtx *cli.Context) error {
 	accNum := cCtx.String("account")
 	accAlias := cCtx.String("alias")
 	region := cCtx.String("region")
-
-	// fail fast if we have a bad combo of flags
-	if (accNum != "" || accAlias != "") && carName == "" {
-		return errors.New("must specify --car parameter when using --account or --alias")
-	} else if carName != "" && accNum == "" && accAlias == "" {
-		return errors.New("must specify --account OR --alias parameter when using --car")
-	}
 
 	// get command used and set cache validity buffer
 	action, buffer := getActionAndBuffer(cCtx)
@@ -986,6 +989,7 @@ func main() {
 				Name:    "stak",
 				Aliases: []string{"setenv", "savecreds", "s"},
 				Usage:   "Generate short-term access keys",
+				Before:  validateCmdStak,
 				Action:  genStaks,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
