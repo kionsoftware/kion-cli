@@ -321,6 +321,39 @@ func getActionAndBuffer(cCtx *cli.Context) (string, time.Duration) {
 	return action, buffer
 }
 
+// authStakCache handles the common pattern of authenticating the user,
+// grabbing a STAK, and caching it.
+func authStakCache(cCtx *cli.Context, carName string, accNum string, accAlias string) (kion.STAK, error) {
+	// handle auth
+	err := setAuthToken(cCtx)
+	if err != nil {
+		return kion.STAK{}, err
+	}
+
+	// grab car if alias used since we need the account number to run GenSTAK
+	if accAlias != "" {
+		car, err := kion.GetCARByNameAndAlias(config.Kion.Url, config.Kion.ApiKey, carName, accAlias)
+		if err != nil {
+			return kion.STAK{}, err
+		}
+		accNum = car.AccountNumber
+	}
+
+	// generate short term tokens
+	stak, err := kion.GetSTAK(config.Kion.Url, config.Kion.ApiKey, carName, accNum)
+	if err != nil {
+		return kion.STAK{}, err
+	}
+
+	// store the stak in the cache
+	err = c.SetStak(carName, accNum, accAlias, stak)
+	if err != nil {
+		return kion.STAK{}, err
+	}
+
+	return stak, err
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Commands                                                                  //
@@ -551,20 +584,8 @@ func genStaks(cCtx *cli.Context) error {
 
 	// grab a new stak if needed
 	if stak == (kion.STAK{}) {
-		// handle auth
-		err := setAuthToken(cCtx)
-		if err != nil {
-			return err
-		}
-
-		// generate short term tokens
-		stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, car.Name, car.AccountNumber)
-		if err != nil {
-			return err
-		}
-
-		// store the stak in the cache
-		err = c.SetStak(car.Name, car.AccountNumber, car.AccountAlias, stak)
+		var err error
+		stak, err = authStakCache(cCtx, car.Name, car.AccountNumber, car.AccountAlias)
 		if err != nil {
 			return err
 		}
@@ -648,20 +669,7 @@ func favorites(cCtx *cli.Context) error {
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-buffer*time.Second)) {
 			stak = cachedSTAK
 		} else {
-			// handle auth
-			err = setAuthToken(cCtx)
-			if err != nil {
-				return err
-			}
-
-			// grab a new stak
-			stak, err = kion.GetSTAK(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
-			if err != nil {
-				return err
-			}
-
-			// store the stak in the cache
-			err = c.SetStak(favorite.CAR, favorite.Account, "", stak)
+			stak, err = authStakCache(cCtx, favorite.CAR, favorite.Account, "")
 			if err != nil {
 				return err
 			}
@@ -737,7 +745,6 @@ func listFavorites(cCtx *cli.Context) error {
 // provided command with said credentials set.
 func runCommand(cCtx *cli.Context) error {
 	// set vars for easier access
-	endpoint := config.Kion.Url
 	favName := cCtx.String("favorite")
 	accNum := cCtx.String("account")
 	accAlias := cCtx.String("alias")
@@ -777,20 +784,7 @@ func runCommand(cCtx *cli.Context) error {
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
 			stak = cachedSTAK
 		} else {
-			// handle auth
-			err := setAuthToken(cCtx)
-			if err != nil {
-				return err
-			}
-
-			// grab a new stak
-			stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, favorite.CAR, favorite.Account)
-			if err != nil {
-				return err
-			}
-
-			// store the stak in the cache
-			err = c.SetStak(favorite.CAR, favorite.Account, "", stak)
+			stak, err = authStakCache(cCtx, favorite.CAR, favorite.Account, "")
 			if err != nil {
 				return err
 			}
@@ -816,29 +810,7 @@ func runCommand(cCtx *cli.Context) error {
 		if found && cachedSTAK.Expiration.After(time.Now().Add(-5*time.Second)) {
 			stak = cachedSTAK
 		} else {
-			// handle auth
-			err := setAuthToken(cCtx)
-			if err != nil {
-				return err
-			}
-
-			// grab car if alias used since we need the account number to run GenSTAK
-			if accAlias != "" {
-				car, err := kion.GetCARByNameAndAlias(endpoint, config.Kion.ApiKey, carName, accAlias)
-				if err != nil {
-					return err
-				}
-				accNum = car.AccountNumber
-			}
-
-			// grab a new stak
-			stak, err = kion.GetSTAK(endpoint, config.Kion.ApiKey, carName, accNum)
-			if err != nil {
-				return err
-			}
-
-			// store the stak in the cache
-			err = c.SetStak(carName, accNum, accAlias, stak)
+			stak, err = authStakCache(cCtx, carName, accNum, accAlias)
 			if err != nil {
 				return err
 			}
