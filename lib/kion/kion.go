@@ -29,7 +29,7 @@ func runQuery(method string, url string, token string, query map[string]string, 
 		return nil, 0, err
 	}
 
-	// append on our parameters to the req.URL.String(), only active milestones
+	// append on our parameters to the req.URL.String()
 	q := req.URL.Query()
 	for key, value := range query {
 		q.Add(key, value)

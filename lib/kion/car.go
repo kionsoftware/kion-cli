@@ -54,10 +54,12 @@ type CAR struct {
 
 // GetCARS queries the Kion API for all cloud access roles to which the
 // authenticated user has access. Deleted CARs will be excluded.
-func GetCARS(host string, token string) ([]CAR, error) {
+func GetCARS(host string, token string, alias string) ([]CAR, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/me/cloud-access-role", host)
-	query := map[string]string{}
+	query := map[string]string{
+		"account_alias": alias,
+	}
 	var data interface{}
 	resp, _, err := runQuery("GET", url, token, query, data)
 	if err != nil {
@@ -83,7 +85,7 @@ func GetCARS(host string, token string) ([]CAR, error) {
 
 // GetCARSOnProject returns all cloud access roles that match a given project and account.
 func GetCARSOnProject(host string, token string, projID uint, accID uint) ([]CAR, error) {
-	allCars, err := GetCARS(host, token)
+	allCars, err := GetCARS(host, token, "")
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +103,7 @@ func GetCARSOnProject(host string, token string, projID uint, accID uint) ([]CAR
 
 // GetCARSOnAccount returns all cloud access roles that match a given account.
 func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
-	allCars, err := GetCARS(host, token)
+	allCars, err := GetCARS(host, token, "")
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +125,7 @@ func GetCARSOnAccount(host string, token string, accID uint) ([]CAR, error) {
 // and workaround for users on older version of Kion that have limited
 // permissions.
 func GetCARByName(host string, token string, carName string) (CAR, error) {
-	allCars, err := GetCARS(host, token)
+	allCars, err := GetCARS(host, token, "")
 	if err != nil {
 		return CAR{}, err
 	}
@@ -143,7 +145,7 @@ func GetCARByName(host string, token string, carName string) (CAR, error) {
 
 // GetCARByNameAndAccount returns a car that matches by name and account number.
 func GetCARByNameAndAccount(host string, token string, carName string, accountNumber string) (CAR, error) {
-	allCars, err := GetCARS(host, token)
+	allCars, err := GetCARS(host, token, "")
 	if err != nil {
 		return CAR{}, err
 	}
@@ -160,11 +162,12 @@ func GetCARByNameAndAccount(host string, token string, carName string, accountNu
 
 // GetCARByNameAndAlias returns a car that matches by name and account alias.
 func GetCARByNameAndAlias(host string, token string, carName string, accountAlias string) (CAR, error) {
-	allCars, err := GetCARS(host, token)
+	allCars, err := GetCARS(host, token, accountAlias)
 	if err != nil {
 		return CAR{}, err
 	}
 
+	fmt.Println(len(allCars))
 	// find our match
 	for _, car := range allCars {
 		if car.Name == carName && strings.EqualFold(car.AccountAlias, accountAlias) {
@@ -177,7 +180,7 @@ func GetCARByNameAndAlias(host string, token string, carName string, accountAlia
 
 // GetAllCARsByName returns a slice of cars that matches a given name.
 func GetAllCARsByName(host string, token string, carName string) ([]CAR, error) {
-	allCars, err := GetCARS(host, token)
+	allCars, err := GetCARS(host, token, "")
 	if err != nil {
 		return nil, err
 	}
