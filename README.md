@@ -3,7 +3,7 @@ Kion CLI
 
 Kion CLI is a tool allowing Kion customers to generate short term access keys and federate into the cloud service provider console via the command line.
 
-![kion-cli usage](doc/kion-cli-usage.gif)
+![kion-cli usage](doc/kion-cli-hero.png)
 
 Setup
 -----
