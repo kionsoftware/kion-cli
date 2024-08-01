@@ -12,8 +12,6 @@ Notes for upgrading...
 
 ### Added
 
-- Added support for account aliases introduced in Kion 3.10.2 [kionsoftware/kion-cli/pull/51]
-
 ### Changed
 
 ### Deprecated
@@ -21,6 +19,16 @@ Notes for upgrading...
 ### Removed
 
 ### Fixed
+
+[0.6.0] - 2024-06-24
+--------------------
+
+Version 0.6.0 adds support for account aliases coming in Kion 3.9.9 and 3.10.2. Account aliases are globally unique user defined identifiers for accounts stored in Kion. Aliases can be used to with the `stak` and `run` commands instead of specifying account numbers.
+
+### Added
+
+- Added support for account aliases [kionsoftware/kion-cli/pull/51]
+
 
 [0.5.0] - 2024-06-24
 --------------------
