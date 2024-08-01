@@ -20,7 +20,7 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.6.0] - 2024-06-24
+[0.6.0] - 2024-08-01
 --------------------
 
 Version 0.6.0 adds support for account aliases coming in Kion 3.9.9 and 3.10.2. Account aliases are globally unique user defined identifiers for accounts stored in Kion. Aliases can be used to with the `stak` and `run` commands instead of specifying account numbers.
