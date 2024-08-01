@@ -36,7 +36,12 @@ func MapAccounts(accounts []kion.Account) ([]string, map[string]kion.Account) {
 	var aNames []string
 	aMap := make(map[string]kion.Account)
 	for _, account := range accounts {
-		name := fmt.Sprintf("%v (%v)", account.Name, account.Number)
+		var name string
+		if account.Alias != "" {
+			name = fmt.Sprintf("%v [%v] (%v)", account.Name, account.Alias, account.Number)
+		} else {
+			name = fmt.Sprintf("%v (%v)", account.Name, account.Number)
+		}
 		aNames = append(aNames, name)
 		aMap[name] = account
 	}
@@ -55,7 +60,12 @@ func MapAccountsFromCARS(cars []kion.CAR, pid uint) ([]string, map[string]string
 	aMap := make(map[string]string)
 	for _, car := range cars {
 		if pid == 0 || car.ProjectID == pid {
-			name := fmt.Sprintf("%v (%v)", car.AccountName, car.AccountNumber)
+			var name string
+			if car.AccountAlias != "" {
+				name = fmt.Sprintf("%v [%v] (%v)", car.AccountName, car.AccountAlias, car.AccountNumber)
+			} else {
+				name = fmt.Sprintf("%v (%v)", car.AccountName, car.AccountNumber)
+			}
 			if slices.Contains(aNames, name) {
 				continue
 			}

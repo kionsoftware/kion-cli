@@ -31,16 +31,25 @@ type STAK struct {
 // API.
 type STAKRequest struct {
 	AccountNumber string `json:"account_number"`
+	AccountAlias  string `json:"account_alias"`
 	CARName       string `json:"cloud_access_role_name"`
 }
 
-// GetSTAK queries the Kion API to generate short term access keys.
-func GetSTAK(host string, token string, carName string, accNum string) (STAK, error) {
+// GetSTAK queries the Kion API to generate short term access keys. Must pass
+// either an account number or an account alias, one can be "".
+func GetSTAK(host string, token string, carName string, accNum string, accAlias string) (STAK, error) {
+	// only account number or account alias should be provided, use the account
+	// number by default
+	if accNum != "" && accAlias != "" {
+		accAlias = ""
+	}
+
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/temporary-credentials/cloud-access-role", host)
 	query := map[string]string{}
 	data := STAKRequest{
 		AccountNumber: accNum,
+		AccountAlias:  accAlias,
 		CARName:       carName,
 	}
 	resp, _, err := runQuery("POST", url, token, query, data)

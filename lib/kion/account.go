@@ -27,6 +27,7 @@ type AccountsResponse struct {
 type Account struct {
 	Email                     string `json:"account_email"`
 	Name                      string `json:"account_name"`
+	Alias                     string `json:"account_alias"`
 	Number                    string `json:"account_number"`
 	TypeID                    uint   `json:"account_type_id"`
 	ID                        uint   `json:"id"`

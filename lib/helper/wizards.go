@@ -40,7 +40,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		// give us one full support line of buffer
 
 		// get all cars for authed user, works with min permission set
-		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"))
+		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
 		if err != nil {
 			return err
 		}

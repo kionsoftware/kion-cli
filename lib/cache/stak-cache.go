@@ -2,6 +2,8 @@ package cache
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/99designs/keyring"
@@ -15,7 +17,15 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // SetStak stores a STAK in the cache.
-func (c *RealCache) SetStak(key string, value kion.STAK) error {
+func (c *RealCache) SetStak(carName string, accNum string, accAlias string, value kion.STAK) error {
+	// set the key based on what was passed
+	var key string
+	if accNum != "" {
+		key = fmt.Sprintf("%s-%s", carName, accNum)
+	} else {
+		key = fmt.Sprintf("%s-%s", carName, strings.ToLower(accAlias))
+	}
+
 	// pull our stak cache
 	cacheName := "Kion-CLI Cache"
 	cache, err := c.keyring.Get(cacheName)
@@ -72,7 +82,15 @@ func (c *RealCache) SetStak(key string, value kion.STAK) error {
 }
 
 // GetStak retrieves a STAK from the cache.
-func (c *RealCache) GetStak(key string) (kion.STAK, bool, error) {
+func (c *RealCache) GetStak(carName string, accNum string, accAlias string) (kion.STAK, bool, error) {
+	// set the key based on what was passed
+	var key string
+	if accNum != "" {
+		key = fmt.Sprintf("%s-%s", carName, accNum)
+	} else {
+		key = fmt.Sprintf("%s-%s", carName, strings.ToLower(accAlias))
+	}
+
 	// pull our stak cache
 	cache, err := c.keyring.Get("Kion-CLI Cache")
 	if err != nil {
@@ -108,11 +126,11 @@ func (c *RealCache) GetStak(key string) (kion.STAK, bool, error) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // SetStak does nothing.
-func (c *NullCache) SetStak(key string, value kion.STAK) error {
+func (c *NullCache) SetStak(carName string, accNum string, accAlias string, value kion.STAK) error {
 	return nil
 }
 
 // GetStak returns an empty STAK, false, and a nil error.
-func (c *NullCache) GetStak(key string) (kion.STAK, bool, error) {
+func (c *NullCache) GetStak(carName string, accNum string, accAlias string) (kion.STAK, bool, error) {
 	return kion.STAK{}, false, nil
 }
