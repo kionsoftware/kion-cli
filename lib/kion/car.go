@@ -167,7 +167,6 @@ func GetCARByNameAndAlias(host string, token string, carName string, accountAlia
 		return CAR{}, err
 	}
 
-	fmt.Println(len(allCars))
 	// find our match
 	for _, car := range allCars {
 		if car.Name == carName && strings.EqualFold(car.AccountAlias, accountAlias) {
