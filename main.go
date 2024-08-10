@@ -92,21 +92,44 @@ func AuthUNPW(cCtx *cli.Context) error {
 	}
 
 	// prompt password if needed
+	pwFoundInCache := false
 	if pw == "" {
-		pw, err = helper.PromptPassword("Password:")
+		// Check password cache
+		pw, pwFoundInCache, err = c.GetPassword(config.Kion.Url, idmsID, un)
 		if err != nil {
 			return err
+		}
+
+		if !pwFoundInCache {
+			pw, err = helper.PromptPassword("Password:")
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	// auth and capture our session
 	session, err := kion.Authenticate(config.Kion.Url, idmsID, un, pw)
 	if err != nil {
+		// Unfortunately, the remote auth endpoint doesn't provide an easy way
+		// of determining if an auth error was the cause of failure (it returns
+		// an HTTP 400 with a body that contains a message about authentication
+		// failues). Conservatively clear out any cached password when
+		// Authenticate() fails
+		if pwFoundInCache {
+			c.SetPassword(config.Kion.Url, idmsID, un, "")
+		}
 		return err
 	}
 	session.IDMSID = idmsID
 	session.UserName = un
 	err = c.SetSession(session)
+	if err != nil {
+		return err
+	}
+
+	// if auth succeeded, cache the password
+	err = c.SetPassword(config.Kion.Url, idmsID, un, pw)
 	if err != nil {
 		return err
 	}
