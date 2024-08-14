@@ -117,7 +117,12 @@ func AuthUNPW(cCtx *cli.Context) error {
 		// failues). Conservatively clear out any cached password when
 		// Authenticate() fails
 		if pwFoundInCache {
-			c.SetPassword(config.Kion.Url, idmsID, un, "")
+			err2 := c.SetPassword(config.Kion.Url, idmsID, un, "")
+			if err2 != nil {
+				// We're already handling the error stored in err, logging err2
+				// is the best we can do
+				log.Printf("Failed to clear cached password after authentication failure: %v", err2)
+			}
 		}
 		return err
 	}
