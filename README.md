@@ -311,7 +311,7 @@ KION_URL                 URL of the Kion instance to interact with.
 
 KION_USERNAME            Username used for authenticating with Kion.
 
-KION_PASSWORD            Passwrod used for authenticating with Kion.
+KION_PASSWORD            Password used for authenticating with Kion.
 
 KION_IDMS_ID             IDMS ID with which to authenticate if using username and
                          password. If only one IDMS is configured that uses username and
@@ -363,6 +363,8 @@ PROFILES
 profiles[NAME].KION                An instance of KION as defined above.
 profiles[NAME].FAVORITES           An instance of FAVORITES as defined above.
 ```
+
+Note: if the authentication password is not provided as a Flag / Environment Variable / Configuration file entry, kion will prompt for the password on the command line. Kion will cache this password in the system keychain's encrypted storage. This may be preferable in environments where plaintext storage of credentials is frowned upon.
 
 __Caching:__
 
