@@ -11,6 +11,8 @@ type Cache interface {
 	GetStak(carName string, accNum string, accAlias string) (kion.STAK, bool, error)
 	SetSession(value kion.Session) error
 	GetSession() (kion.Session, bool, error)
+	SetPassword(host string, idmsID uint, un string, pw string) error
+	GetPassword(host string, idmsID uint, un string) (string, bool, error)
 	FlushCache() error
 }
 
@@ -27,8 +29,9 @@ type RealCache struct {
 
 // CacheData is a nested structure for storing kion-cli data.
 type CacheData struct {
-	STAK    map[string]kion.STAK
-	SESSION kion.Session
+	STAK     map[string]kion.STAK
+	SESSION  kion.Session
+	PASSWORD map[string]string
 }
 
 // NewCache creates a new RealCache.
