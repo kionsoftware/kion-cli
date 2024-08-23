@@ -666,7 +666,7 @@ func favorites(cCtx *cli.Context) error {
 	// grab the favorite object
 	favorite := fMap[fav]
 
-	// determine favorite action, default to cli unless explicitly set to web
+	// determine favorite action, default to CLI unless explicitly set to web
 	if favorite.AccessType == "web" {
 		// handle auth
 		err = setAuthToken(cCtx)
@@ -674,7 +674,7 @@ func favorites(cCtx *cli.Context) error {
 			return err
 		}
 
-		// attempt to find exact match then fallback to first match
+		// attempt to find an exact match then fallback to the first match
 		car, err := kion.GetCARByNameAndAccount(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 		if err != nil {
 			car, err = kion.GetCARByName(config.Kion.Url, config.Kion.ApiKey, favorite.CAR)
@@ -683,7 +683,9 @@ func favorites(cCtx *cli.Context) error {
 			}
 			car.AccountNumber = favorite.Account
 		}
-		url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
+
+		// grab the federation URL using the account number only
+		url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car, "")
 		if err != nil {
 			return err
 		}
@@ -710,7 +712,7 @@ func favorites(cCtx *cli.Context) error {
 			}
 		}
 
-		// cred process output, print, or create sub-shell
+		// credential process output, print, or create sub-shell
 		switch action {
 		case "credential-process":
 			// NOTE: do not use os.Stderr here else credentials can be written to logs
@@ -726,7 +728,7 @@ func favorites(cCtx *cli.Context) error {
 }
 
 // fedConsole opens the CSP console for the selected account and cloud access
-// role in the users default browser.
+// role in the user's default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
 	err := setAuthToken(cCtx)
@@ -734,18 +736,31 @@ func fedConsole(cCtx *cli.Context) error {
 		return err
 	}
 
-	// walk user through the prompt workflow to select a car
+	// Retrieve the account alias and CAR name from the context
+	accountAlias := cCtx.String("alias")
+	carName := cCtx.String("car")
+
 	var car kion.CAR
-	err = helper.CARSelector(cCtx, &car)
-	if err != nil {
-		return err
+	if accountAlias != "" && carName != "" {
+		// Fetch the CAR directly using alias and CAR name
+		car, err = kion.GetCARByNameAndAlias(config.Kion.Url, config.Kion.ApiKey, carName, accountAlias)
+		if err != nil {
+			return fmt.Errorf("failed to get CAR for alias %s and CAR %s: %v", accountAlias, carName, err)
+		}
+	} else {
+		// Walk user through the prompt workflow to select a CAR
+		err = helper.CARSelector(cCtx, &car)
+		if err != nil {
+			return err
+		}
 	}
 
-	// grab the csp federation url
-	url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
+	// Grab the CSP federation URL
+	url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car, accountAlias)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get federation URL: %v", err)
 	}
+
 	return helper.OpenBrowserRedirect(url, car.AccountTypeID)
 }
 
@@ -1061,6 +1076,18 @@ func main() {
 				Aliases: []string{"con", "c"},
 				Usage:   "Federate into the web console",
 				Action:  fedConsole,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "alias",
+						Aliases: []string{"aka", "l"},
+						Usage:   "account alias",
+					},
+					&cli.StringFlag{
+						Name:    "car",
+						Aliases: []string{"cloud-access-role", "c"},
+						Usage:   "target cloud access role, must be passed with alias",
+					},
+				},
 			},
 			{
 				Name:      "favorite",
