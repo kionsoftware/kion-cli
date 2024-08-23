@@ -32,7 +32,6 @@ type URLRequest struct {
 
 // GetFederationURL queries the Kion API to generate a federation URL.
 func GetFederationURL(host string, token string, car CAR, accountAlias string) (string, error) {
-	// Construct the payload according to the expected format
 	data := URLRequest{
 		AccountID:      car.AccountID,
 		AccountNumber:  car.AccountNumber,
