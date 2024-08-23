@@ -27,7 +27,7 @@ Version 0.6.1 adds support for console federation via account aliases.  Aliases 
 
 ### Added
 
-- Added support for account aliases in console commands [kionsoftware/kion-cli/pull/56]
+- Added support for account aliases in console commands [kionsoftware/kion-cli/pull/57]
 
 [0.6.0] - 2024-08-01
 --------------------
@@ -38,7 +38,6 @@ Version 0.6.0 adds support for account aliases coming in Kion 3.9.9 and 3.10.2. 
 
 - Added support for account aliases [kionsoftware/kion-cli/pull/51]
 
-
 [0.5.0] - 2024-06-24
 --------------------
 
@@ -48,14 +47,12 @@ This release changes how caching is handled for Gnome users. After upgrading a n
 
 - Updated keyring config for Gnome Wallet (libsecret) to use the default `login` keyring [kionsoftware/kion-cli/pull/49]
 
-
 [0.4.1] - 2024-06-24
 --------------------
 
 ### Fixed
 
 - Patched the package `github.com/dvsekhvalnov/jose2go` to version 1.6.0 to address Dependabot security findings [kionsoftware/kion-cli/pull/48]
-
 
 [0.4.0] - 2024-06-18
 --------------------
@@ -130,6 +127,7 @@ Kion CLI will now use cached STAKs by default to improve performance and reduce 
 The cache will be stored in the system's keychain, and depending on your operating system, you may be prompted to allow Kion CLI to access the cache entry on your first run.
 
 Cached STAKs will be used by default unless:
+
 - Caching is disabled via the `--disable-cache` global flag
 - Caching is disabled in the `~/.kion.yml` configuration file by setting `kion.disable_cache: true`
 - The credential has less than 5 seconds left and Kion CLI is being used as an AWS credential provider
