@@ -1,12 +1,10 @@
-Kion CLI
-========
+# Kion CLI
 
 Kion CLI is a tool allowing Kion customers to generate short term access keys and federate into the cloud service provider console via the command line.
 
 ![kion-cli usage](doc/kion-cli-hero.png)
 
-Setup
------
+## Setup
 
 > [!TIP]
 > If you are on OSX and use Homebrew you can install with `brew install kionsoftware/tap/kion-cli`.
@@ -111,6 +109,9 @@ Setup
     # start a sub-shell authenticated into an account
     kion stak --account 121212121212 --car Admin
 
+    # start a sub-shell authenticated into an account via an account alias
+    kion stak --alias Prod --car Admin
+
     # start a sub-shell using a wizard to select a target account and Cloud Rule
     kion stak
 
@@ -129,8 +130,7 @@ Setup
     credential_process = /path/to/kion favorite --credential-process MyFavorite
     ```
 
-User Manual
------------
+## User Manual
 
 __Description:__
 
@@ -370,13 +370,13 @@ __Caching:__
 
 The Kion CLI has caching enabled by default. The cache is stored in the system keychain and can be disabled by either passing the `--disable-cache` global flag or by setting `kion.disable_cache: true` in the `~/.kion.yml` configuration file. The Kion CLI attempts to receive temporary credential expirations from Kion however if nothing is returned a default credential duration of 15 minutes is set. Cached credentials will be used by default unless:
 
-  - Caching is disabled via the `--disable-cache` global flag
-  - Caching is disabled in the `~/.kion.yml` configuration file by setting `disable_cache: true`
-  - The credential has less than 5 seconds left and Kion CLI is being used as an AWS credential provider
-  - The credential has less than 5 minutes left and Kion CLI is being used to print keys
-  - The credential has less than 10 minutes left and Kion CLI is being used to create an AWS configuration profile
-  - The credential has less than 5 minutes left and Kion CLI is being used to create an authenticated subshell
-  - The credential has less than 5 seconds left and Kion CLI is being used to run an ad hoc command
+- Caching is disabled via the `--disable-cache` global flag
+- Caching is disabled in the `~/.kion.yml` configuration file by setting `disable_cache: true`
+- The credential has less than 5 seconds left and Kion CLI is being used as an AWS credential provider
+- The credential has less than 5 minutes left and Kion CLI is being used to print keys
+- The credential has less than 10 minutes left and Kion CLI is being used to create an AWS configuration profile
+- The credential has less than 5 minutes left and Kion CLI is being used to create an authenticated subshell
+- The credential has less than 5 seconds left and Kion CLI is being used to run an ad hoc command
 
 ### Compatibility
 
@@ -409,7 +409,6 @@ While you can drop in Kion-CLI directly with old usage it is recommended that
 you familiarize yourself with the new methods of access as it is does not
 require modification of AWS CLI configuration files.
 
-
 ### SAML Setup
 
 Kion CLI can use the same SAML identity provider as the Kion user interface to
@@ -435,17 +434,17 @@ but it is not enabled by default.
    to login to Kion.  Locate the ID in the URL of this page.
 
    For example: `https://mykion.example/portal/idms/##`
-2. Using the Kion API, add the Kion CLI tool as an additional SAML destination
-   by adding `http://localhost:8400/callback` as a supported destination URL.
-   Use the `POST /v3/idms/{id}/destination-url` API.
+2. Using the Kion API, add the Kion CLI tool as an additional SAML destination by adding `http://localhost:8400/callback` as a supported destination URL. Use the `POST /v3/idms/{id}/destination-url` API.
 
    For example, if the IDMS ID from the previous step is `2`:
 
-       curl -H "Authorization: Bearer $APIKEY" \
-            -X POST \
-            -H 'Content-Type: application-json' \
-            https://mykion.example/api/v3/idms/2/destination-url \
-            -d '{"destination_url": "http://localhost:8400/callback"}'
+   ```bash
+   curl -H "Authorization: Bearer $APIKEY" \
+        -X POST \
+        -H 'Content-Type: application/json' \
+        https://mykion.example/api/v3/idms/2/destination-url \
+        -d '{"destination_url": "http://localhost:8400/callback"}'
+
 </details>
 
 <details>
@@ -454,7 +453,7 @@ but it is not enabled by default.
 You must add SAML configuration options to your `~/.kion.yml` file under the
 `kion` section:
 
-* `saml_metadata_file` - This is the SAML Metadata XML file provided by your
+- `saml_metadata_file` - This is the SAML Metadata XML file provided by your
    IDP.  This should be a path to a file on your computer, or a URL from
    your identity provider.
 
@@ -463,11 +462,11 @@ You must add SAML configuration options to your `~/.kion.yml` file under the
    Example 2: `https://dev-XXXXXX.oktapreview.com/app/exkXXXXXXXXXXXXXXXXXXX/sso/saml/metadata`
 
    To obtain this file:
-    * In the Okta Admin UI, this can be found on the SAML application's Sign On
+  - In the Okta Admin UI, this can be found on the SAML application's Sign On
       tab.
-    * In the Entra ID UI, this can be found in the SAML application's Endpoints
+  - In the Entra ID UI, this can be found in the SAML application's Endpoints
       section.  Look for the `Federation metadata document`.
-* `saml_sp_issuer` - This is the Entity ID for the Kion SAML IDMS.  This can
+- `saml_sp_issuer` - This is the Entity ID for the Kion SAML IDMS.  This can
    be found by navigating to the SAML IDMS in Kion (Users -> Identity Management
    Systems).  Edit the SAML IDMS and copy the `Service Provider Issuer (Entity ID)`
    URL.
@@ -485,18 +484,18 @@ requestable SSO URL](https://support.okta.com/help/s/article/How-to-add-addition
 1. Login to the Okta administrator UI
 2. Browse to the SSO Apps and select the Kion Application you’d like to
    configure.
-3. On the **General** tab, scroll down to the **SAML Settings** section and
-   click **Edit**
+3. On the __General__ tab, scroll down to the __SAML Settings__ section and
+   click __Edit__
 4. Hit Next on Step 1, and get to the Configure SAML section in Step 2 of the
    wizard.
-5. Click **Show Advanced Settings**
-    1. Under **Other Requestable SSO URLs**, leave the first one as your primary
+5. Click __Show Advanced Settings__
+    1. Under __Other Requestable SSO URLs__, leave the first one as your primary
        FQDN with an Index of `1`.  This will be the normal Kion application
        callback URL such as `https://mykion.example/api/v1/saml/callback`.
-    2. Click **+ Add Another** and enter the Kion CLI URL:
+    2. Click __+ Add Another__ and enter the Kion CLI URL:
         1. URL: `http://localhost:8400/callback`
         2. Index: `2`
-6. Click **Next** and then **Finish**.
+6. Click __Next__ and then __Finish__.
 
 </details>
 
@@ -516,8 +515,7 @@ redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/quicksta
 
 </details>
 
-Contributing
-------------
+## Contributing
 
 1. Ensure you have golang installed and configured.
 2. Clone the repository and initialize with `make init`. This will setup the necessary git hooks and other needed tools.

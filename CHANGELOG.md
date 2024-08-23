@@ -20,6 +20,15 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.6.1] - 2024-08-23
+--------------------
+
+Version 0.6.1 adds support for console federation via account aliases.  Aliases can be now be used with the `stak`, `console` and `run` commands instead of specifying account numbers.
+
+### Added
+
+- Added support for account aliases in console commands [kionsoftware/kion-cli/pull/56]
+
 [0.6.0] - 2024-08-01
 --------------------
 
