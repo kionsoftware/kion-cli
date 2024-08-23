@@ -666,7 +666,7 @@ func favorites(cCtx *cli.Context) error {
 	// grab the favorite object
 	favorite := fMap[fav]
 
-	// determine favorite action, default to CLI unless explicitly set to web
+	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
 		// handle auth
 		err = setAuthToken(cCtx)
