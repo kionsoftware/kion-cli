@@ -111,6 +111,9 @@ Setup
     # start a sub-shell authenticated into an account
     kion stak --account 121212121212 --car Admin
 
+    # start a sub-shell authenticated into an account via an account alias
+    kion stak --alias Prod --car Admin
+
     # start a sub-shell using a wizard to select a target account and Cloud Rule
     kion stak
 

@@ -70,7 +70,7 @@ func runQuery(method string, url string, token string, query map[string]string, 
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// GetVersion returns the targeted Kion's version number.
+// GetVersion returns the targeted kion's version number.
 func GetVersion(host string) (string, error) {
 	url := fmt.Sprintf("%v/api/version", host)
 	query := map[string]string{}
