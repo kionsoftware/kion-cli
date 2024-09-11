@@ -18,6 +18,12 @@ CYN="$$(tput setaf 6)"
 # reset terminal output
 NRM="$$(tput sgr0)"
 
+# Go compiler
+GO := go
+
+# LDFLAGS for compressing the binary or setting version information
+LDFLAGS := -X main.kionCliVersion=$$(cat VERSION.md) -s -w
+
 default:
 	@printf "\n\
 	\
@@ -32,6 +38,7 @@ default:
 	    $(B)$(BLU)$(UN)Development:$(NRM)\n\n\
 	\
 	    $(B)$(GRN)build$(NRM)                $(GRN)Build the kion binary$(NRM)\n\
+	    $(B)$(GRN)build-windows$(NRM)        $(GRN)Build the kion binary for Windows$(NRM)\n\
 	    $(B)$(GRN)gofmt$(NRM)                $(GRN)Run gofmt against the repo$(NRM)\n\
 	    $(B)$(GRN)lint$(NRM)                 $(GRN)Run golangci-lint against the repo$(NRM)\n\
 	    $(B)$(GRN)test$(NRM)                 $(GRN)Run all go tests$(NRM)\n\
@@ -51,7 +58,11 @@ init:
 
 build:
 	@printf "${B}${UN}${BLU}Building Kion CLI:${NRM}\n"
-	go build -ldflags "-X main.kionCliVersion=$$(cat VERSION.md)" -o kion
+	$(GO) build -ldflags "$(LDFLAGS)" -o kion
+
+build-windows:
+	@printf "${B}${UN}${BLU}Building Kion CLI for Windows:${NRM}\n"
+	GOOS=windows GOARCH=amd64 $(GO) build -ldflags "$(LDFLAGS)" -o kion_windows.exe
 
 gofmt:
 	@printf "${B}${UN}${BLU}Running gofmt:${NRM}\n"
@@ -83,5 +94,6 @@ install-symlink: build
 clean:
 	@printf "${B}${UN}${BLU}Cleaning generated assets and helpers:${NRM}\n"
 	rm -f kion
+	rm -f kion_windows.exe
 	rm -f profile.cov
 	rm -f tools/golangci-lint
