@@ -20,7 +20,6 @@ type URLResponse struct {
 // URLRequest maps to the required post body when interfacing with the Kion
 // API.
 type URLRequest struct {
-	AccountAlias   string `json:"account_alias"`
 	AccountID      uint   `json:"account_id"`
 	AccountName    string `json:"account_name"`
 	AccountNumber  string `json:"account_number"`
@@ -31,7 +30,7 @@ type URLRequest struct {
 }
 
 // GetFederationURL queries the Kion API to generate a federation URL.
-func GetFederationURL(host string, token string, car CAR, accountAlias string) (string, error) {
+func GetFederationURL(host string, token string, car CAR) (string, error) {
 	// converting cloud access role type to role type
 	var roleType string
 	switch car.CloudAccessRoleType {
@@ -48,8 +47,8 @@ func GetFederationURL(host string, token string, car CAR, accountAlias string) (
 		AccountID:      car.AccountID,
 		AccountName:    car.AccountName,
 		AccountNumber:  car.AccountNumber,
-		AccountTypeID:  car.AccountTypeID,
 		AWSIAMRoleName: car.AwsIamRoleName,
+		AccountTypeID:  car.AccountTypeID,
 		RoleID:         car.ID,
 		RoleType:       roleType,
 	}

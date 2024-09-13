@@ -112,7 +112,7 @@ Setup
     kion stak --account 121212121212 --car Admin
 
     # start a sub-shell authenticated into an account via an account alias
-    # * note that account alias only supports kion versions 3.9.9 and 3.10.2 and up
+    # NOTE: that account alias only supports Kion versions 3.9.9 and 3.10.2 and up
     kion stak --alias Prod --car Admin
 
     # start a sub-shell using a wizard to select a target account and Cloud Rule
@@ -123,8 +123,8 @@ Setup
     kion console
 
     # federate into a web console using an alias
-    # * note that Firefox users will have to approve pop-ups on the first run
-    # * note that account alias only supports kion versions 3.9.9 and 3.10.2 and up
+    # NOTE: that Firefox users will have to approve pop-ups on the first run
+    # NOTE: that account alias only supports Kion versions 3.9.9 and 3.10.2 and up
     kion console --alias Prod --car Admin
     ```
 
@@ -297,6 +297,21 @@ OPTIONS
   --help, -h                           Print usage text.
 ```
 
+__Console Command:__
+
+```text
+OPTIONS
+
+  --alias val, --aka val, -l val       Target account alias, used to bypass
+                                       prompts, must be passed with --car.
+
+  --car val, --cloud-access-role val,  Target cloud access role, used to bypass
+    -c val                             prompts, must be passed with --account
+                                       or --alias.
+
+  --help, -h                           Print usage text.
+```
+
 __Util Commands:__
 
 ```text
@@ -456,7 +471,7 @@ but it is not enabled by default.
       -H 'Content-Type: application/json' \
       https://mykion.example/api/v3/idms/2/destination-url \
       -d '{"destination_url": "http://localhost:8400/callback"}'
-      ```
+    ```
 
 </details>
 

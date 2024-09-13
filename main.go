@@ -350,7 +350,7 @@ func getActionAndBuffer(cCtx *cli.Context) (string, time.Duration) {
 }
 
 // authStakCache handles the common pattern of authenticating the user,
-// grabbing a stak, and caching it.
+// grabbing a STAK, and caching it.
 func authStakCache(cCtx *cli.Context, carName string, accNum string, accAlias string) (kion.STAK, error) {
 	// handle auth
 	err := setAuthToken(cCtx)
@@ -457,13 +457,13 @@ func beforeCommands(cCtx *cli.Context) error {
 		}
 	}
 
-	// grab the kion url if not already set
+	// grab the Kion url if not already set
 	err := setEndpoint()
 	if err != nil {
 		return err
 	}
 
-	// gather the targeted kion version
+	// gather the targeted Kion version
 	kionVer, err := kion.GetVersion(config.Kion.Url)
 	if err != nil {
 		return err
@@ -684,13 +684,13 @@ func favorites(cCtx *cli.Context) error {
 			car.AccountNumber = favorite.Account
 		}
 
-		// grab the federation url using the account number only
-		url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car, "")
+		url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
 		if err != nil {
 			return err
 		}
 		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
 		return helper.OpenBrowserRedirect(url, car.AccountTypeID)
+
 	} else {
 		// placeholder for our stak
 		var stak kion.STAK
@@ -727,7 +727,7 @@ func favorites(cCtx *cli.Context) error {
 	}
 }
 
-// fedConsole opens the csp console for the selected account and cloud access
+// fedConsole opens the CSP console for the selected account and cloud access
 // role in the user's default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
@@ -756,7 +756,7 @@ func fedConsole(cCtx *cli.Context) error {
 	}
 
 	// grab the csp federation url
-	url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car, accountAlias)
+	url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
 	if err != nil {
 		return err
 	}
@@ -870,7 +870,7 @@ func runCommand(cCtx *cli.Context) error {
 	return nil
 }
 
-// flushCache clears the kion cli cache.
+// flushCache clears the Kion CLI cache.
 func flushCache(cCtx *cli.Context) error {
 	return c.FlushCache()
 }
@@ -1053,7 +1053,7 @@ func main() {
 					&cli.StringFlag{
 						Name:    "car",
 						Aliases: []string{"cloud-access-role", "c"},
-						Usage:   "target cloud access role, must be passed with account and alias",
+						Usage:   "target cloud access role, must be passed with account or alias",
 					},
 					&cli.StringFlag{
 						Name:    "region",
