@@ -240,8 +240,6 @@ func TestFindCARByName(t *testing.T) {
 	}
 }
 
-// New tests for alias and account ID
-
 func TestFindCARByNameAndAccountNumber(t *testing.T) {
 	tests := []struct {
 		name          string
