@@ -31,7 +31,16 @@ type URLRequest struct {
 }
 
 // GetFederationURL queries the Kion API to generate a federation URL.
-func GetFederationURL(host string, token string, car CAR, accountAlias string) (string, error) {
+func GetFederationURL(host string, token string, car CAR) (string, error) {
+	// converting cloud access role type to role type
+	var roleType string
+	switch car.CloudAccessRoleType {
+	case "inherited":
+		roleType = "ou"
+	case "local":
+		roleType = "project"
+	}
+
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v1/console-access", host)
 	query := map[string]string{}
@@ -42,7 +51,7 @@ func GetFederationURL(host string, token string, car CAR, accountAlias string) (
 		AccountTypeID:  car.AccountTypeID,
 		AWSIAMRoleName: car.AwsIamRoleName,
 		RoleID:         car.ID,
-		RoleType:       car.CloudAccessRoleType,
+		RoleType:       roleType,
 	}
 	resp, _, err := runQuery("POST", url, token, query, data)
 	if err != nil {
