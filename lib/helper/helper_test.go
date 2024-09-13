@@ -1,11 +1,13 @@
 package helper
 
 import (
+	"fmt"
+
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
 )
 
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Resources                                                                 //
 //                                                                            //
@@ -30,12 +32,12 @@ var kionTestProjectsNames = []string{
 }
 
 var kionTestAccounts = []kion.Account{
-	{Email: "test1@kion.io", Name: "account one", Number: "111111111111", TypeID: 1, ID: 101, IncludeLinkedAccountSpend: true, LinkedAccountNumber: "", LinkedRole: "", PayerID: 101, ProjectID: 101, SkipAccessChecking: true, UseOrgAccountInfo: false},
-	{Email: "test2@kion.io", Name: "account two", Number: "121212121212", TypeID: 2, ID: 102, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 102, ProjectID: 102, SkipAccessChecking: true, UseOrgAccountInfo: false},
-	{Email: "test3@kion.io", Name: "account three", Number: "131313131313", TypeID: 3, ID: 103, IncludeLinkedAccountSpend: true, LinkedAccountNumber: "000000000000", LinkedRole: "", PayerID: 103, ProjectID: 103, SkipAccessChecking: true, UseOrgAccountInfo: false},
-	{Email: "test4@kion.io", Name: "account four", Number: "141414141414", TypeID: 4, ID: 104, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 104, ProjectID: 104, SkipAccessChecking: true, UseOrgAccountInfo: false},
-	{Email: "test5@kion.io", Name: "account five", Number: "151515151515", TypeID: 5, ID: 105, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 105, ProjectID: 105, SkipAccessChecking: true, UseOrgAccountInfo: false},
-	{Email: "test6@kion.io", Name: "account six", Number: "161616161616", TypeID: 6, ID: 106, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 106, ProjectID: 106, SkipAccessChecking: true, UseOrgAccountInfo: true},
+	{Email: "test1@kion.io", Name: "account one", Alias: "acct-one-alias", Number: "111111111111", TypeID: 1, ID: 101, IncludeLinkedAccountSpend: true, LinkedAccountNumber: "", LinkedRole: "", PayerID: 101, ProjectID: 101, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test2@kion.io", Name: "account two", Alias: "acct-two-alias", Number: "121212121212", TypeID: 2, ID: 102, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 102, ProjectID: 102, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test3@kion.io", Name: "account three", Alias: "acct-three-alias", Number: "131313131313", TypeID: 3, ID: 103, IncludeLinkedAccountSpend: true, LinkedAccountNumber: "000000000000", LinkedRole: "", PayerID: 103, ProjectID: 103, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test4@kion.io", Name: "account four", Alias: "acct-four-alias", Number: "141414141414", TypeID: 4, ID: 104, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 104, ProjectID: 104, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test5@kion.io", Name: "account five", Alias: "acct-five-alias", Number: "151515151515", TypeID: 5, ID: 105, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 105, ProjectID: 105, SkipAccessChecking: true, UseOrgAccountInfo: false},
+	{Email: "test6@kion.io", Name: "account six", Alias: "acct-six-alias", Number: "161616161616", TypeID: 6, ID: 106, IncludeLinkedAccountSpend: false, LinkedAccountNumber: "", LinkedRole: "", PayerID: 106, ProjectID: 106, SkipAccessChecking: true, UseOrgAccountInfo: true},
 }
 
 var kionTestAccountsNames = []string{
@@ -48,12 +50,12 @@ var kionTestAccountsNames = []string{
 }
 
 var kionTestCARs = []kion.CAR{
-	{AccountID: 101, AccountNumber: "111111111111", AccountType: "aws", AccountTypeID: 1, AccountName: "account one", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role one", CloudAccessRoleType: "type", FutureAccounts: true, ID: 101, LongTermAccessKeys: false, Name: "car one", ProjectID: 101, ShortTermAccessKeys: true, WebAccess: true},
-	{AccountID: 102, AccountNumber: "121212121212", AccountType: "aws", AccountTypeID: 2, AccountName: "account two", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role two", CloudAccessRoleType: "type", FutureAccounts: true, ID: 102, LongTermAccessKeys: false, Name: "car two", ProjectID: 102, ShortTermAccessKeys: true, WebAccess: true},
-	{AccountID: 103, AccountNumber: "131313131313", AccountType: "aws", AccountTypeID: 3, AccountName: "account three", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role three", CloudAccessRoleType: "type", FutureAccounts: true, ID: 103, LongTermAccessKeys: false, Name: "car three", ProjectID: 103, ShortTermAccessKeys: true, WebAccess: true},
-	{AccountID: 104, AccountNumber: "141414141414", AccountType: "aws", AccountTypeID: 4, AccountName: "account four", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role four", CloudAccessRoleType: "type", FutureAccounts: true, ID: 104, LongTermAccessKeys: false, Name: "car four", ProjectID: 104, ShortTermAccessKeys: true, WebAccess: true},
-	{AccountID: 105, AccountNumber: "151515151515", AccountType: "aws", AccountTypeID: 5, AccountName: "account five", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role five", CloudAccessRoleType: "type", FutureAccounts: true, ID: 105, LongTermAccessKeys: false, Name: "car five", ProjectID: 105, ShortTermAccessKeys: true, WebAccess: true},
-	{AccountID: 106, AccountNumber: "161616161616", AccountType: "aws", AccountTypeID: 6, AccountName: "account six", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role six", CloudAccessRoleType: "type", FutureAccounts: true, ID: 106, LongTermAccessKeys: false, Name: "car six", ProjectID: 106, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 101, AccountNumber: "111111111111", AccountAlias: "acct-one-alias", AccountType: "aws", AccountTypeID: 1, AccountName: "account one", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role one", CloudAccessRoleType: "type", FutureAccounts: true, ID: 101, LongTermAccessKeys: false, Name: "car one", ProjectID: 101, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 102, AccountNumber: "121212121212", AccountAlias: "acct-two-alias", AccountType: "aws", AccountTypeID: 2, AccountName: "account two", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role two", CloudAccessRoleType: "type", FutureAccounts: true, ID: 102, LongTermAccessKeys: false, Name: "car two", ProjectID: 102, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 103, AccountNumber: "131313131313", AccountAlias: "acct-three-alias", AccountType: "aws", AccountTypeID: 3, AccountName: "account three", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role three", CloudAccessRoleType: "type", FutureAccounts: true, ID: 103, LongTermAccessKeys: false, Name: "car three", ProjectID: 103, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 104, AccountNumber: "141414141414", AccountAlias: "acct-four-alias", AccountType: "aws", AccountTypeID: 4, AccountName: "account four", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role four", CloudAccessRoleType: "type", FutureAccounts: true, ID: 104, LongTermAccessKeys: false, Name: "car four", ProjectID: 104, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 105, AccountNumber: "151515151515", AccountAlias: "acct-five-alias", AccountType: "aws", AccountTypeID: 5, AccountName: "account five", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role five", CloudAccessRoleType: "type", FutureAccounts: true, ID: 105, LongTermAccessKeys: false, Name: "car five", ProjectID: 105, ShortTermAccessKeys: true, WebAccess: true},
+	{AccountID: 106, AccountNumber: "161616161616", AccountAlias: "acct-six-alias", AccountType: "aws", AccountTypeID: 6, AccountName: "account six", ApplyToAllAccounts: true, AwsIamPath: "some path", AwsIamRoleName: "role six", CloudAccessRoleType: "type", FutureAccounts: true, ID: 106, LongTermAccessKeys: false, Name: "car six", ProjectID: 106, ShortTermAccessKeys: true, WebAccess: true},
 }
 
 var kionTestCARsNames = []string{
@@ -106,3 +108,23 @@ var kionTestFavoritesNames = []string{
 //  Helpers                                                                   //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+// FindCARByNameAndAccountNumber finds a CAR by name and account number.
+func FindCARByNameAndAccountNumber(cars []kion.CAR, name string, accountNumber string) (*kion.CAR, error) {
+	for _, car := range cars {
+		if car.Name == name && car.AccountNumber == accountNumber {
+			return &car, nil
+		}
+	}
+	return nil, fmt.Errorf("cannot find cloud access role with name %v and account number %v", name, accountNumber)
+}
+
+// FindCARByNameAndAlias finds a CAR by name and account alias.
+func FindCARByNameAndAlias(cars []kion.CAR, name string, accountAlias string) (*kion.CAR, error) {
+	for _, car := range cars {
+		if car.Name == name && car.AccountAlias == accountAlias {
+			return &car, nil
+		}
+	}
+	return nil, fmt.Errorf("cannot find cloud access role with name %v and account alias %v", name, accountAlias)
+}

@@ -59,20 +59,20 @@ func TestMapAccounts(t *testing.T) {
 			"Basic",
 			kionTestAccounts,
 			[]string{
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Alias, kionTestAccounts[4].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Alias, kionTestAccounts[3].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Alias, kionTestAccounts[0].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Alias, kionTestAccounts[5].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Alias, kionTestAccounts[2].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Alias, kionTestAccounts[1].Number),
 			},
 			map[string]kion.Account{
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Number): kionTestAccounts[0],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Number): kionTestAccounts[1],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Number): kionTestAccounts[2],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Number): kionTestAccounts[3],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Number): kionTestAccounts[4],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Number): kionTestAccounts[5],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Alias, kionTestAccounts[0].Number): kionTestAccounts[0],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Alias, kionTestAccounts[1].Number): kionTestAccounts[1],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Alias, kionTestAccounts[2].Number): kionTestAccounts[2],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Alias, kionTestAccounts[3].Number): kionTestAccounts[3],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Alias, kionTestAccounts[4].Number): kionTestAccounts[4],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Alias, kionTestAccounts[5].Number): kionTestAccounts[5],
 			},
 		},
 	}
@@ -86,7 +86,6 @@ func TestMapAccounts(t *testing.T) {
 		})
 	}
 }
-
 func TestMapCAR(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -236,6 +235,98 @@ func TestFindCARByName(t *testing.T) {
 			// if !reflect.DeepEqual(&test.wantCAR, car) || test.wantErr != err {
 			if !reflect.DeepEqual(&test.wantCAR, car) || !reflect.DeepEqual(test.wantErr, err) {
 				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", car, err, &test.wantCAR, test.wantErr)
+			}
+		})
+	}
+}
+
+// New tests for alias and account ID
+
+func TestFindCARByNameAndAccountNumber(t *testing.T) {
+	tests := []struct {
+		name          string
+		carName       string
+		accountNumber string
+		cars          []kion.CAR
+		wantCAR       *kion.CAR
+		wantErr       error
+	}{
+		{
+			"Find Match",
+			"car one",
+			"111111111111",
+			kionTestCARs,
+			&kionTestCARs[0],
+			nil,
+		},
+		{
+			"Find No Match - Wrong Account Number",
+			"car one",
+			"999999999999",
+			kionTestCARs,
+			nil,
+			fmt.Errorf("cannot find cloud access role with name %v and account number %v", "car one", "999999999999"),
+		},
+		{
+			"Find No Match - Wrong CAR Name",
+			"fake car",
+			"111111111111",
+			kionTestCARs,
+			nil,
+			fmt.Errorf("cannot find cloud access role with name %v and account number %v", "fake car", "111111111111"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			car, err := FindCARByNameAndAccountNumber(test.cars, test.carName, test.accountNumber)
+			if !reflect.DeepEqual(test.wantCAR, car) || (err != nil && err.Error() != test.wantErr.Error()) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", car, err, test.wantCAR, test.wantErr)
+			}
+		})
+	}
+}
+
+func TestFindCARByNameAndAlias(t *testing.T) {
+	tests := []struct {
+		name         string
+		carName      string
+		accountAlias string
+		cars         []kion.CAR
+		wantCAR      *kion.CAR
+		wantErr      error
+	}{
+		{
+			"Find Match",
+			"car two",
+			"acct-two-alias",
+			kionTestCARs,
+			&kionTestCARs[1],
+			nil,
+		},
+		{
+			"Find No Match - Wrong Account Alias",
+			"car two",
+			"non-existent-alias",
+			kionTestCARs,
+			nil,
+			fmt.Errorf("cannot find cloud access role with name %v and account alias %v", "car two", "non-existent-alias"),
+		},
+		{
+			"Find No Match - Wrong CAR Name",
+			"fake car",
+			"acct-two-alias",
+			kionTestCARs,
+			nil,
+			fmt.Errorf("cannot find cloud access role with name %v and account alias %v", "fake car", "acct-two-alias"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			car, err := FindCARByNameAndAlias(test.cars, test.carName, test.accountAlias)
+			if !reflect.DeepEqual(test.wantCAR, car) || (err != nil && err.Error() != test.wantErr.Error()) {
+				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", car, err, test.wantCAR, test.wantErr)
 			}
 		})
 	}
