@@ -35,7 +35,6 @@ default:
 	    $(B)$(BLU)$(UN)Development:$(NRM)\n\n\
 	\
 	    $(B)$(GRN)build$(NRM)                $(GRN)Build the kion binary$(NRM)\n\
-	    $(B)$(GRN)build-windows$(NRM)        $(GRN)Build the kion binary for Windows$(NRM)\n\
 	    $(B)$(GRN)gofmt$(NRM)                $(GRN)Run gofmt against the repo$(NRM)\n\
 	    $(B)$(GRN)lint$(NRM)                 $(GRN)Run golangci-lint against the repo$(NRM)\n\
 	    $(B)$(GRN)test$(NRM)                 $(GRN)Run all go tests$(NRM)\n\
