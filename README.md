@@ -112,6 +112,7 @@ Setup
     kion stak --account 121212121212 --car Admin
 
     # start a sub-shell authenticated into an account via an account alias
+    # * note that account alias only supports kion versions 3.9.9 and 3.10.2 and up
     kion stak --alias Prod --car Admin
 
     # start a sub-shell using a wizard to select a target account and Cloud Rule
@@ -120,6 +121,11 @@ Setup
     # federate into a web console using a wizard to select a target account and Cloud Rule
     # * note that Firefox users will have to approve pop-ups on the first run
     kion console
+
+    # federate into a web console using an alias
+    # * note that Firefox users will have to approve pop-ups on the first run
+    # * note that account alias only supports kion versions 3.9.9 and 3.10.2 and up
+    kion console --alias Prod --car Admin
     ```
 
     __AWS Profiles:__
@@ -444,11 +450,14 @@ but it is not enabled by default.
 
    For example, if the IDMS ID from the previous step is `2`:
 
-       curl -H "Authorization: Bearer $APIKEY" \
-            -X POST \
-            -H 'Content-Type: application-json' \
-            https://mykion.example/api/v3/idms/2/destination-url \
-            -d '{"destination_url": "http://localhost:8400/callback"}'
+    ```bash
+    curl -H "Authorization: Bearer $APIKEY" \
+      -X POST \
+      -H 'Content-Type: application/json' \
+      https://mykion.example/api/v3/idms/2/destination-url \
+      -d '{"destination_url": "http://localhost:8400/callback"}'
+      ```
+
 </details>
 
 <details>

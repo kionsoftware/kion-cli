@@ -1048,12 +1048,12 @@ func main() {
 					&cli.StringFlag{
 						Name:    "alias",
 						Aliases: []string{"aka", "l"},
-						Usage:   "account alias",
+						Usage:   "account alias, must be passed with car",
 					},
 					&cli.StringFlag{
 						Name:    "car",
 						Aliases: []string{"cloud-access-role", "c"},
-						Usage:   "target cloud access role, must be passed with account",
+						Usage:   "target cloud access role, must be passed with account and alias",
 					},
 					&cli.StringFlag{
 						Name:    "region",

@@ -31,7 +31,7 @@ type URLRequest struct {
 }
 
 // GetFederationURL queries the Kion API to generate a federation URL.
-func GetFederationURL(host string, token string, car CAR) (string, error) {
+func GetFederationURL(host string, token string, car CAR, accountAlias string) (string, error) {
 	// converting cloud access role type to role type
 	var roleType string
 	switch car.CloudAccessRoleType {
