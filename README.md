@@ -126,6 +126,9 @@ Setup
     # NOTE: that Firefox users will have to approve pop-ups on the first run
     # NOTE: that account alias only supports Kion versions 3.9.9 and 3.10.2 and up
     kion console --alias Prod --car Admin
+
+    # federate into a web console using an account number
+    kion console --account 111122223333 --car Admin
     ```
 
     __AWS Profiles:__
@@ -301,6 +304,9 @@ __Console Command:__
 
 ```text
 OPTIONS
+
+  --account val, --acc val, -a val     Target account number, used to bypass
+                                       prompts, must be passed with --car.
 
   --alias val, --aka val, -l val       Target account alias, used to bypass
                                        prompts, must be passed with --car.
