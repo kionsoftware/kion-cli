@@ -18,9 +18,6 @@ CYN="$$(tput setaf 6)"
 # reset terminal output
 NRM="$$(tput sgr0)"
 
-# Go compiler
-GO := go
-
 # LDFLAGS for compressing the binary or setting version information
 LDFLAGS := -X main.kionCliVersion=$$(cat VERSION.md) -s -w
 
@@ -58,11 +55,9 @@ init:
 
 build:
 	@printf "${B}${UN}${BLU}Building Kion CLI:${NRM}\n"
-	$(GO) build -ldflags "$(LDFLAGS)" -o kion
-
-build-windows:
+	go build -ldflags "$(LDFLAGS)" -o kion
 	@printf "${B}${UN}${BLU}Building Kion CLI for Windows:${NRM}\n"
-	GOOS=windows GOARCH=amd64 $(GO) build -ldflags "$(LDFLAGS)" -o kion_windows.exe
+	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o kion.exe
 
 gofmt:
 	@printf "${B}${UN}${BLU}Running gofmt:${NRM}\n"
@@ -94,6 +89,6 @@ install-symlink: build
 clean:
 	@printf "${B}${UN}${BLU}Cleaning generated assets and helpers:${NRM}\n"
 	rm -f kion
-	rm -f kion_windows.exe
+	rm -f kion.exe
 	rm -f profile.cov
 	rm -f tools/golangci-lint
