@@ -1,8 +1,6 @@
 package helper
 
 import (
-	"fmt"
-
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
 )
@@ -108,23 +106,3 @@ var kionTestFavoritesNames = []string{
 //  Helpers                                                                   //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-
-// FindCARByNameAndAccountNumber finds a CAR by name and account number.
-func FindCARByNameAndAccountNumber(cars []kion.CAR, name string, accountNumber string) (*kion.CAR, error) {
-	for _, car := range cars {
-		if car.Name == name && car.AccountNumber == accountNumber {
-			return &car, nil
-		}
-	}
-	return nil, fmt.Errorf("cannot find cloud access role with name %v and account number %v", name, accountNumber)
-}
-
-// FindCARByNameAndAlias finds a CAR by name and account alias.
-func FindCARByNameAndAlias(cars []kion.CAR, name string, accountAlias string) (*kion.CAR, error) {
-	for _, car := range cars {
-		if car.Name == name && car.AccountAlias == accountAlias {
-			return &car, nil
-		}
-	}
-	return nil, fmt.Errorf("cannot find cloud access role with name %v and account alias %v", name, accountAlias)
-}

@@ -235,10 +235,14 @@ OPTIONS
 
   --alias val, --aka val, -l val       Target account alias, used to bypass
                                        prompts, must be passed with --car.
+                                       Note account alias only supports
+                                       Kion versions 3.9.9 and 3.10.2 and up.
 
   --car val, --cloud-access-role val,  Target cloud access role, used to bypass
     -c val                             prompts, must be passed with --account
                                        or --alias.
+                                       Note account alias only supports
+                                       Kion versions 3.9.9 and 3.10.2 and up.
 
   --region val, -r val                 Specify which region to target.
 
@@ -291,9 +295,13 @@ OPTIONS
 
   --alias val, --aka val, -l val       Target account alias, used to bypass
                                        prompts, must be passed with --car.
+                                       Note account alias only supports
+                                       Kion versions 3.9.9 and 3.10.2 and up.
 
   --car val, -c val                    Specify which Cloud Access Role to use,
                                        must be passed with --account or --alias.
+                                       Note account alias only supports
+                                       Kion versions 3.9.9 and 3.10.2 and up.
 
   --region val, -r val                 Specify which region to target.
 
@@ -310,10 +318,13 @@ OPTIONS
 
   --alias val, --aka val, -l val       Target account alias, used to bypass
                                        prompts, must be passed with --car.
+                                       Note account alias only supports
+                                       Kion versions 3.9.9 and 3.10.2 and up.
 
   --car val, --cloud-access-role val,  Target cloud access role, used to bypass
     -c val                             prompts, must be passed with --account
-                                       or --alias.
+                                       or --alias. Note account alias only supports
+                                       Kion versions 3.9.9 and 3.10.2 and up.
 
   --help, -h                           Print usage text.
 ```
