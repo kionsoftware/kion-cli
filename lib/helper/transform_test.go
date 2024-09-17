@@ -59,20 +59,20 @@ func TestMapAccounts(t *testing.T) {
 			"Basic",
 			kionTestAccounts,
 			[]string{
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Number),
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Alias, kionTestAccounts[4].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Alias, kionTestAccounts[3].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Alias, kionTestAccounts[0].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Alias, kionTestAccounts[5].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Alias, kionTestAccounts[2].Number),
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Alias, kionTestAccounts[1].Number),
 			},
 			map[string]kion.Account{
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Number): kionTestAccounts[0],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Number): kionTestAccounts[1],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Number): kionTestAccounts[2],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Number): kionTestAccounts[3],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Number): kionTestAccounts[4],
-				fmt.Sprintf("%v (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Number): kionTestAccounts[5],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[0], kionTestAccounts[0].Alias, kionTestAccounts[0].Number): kionTestAccounts[0],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[1], kionTestAccounts[1].Alias, kionTestAccounts[1].Number): kionTestAccounts[1],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[2], kionTestAccounts[2].Alias, kionTestAccounts[2].Number): kionTestAccounts[2],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[3], kionTestAccounts[3].Alias, kionTestAccounts[3].Number): kionTestAccounts[3],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[4], kionTestAccounts[4].Alias, kionTestAccounts[4].Number): kionTestAccounts[4],
+				fmt.Sprintf("%v [%v] (%v)", kionTestAccountsNames[5], kionTestAccounts[5].Alias, kionTestAccounts[5].Number): kionTestAccounts[5],
 			},
 		},
 	}
@@ -86,7 +86,6 @@ func TestMapAccounts(t *testing.T) {
 		})
 	}
 }
-
 func TestMapCAR(t *testing.T) {
 	tests := []struct {
 		name    string

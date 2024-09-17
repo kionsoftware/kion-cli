@@ -182,7 +182,7 @@ func AuthSAML(cCtx *cli.Context) error {
 	}
 	var authData *kion.AuthData
 
-	// We only need to check for existence - the value is irrelevant
+	// we only need to check for existence - the value is irrelevant
 	if cCtx.App.Metadata["useOldSAML"] == true {
 		authData, err = kion.AuthenticateSAMLOld(
 			config.Kion.Url,
@@ -383,6 +383,18 @@ func validateCmdStak(cCtx *cli.Context) error {
 	return nil
 }
 
+// validateCmdConsole validates the flags passed to the console command.
+func validateCmdConsole(cCtx *cli.Context) error {
+	if cCtx.String("car") != "" {
+		if cCtx.String("account") == "" && cCtx.String("alias") == "" {
+			return errors.New("must specify --account or --alias parameter when using --car")
+		}
+	} else if cCtx.String("account") != "" || cCtx.String("alias") != "" {
+		return errors.New("must specify --car parameter when using --account or --alias")
+	}
+	return nil
+}
+
 // validateCmdRun validates the flags passed to the run command.
 func validateCmdRun(cCtx *cli.Context) error {
 	if cCtx.String("favorite") == "" && ((cCtx.String("account") == "" && cCtx.String("alias") == "") || cCtx.String("car") == "") {
@@ -457,13 +469,13 @@ func beforeCommands(cCtx *cli.Context) error {
 		}
 	}
 
-	// grab the kion url if not already set
+	// grab the Kion url if not already set
 	err := setEndpoint()
 	if err != nil {
 		return err
 	}
 
-	// gather the targeted kion version
+	// gather the targeted Kion version
 	kionVer, err := kion.GetVersion(config.Kion.Url)
 	if err != nil {
 		return err
@@ -674,7 +686,7 @@ func favorites(cCtx *cli.Context) error {
 			return err
 		}
 
-		// attempt to find exact match then fallback to first match
+		// attempt to find an exact match then fallback to the first match
 		car, err := kion.GetCARByNameAndAccount(config.Kion.Url, config.Kion.ApiKey, favorite.CAR, favorite.Account)
 		if err != nil {
 			car, err = kion.GetCARByName(config.Kion.Url, config.Kion.ApiKey, favorite.CAR)
@@ -683,6 +695,7 @@ func favorites(cCtx *cli.Context) error {
 			}
 			car.AccountNumber = favorite.Account
 		}
+
 		url, err := kion.GetFederationURL(config.Kion.Url, config.Kion.ApiKey, car)
 		if err != nil {
 			return err
@@ -710,7 +723,7 @@ func favorites(cCtx *cli.Context) error {
 			}
 		}
 
-		// cred process output, print, or create sub-shell
+		// credential process output, print, or create sub-shell
 		switch action {
 		case "credential-process":
 			// NOTE: do not use os.Stderr here else credentials can be written to logs
@@ -726,7 +739,7 @@ func favorites(cCtx *cli.Context) error {
 }
 
 // fedConsole opens the CSP console for the selected account and cloud access
-// role in the users default browser.
+// role in the user's default browser.
 func fedConsole(cCtx *cli.Context) error {
 	// handle auth
 	err := setAuthToken(cCtx)
@@ -734,11 +747,31 @@ func fedConsole(cCtx *cli.Context) error {
 		return err
 	}
 
-	// walk user through the prompt workflow to select a car
+	// retrieve the account number, account alias, and CAR name from the context
+	accNum := cCtx.String("account")
+	accountAlias := cCtx.String("alias")
+	carName := cCtx.String("car")
+
 	var car kion.CAR
-	err = helper.CARSelector(cCtx, &car)
-	if err != nil {
-		return err
+	if carName != "" && (accNum != "" || accountAlias != "") {
+		// fetch the car directly using account number or alias and car name
+		if accNum != "" {
+			car, err = kion.GetCARByNameAndAccount(config.Kion.Url, config.Kion.ApiKey, carName, accNum)
+			if err != nil {
+				return fmt.Errorf("failed to get CAR for account %s and CAR %s: %v", accNum, carName, err)
+			}
+		} else {
+			car, err = kion.GetCARByNameAndAlias(config.Kion.Url, config.Kion.ApiKey, carName, accountAlias)
+			if err != nil {
+				return fmt.Errorf("failed to get CAR for alias %s and CAR %s: %v", accountAlias, carName, err)
+			}
+		}
+	} else {
+		// walk user through the prompt workflow to select a car
+		err = helper.CARSelector(cCtx, &car)
+		if err != nil {
+			return err
+		}
 	}
 
 	// grab the csp federation url
@@ -746,6 +779,7 @@ func fedConsole(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	return helper.OpenBrowserRedirect(url, car.AccountTypeID)
 }
 
@@ -871,7 +905,7 @@ func afterCommands(cCtx *cli.Context) error {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// main defines the command line utilities API. This should probably be broken
+// main defines the command line utilities api. This should probably be broken
 // out into its own function some day.
 func main() {
 	// get home directory
@@ -1033,12 +1067,12 @@ func main() {
 					&cli.StringFlag{
 						Name:    "alias",
 						Aliases: []string{"aka", "l"},
-						Usage:   "account alias",
+						Usage:   "account alias, must be passed with car",
 					},
 					&cli.StringFlag{
 						Name:    "car",
 						Aliases: []string{"cloud-access-role", "c"},
-						Usage:   "target cloud access role, must be passed with account",
+						Usage:   "target cloud access role, must be passed with account or alias",
 					},
 					&cli.StringFlag{
 						Name:    "region",
@@ -1060,7 +1094,25 @@ func main() {
 				Name:    "console",
 				Aliases: []string{"con", "c"},
 				Usage:   "Federate into the web console",
+				Before:  validateCmdConsole,
 				Action:  fedConsole,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "account",
+						Aliases: []string{"acc", "a"},
+						Usage:   "target account number, must be passed with car",
+					},
+					&cli.StringFlag{
+						Name:    "alias",
+						Aliases: []string{"aka", "l"},
+						Usage:   "account alias, must be passed with car",
+					},
+					&cli.StringFlag{
+						Name:    "car",
+						Aliases: []string{"cloud-access-role", "c"},
+						Usage:   "target cloud access role, must be passed with account or alias",
+					},
+				},
 			},
 			{
 				Name:      "favorite",
