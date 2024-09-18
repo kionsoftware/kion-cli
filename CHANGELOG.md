@@ -23,13 +23,11 @@ Notes for upgrading...
 [0.7.0] - 2024.09.18
 --------------------
 
-Version 0.7.0 adds support for account aliases to console federation, addresses a bug that presented when using paths with AWS IAM roles, and adds a method for keeping your Kion password in encrypted storage (eg the system keyring).
-
-NOTE: Account aliases are only available in Kion 3.9.9, 3.10.2 and up.
+Version 0.7.0 adds flag support to console federation, addresses a bug that presented when using paths with AWS IAM roles, and adds a method for keeping your Kion password in encrypted storage (eg the system keyring).
 
 ### Added
 
-- Added support for account aliases to console federation [kionsoftware/kion-cli/pull/61]
+- Added support for flags (account alias/number and car) to console federation [kionsoftware/kion-cli/pull/61]
 - Added support for storing login password in encrypted storage [kionsoftware/kion-cli/pull/53]
 
 ### Fixed
