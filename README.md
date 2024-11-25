@@ -560,6 +560,23 @@ redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/quicksta
 
 </details>
 
+### Firefox Containers
+
+Kion CLI supports the use of [Firefox Containers](https://support.mozilla.org/en-US/kb/containers) to isolate federated sessions and allow multiple accounts to be used simultaneously in the same browser window, particulary useful for AWS sessions. To use containers with the Kion CLI, you must have the [granted containers](https://addons.mozilla.org/en-US/firefox/addon/granted/) Firefox extension installed. This extension allows the Kion CLI to create new container tabs when opening console sessions.
+
+To configure the Kion CLI to use Firefox Containers, add the following to your `~/.kion.yml` file:
+
+```yaml
+
+browser:
+  firefox_containers: true
+  # Optional, Kion CLI will try default paths for your platform if not provided
+  custom_browser_path: /Applications/Firefox.app/Contents/MacOS/firefox
+
+```
+
+
+
 Contributing
 ------------
 

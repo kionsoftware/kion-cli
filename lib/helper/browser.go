@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"runtime"
 	"time"
+
+	"github.com/kionsoftware/kion-cli/lib/structs"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +19,10 @@ import (
 //  Browser                                                                   //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+var FirefoxPathMac = []string{`/Applications/Firefox.app/Contents/MacOS/firefox`}
+var FirefoxPathLinux = []string{`/usr/bin/firefox`}
+var FirefoxPathWindows = []string{`\Program Files\Mozilla Firefox\firefox.exe`}
 
 // redirectServer runs a temp go http server to handle logging out any existing
 // AWS sessions then redirecting to the federated console login.
@@ -189,7 +195,7 @@ func OpenBrowser(url string, typeID uint) error {
 // OpenBrowserDirect opens up a URL in the users system default browser. It
 // uses the redirect_uri query parameter to handle the logout and redirect to
 // the federated login page.
-func OpenBrowserRedirect(target string, typeID uint) error {
+func OpenBrowserRedirect(target string, typeID uint, name string, config structs.Browser) error {
 	var err error
 	var logoutURL string
 	var replacement string
@@ -223,16 +229,39 @@ func OpenBrowserRedirect(target string, typeID uint) error {
 	// generate the federation link
 	federationLink := fmt.Sprintf("%s%s", logoutURL, encodedUrl)
 
-	// open the browser
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", federationLink).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", federationLink).Start()
-	case "darwin":
-		err = exec.Command("open", federationLink).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
+	if config.FirefoxContainers {
+		fmt.Printf("Opening in Firefox Container\n")
+		federationLink = fmt.Sprintf("ext+granted-containers:name=%s&url=%s", name, url.QueryEscape(federationLink))
+
+		// open the browser using a firefox binary
+		if config.CustomBrowserPath != "" {
+			fmt.Printf("Using custom browser path: %s\n", config.CustomBrowserPath)
+			err = exec.Command(config.CustomBrowserPath, "--new-tab", federationLink).Start()
+		} else {
+			// Try to infer the path to the Firefox binary based on the OS
+			switch runtime.GOOS {
+			case "linux":
+				err = exec.Command(FirefoxPathLinux[0], "--new-tab", federationLink).Start()
+			case "windows":
+				err = exec.Command(FirefoxPathWindows[0], "--new-tab", federationLink).Start()
+			case "darwin":
+				err = exec.Command(FirefoxPathMac[0], "--new-tab", federationLink).Start()
+			default:
+				err = fmt.Errorf("unsupported platform")
+			}
+		}
+	} else {
+		// open the browser
+		switch runtime.GOOS {
+		case "linux":
+			err = exec.Command("xdg-open", federationLink).Start()
+		case "windows":
+			err = exec.Command("rundll32", "url.dll,FileProtocolHandler", federationLink).Start()
+		case "darwin":
+			err = exec.Command("open", federationLink).Start()
+		default:
+			err = fmt.Errorf("unsupported platform")
+		}
 	}
 
 	return err

@@ -8,9 +8,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 [Unreleased] - yyyy-mm-dd
 -------------------------
 
-Notes for upgrading...
+Version unreleased adds support for Firefox Containers integration. This feature allows users to open multiple AWS accounts in the same browser window.
 
 ### Added
+
+- Added `.kion.yml` keys to enable Firefox Containers integration
 
 ### Changed
 
