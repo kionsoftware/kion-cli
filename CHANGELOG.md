@@ -12,7 +12,7 @@ Version unreleased adds support for Firefox Containers integration. This feature
 
 ### Added
 
-- Added `.kion.yml` keys to enable Firefox Containers integration
+- Added `.kion.yml` keys to enable Firefox Containers integration [kionsoftware/kion-cli/pull/68]
 
 ### Changed
 
