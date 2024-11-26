@@ -403,6 +403,11 @@ PROFILES
 --------
 profiles[NAME].KION                An instance of KION as defined above.
 profiles[NAME].FAVORITES           An instance of FAVORITES as defined above.
+
+BROWSER
+-------
+browser.firefox_containers         Enable Firefox Containers for federated sessions.
+browser.custom_browser_path        Path to a custom browser executable.
 ```
 
 Note: if the authentication password is not provided as a Flag / Environment Variable / Configuration file entry, kion will prompt for the password on the command line. Kion will cache this password in the system keychain's encrypted storage. This may be preferable in environments where plaintext storage of credentials is frowned upon.
