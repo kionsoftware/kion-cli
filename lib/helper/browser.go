@@ -195,12 +195,12 @@ func OpenBrowser(url string, typeID uint) error {
 // OpenBrowserDirect opens up a URL in the users system default browser. It
 // uses the redirect_uri query parameter to handle the logout and redirect to
 // the federated login page.
-func OpenBrowserRedirect(target string, typeID uint, name string, config structs.Browser) error {
+func OpenBrowserRedirect(target string, session structs.SessionInfo, config structs.Browser) error {
 	var err error
 	var logoutURL string
 	var replacement string
 
-	switch typeID {
+	switch session.AccountTypeID {
 	case 1:
 		// commmercial
 		logoutURL = "https://signin.aws.amazon.com/oauth?Action=logout&redirect_uri="
@@ -230,8 +230,8 @@ func OpenBrowserRedirect(target string, typeID uint, name string, config structs
 	federationLink := fmt.Sprintf("%s%s", logoutURL, encodedUrl)
 
 	if config.FirefoxContainers {
-		fmt.Printf("Opening in Firefox Container\n")
 		federationLink = fmt.Sprintf("ext+granted-containers:name=%s&url=%s", name, url.QueryEscape(federationLink))
+		fmt.Printf("Federating into %s (%s) via %s in a new Firefox Container\n", session.AccountName, session.AccountNumber, session.AwsIamRoleName)
 
 		// open the browser using a firefox binary
 		if config.CustomBrowserPath != "" {
@@ -251,6 +251,7 @@ func OpenBrowserRedirect(target string, typeID uint, name string, config structs
 			}
 		}
 	} else {
+		fmt.Printf("Federating into %s (%s) via %s in your default browser\n", session.AccountName, session.AccountNumber, session.AwsIamRoleName)
 		// open the browser
 		switch runtime.GOOS {
 		case "linux":
