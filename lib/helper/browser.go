@@ -226,32 +226,35 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 	// escape the target url
 	encodedUrl := url.QueryEscape(target)
 
-	// generate the federation link
-	federationLink := fmt.Sprintf("%s%s", logoutURL, encodedUrl)
-
 	if config.FirefoxContainers {
-		federationLink = fmt.Sprintf("ext+granted-containers:name=%s&url=%s", name, url.QueryEscape(federationLink))
 		fmt.Printf("Federating into %s (%s) via %s in a new Firefox Container\n", session.AccountName, session.AccountNumber, session.AwsIamRoleName)
+
+		// Generate the target URL with the granted-containers extension
+		target = fmt.Sprintf("ext+granted-containers:name=%s&url=%s", session.AccountName, url.QueryEscape(encodedUrl))
 
 		// open the browser using a firefox binary
 		if config.CustomBrowserPath != "" {
 			fmt.Printf("Using custom browser path: %s\n", config.CustomBrowserPath)
-			err = exec.Command(config.CustomBrowserPath, "--new-tab", federationLink).Start()
+			err = exec.Command(config.CustomBrowserPath, "--new-tab", target).Start()
 		} else {
 			// Try to infer the path to the Firefox binary based on the OS
 			switch runtime.GOOS {
 			case "linux":
-				err = exec.Command(FirefoxPathLinux[0], "--new-tab", federationLink).Start()
+				err = exec.Command(FirefoxPathLinux[0], "--new-tab", target).Start()
 			case "windows":
-				err = exec.Command(FirefoxPathWindows[0], "--new-tab", federationLink).Start()
+				err = exec.Command(FirefoxPathWindows[0], "--new-tab", target).Start()
 			case "darwin":
-				err = exec.Command(FirefoxPathMac[0], "--new-tab", federationLink).Start()
+				err = exec.Command(FirefoxPathMac[0], "--new-tab", target).Start()
 			default:
 				err = fmt.Errorf("unsupported platform")
 			}
 		}
 	} else {
 		fmt.Printf("Federating into %s (%s) via %s in your default browser\n", session.AccountName, session.AccountNumber, session.AwsIamRoleName)
+
+		// generate the federation link without logout to handle any existing browser sessions
+		federationLink := fmt.Sprintf("%s%s", logoutURL, encodedUrl)
+
 		// open the browser
 		switch runtime.GOOS {
 		case "linux":
