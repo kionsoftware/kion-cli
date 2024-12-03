@@ -20,9 +20,9 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-var FirefoxPathMac = []string{`/Applications/Firefox.app/Contents/MacOS/firefox`}
-var FirefoxPathLinux = []string{`/usr/bin/firefox`}
-var FirefoxPathWindows = []string{`\Program Files\Mozilla Firefox\firefox.exe`}
+var firefoxPathMac = []string{`/Applications/Firefox.app/Contents/MacOS/firefox`}
+var firefoxPathLinux = []string{`/usr/bin/firefox`}
+var firefoxPathWindows = []string{`\Program Files\Mozilla Firefox\firefox.exe`}
 
 // redirectServer runs a temp go http server to handle logging out any existing
 // AWS sessions then redirecting to the federated console login.
@@ -240,11 +240,11 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 			// Try to infer the path to the Firefox binary based on the OS
 			switch runtime.GOOS {
 			case "linux":
-				err = exec.Command(FirefoxPathLinux[0], "--new-tab", target).Start()
+				err = exec.Command(firefoxPathLinux[0], "--new-tab", target).Start()
 			case "windows":
-				err = exec.Command(FirefoxPathWindows[0], "--new-tab", target).Start()
+				err = exec.Command(firefoxPathWindows[0], "--new-tab", target).Start()
 			case "darwin":
-				err = exec.Command(FirefoxPathMac[0], "--new-tab", target).Start()
+				err = exec.Command(firefoxPathMac[0], "--new-tab", target).Start()
 			default:
 				err = fmt.Errorf("unsupported platform")
 			}
