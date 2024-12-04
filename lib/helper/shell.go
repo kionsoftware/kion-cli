@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 
@@ -59,7 +60,11 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 	case "bash":
 		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountMeta)
 	default:
-		cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountMeta)
+		if runtime.GOOS == "windows" {
+			cmd = fmt.Sprintf(`cmd.exe /K "PROMPT [%s]$G`, accountMeta)
+		} else {
+			cmd = fmt.Sprintf(`bash --rcfile <(echo "source \"$HOME/.bashrc\"; export PS1='[%v] > '")`, accountMeta)
+		}
 	}
 
 	// init shell
