@@ -701,7 +701,14 @@ func favorites(cCtx *cli.Context) error {
 			return err
 		}
 		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
-		return helper.OpenBrowserRedirect(url, car.AccountTypeID)
+		session := structs.SessionInfo{
+			AccountName:    favorite.Name,
+			AccountNumber:  car.AccountNumber,
+			AccountTypeID:  car.AccountTypeID,
+			AwsIamRoleName: car.AwsIamRoleName,
+			Region:         favorite.Region,
+		}
+		return helper.OpenBrowserRedirect(url, session, config.Browser)
 	} else {
 		// placeholder for our stak
 		var stak kion.STAK
@@ -780,7 +787,14 @@ func fedConsole(cCtx *cli.Context) error {
 		return err
 	}
 
-	return helper.OpenBrowserRedirect(url, car.AccountTypeID)
+	session := structs.SessionInfo{
+		AccountName:    car.AccountName,
+		AccountNumber:  car.AccountNumber,
+		AccountTypeID:  car.AccountTypeID,
+		AwsIamRoleName: car.AwsIamRoleName,
+		Region:         cCtx.String("region"),
+	}
+	return helper.OpenBrowserRedirect(url, session, config.Browser)
 }
 
 // listFavorites prints out the users stored favorites. Extra information is
