@@ -73,7 +73,7 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 		// cmd = fmt.Sprintf(`cmd.exe /K "PROMPT [%s]$G"`, accountMeta)
 		// shell = exec.Command("cmd.exe", "/C", "start", cmd)
 		cmdPath := "C:\\Windows\\System32\\cmd.exe"
-		shell = exec.Command(cmdPath, "/K", fmt.Sprintf(`PROMPT [%s]$G`, accountMeta))
+		shell = exec.Command(cmdPath, "/K", fmt.Sprintf(`PROMPT $E[32m[%s]$E[0m$G`, accountMeta))
 	} else {
 		shell = exec.Command("bash", "-c", cmd)
 	}
