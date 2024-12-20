@@ -226,7 +226,11 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 	// generate the federation link
 	var federationLink string
 	if config.FirefoxContainers {
-		federationLink = fmt.Sprintf("ext+container:name=%s&url=%s", url.QueryEscape(session.AccountName), encodedUrlOriginal)
+		if runtime.GOOS == "windows" {
+			federationLink = fmt.Sprintf("ext+container:url=%s^&name=%s", encodedUrlOriginal, url.QueryEscape(session.AccountName))
+		} else {
+			federationLink = fmt.Sprintf("ext+container:url=%s&name=%s", encodedUrlOriginal, url.QueryEscape(session.AccountName))
+		}
 	} else {
 		federationLink = fmt.Sprintf("%s%s", logoutURL, encodedUrlRedirect)
 	}
@@ -239,7 +243,11 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 		case "linux":
 			err = exec.Command("xdg-open", federationLink).Start()
 		case "windows":
-			err = exec.Command("rundll32", "url.dll,FileProtocolHandler", federationLink).Start()
+			if config.FirefoxContainers {
+				err = exec.Command("cmd.exe", "/C", "start", "firefox", federationLink).Start()
+			} else {
+				err = exec.Command("rundll32", "url.dll,FileProtocolHandler", federationLink).Start()
+			}
 		case "darwin":
 			if config.FirefoxContainers {
 				err = exec.Command("open", "-a", "firefox", federationLink).Start()
