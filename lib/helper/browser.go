@@ -241,7 +241,11 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 	} else {
 		switch runtime.GOOS {
 		case "linux":
-			err = exec.Command("xdg-open", federationLink).Start()
+			if config.FirefoxContainers {
+				err = exec.Command("firefox", federationLink).Start()
+			} else {
+				err = exec.Command("xdg-open", federationLink).Start()
+			}
 		case "windows":
 			if config.FirefoxContainers {
 				err = exec.Command("cmd.exe", "/C", "start", "firefox", federationLink).Start()
