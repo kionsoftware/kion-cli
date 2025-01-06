@@ -403,6 +403,11 @@ PROFILES
 --------
 profiles[NAME].KION                An instance of KION as defined above.
 profiles[NAME].FAVORITES           An instance of FAVORITES as defined above.
+
+BROWSER
+-------
+browser.firefox_container          Boolean to enable Firefox container support, defaults 'false'.
+                                   * Depends on the "Open external links in a container" plugin.
 ```
 
 Note: if the authentication password is not provided as a Flag / Environment Variable / Configuration file entry, kion will prompt for the password on the command line. Kion will cache this password in the system keychain's encrypted storage. This may be preferable in environments where plaintext storage of credentials is frowned upon.
@@ -559,6 +564,17 @@ redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/quicksta
 6. Save your changes
 
 </details>
+
+### Firefox Containers
+
+Kion CLI supports the use of [Firefox Containers](https://support.mozilla.org/en-US/kb/containers) to isolate federated sessions and allow multiple accounts to be accessed simultaneously in the same browser. To use containers with the Kion CLI, you must have the [Open external links in a container](https://addons.mozilla.org/en-US/firefox/addon/open-url-in-container) Firefox extension installed. This extension adds a custom protocol handler that allows the Kion CLI to create new container tabs when opening console sessions.
+
+To configure Kion CLI to use Firefox Containers, add the following to your `~/.kion.yml` file:
+
+```yaml
+browser:
+  firefox_containers: true
+```
 
 Contributing
 ------------
