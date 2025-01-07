@@ -41,6 +41,7 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 	// get users shell information
 	usrShellPath := os.Getenv("SHELL")
 	usrShellName := filepath.Base(usrShellPath)
+	usrHistFile := os.Getenv("HISTFILE")
 
 	// create command based on the users shell and set prompt
 	var cmd string
@@ -55,7 +56,7 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(f, `source $HOME/.zshrc; autoload -U colors && colors; export PS1="%%F{green}[%v]%%b%%f $PS1"`, accountMeta)
+		fmt.Fprintf(f, `HISTFILE=%s; source $HOME/.zshrc; autoload -U colors && colors; export PS1="%%F{green}[%v]%%b%%f $PS1"`, usrHistFile, accountMeta)
 		err = f.Sync()
 		if err != nil {
 			return err
