@@ -12,6 +12,7 @@ type Configuration struct {
 	Kion      Kion               `yaml:"kion"`
 	Favorites []Favorite         `yaml:"favorites"`
 	Profiles  map[string]Profile `yaml:"profiles"`
+	Browser   Browser            `yaml:"browser"`
 }
 
 // Kion holds information about the instance of Kion with which the application
@@ -41,4 +42,10 @@ type Favorite struct {
 type Profile struct {
 	Kion      Kion       `yaml:"kion"`
 	Favorites []Favorite `yaml:"favorites"`
+}
+
+// Browser holds configurations for browser options.
+type Browser struct {
+	FirefoxContainers bool   `yaml:"firefox_containers"`
+	CustomBrowserPath string `yaml:"custom_browser_path"`
 }

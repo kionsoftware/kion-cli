@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 
@@ -29,7 +30,11 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 		accountMeta = accountNumber
 		accountMetaSentence = accountNumber
 	} else {
-		accountMeta = fmt.Sprintf("%v|%v", accountAlias, accountNumber)
+		if runtime.GOOS == "windows" {
+			accountMeta = fmt.Sprintf("%v^|%v", accountAlias, accountNumber)
+		} else {
+			accountMeta = fmt.Sprintf("%v|%v", accountAlias, accountNumber)
+		}
 		accountMetaSentence = fmt.Sprintf("%v (%v)", accountAlias, accountNumber)
 	}
 
@@ -63,7 +68,13 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 	}
 
 	// init shell
-	shell := exec.Command("bash", "-c", cmd)
+	var shell *exec.Cmd
+	if runtime.GOOS == "windows" && usrShellName == "" {
+		cmdPath := "C:\\Windows\\System32\\cmd.exe"
+		shell = exec.Command(cmdPath, "/K", fmt.Sprintf(`PROMPT $E[32m[%s]$E[0m$G`, accountMeta))
+	} else {
+		shell = exec.Command("bash", "-c", cmd)
+	}
 
 	// replicate current env vars and add stak
 	shell.Env = os.Environ()

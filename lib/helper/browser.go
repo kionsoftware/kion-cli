@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"runtime"
 	"time"
+
+	"github.com/kionsoftware/kion-cli/lib/structs"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,12 +191,12 @@ func OpenBrowser(url string, typeID uint) error {
 // OpenBrowserDirect opens up a URL in the users system default browser. It
 // uses the redirect_uri query parameter to handle the logout and redirect to
 // the federated login page.
-func OpenBrowserRedirect(target string, typeID uint) error {
+func OpenBrowserRedirect(target string, session structs.SessionInfo, config structs.Browser) error {
 	var err error
 	var logoutURL string
 	var replacement string
 
-	switch typeID {
+	switch session.AccountTypeID {
 	case 1:
 		// commmercial
 		logoutURL = "https://signin.aws.amazon.com/oauth?Action=logout&redirect_uri="
@@ -215,24 +217,50 @@ func OpenBrowserRedirect(target string, typeID uint) error {
 
 	// update url to one that supports a redirect uri
 	re := regexp.MustCompile(`:\/\/signin`)
-	target = re.ReplaceAllString(target, replacement)
+	redirectTarget := re.ReplaceAllString(target, replacement)
 
-	// escape the target url
-	encodedUrl := url.QueryEscape(target)
+	// escape the target urls
+	encodedUrlOriginal := url.QueryEscape(target)
+	encodedUrlRedirect := url.QueryEscape(redirectTarget)
 
 	// generate the federation link
-	federationLink := fmt.Sprintf("%s%s", logoutURL, encodedUrl)
+	var federationLink string
+	if config.FirefoxContainers {
+		if runtime.GOOS == "windows" {
+			federationLink = fmt.Sprintf("ext+container:url=%s^&name=%s", encodedUrlOriginal, url.QueryEscape(session.AccountName))
+		} else {
+			federationLink = fmt.Sprintf("ext+container:url=%s&name=%s", encodedUrlOriginal, url.QueryEscape(session.AccountName))
+		}
+	} else {
+		federationLink = fmt.Sprintf("%s%s", logoutURL, encodedUrlRedirect)
+	}
 
 	// open the browser
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", federationLink).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", federationLink).Start()
-	case "darwin":
-		err = exec.Command("open", federationLink).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
+	if config.CustomBrowserPath != "" {
+		err = exec.Command(config.CustomBrowserPath, federationLink).Start()
+	} else {
+		switch runtime.GOOS {
+		case "linux":
+			if config.FirefoxContainers {
+				err = exec.Command("firefox", federationLink).Start()
+			} else {
+				err = exec.Command("xdg-open", federationLink).Start()
+			}
+		case "windows":
+			if config.FirefoxContainers {
+				err = exec.Command("cmd.exe", "/C", "start", "firefox", federationLink).Start()
+			} else {
+				err = exec.Command("rundll32", "url.dll,FileProtocolHandler", federationLink).Start()
+			}
+		case "darwin":
+			if config.FirefoxContainers {
+				err = exec.Command("open", "-a", "firefox", federationLink).Start()
+			} else {
+				err = exec.Command("open", federationLink).Start()
+			}
+		default:
+			err = fmt.Errorf("unsupported platform")
+		}
 	}
 
 	return err
