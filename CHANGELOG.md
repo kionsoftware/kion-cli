@@ -20,6 +20,21 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.8.0] - 2025.01.07
+--------------------
+
+Version 0.8.0 adds support for Firefox containers, support for Windows Command Prompt and PowerShell, and improved shell history support when dropping into sub-shells (the `kion stak` command). Firefox container support adds the ability to federate into multiple AWS accounts at the same time for more advanced workflows. Note that Firefox container support requires the [Open external links in a container](https://addons.mozilla.org/en-US/firefox/addon/open-url-in-container) add-on as well as an update to your `~/.kion.yml` configuration file. See the repo `README.md` for more details. A big thank you to @joraff and @mjburling for help with development and testing!
+
+### Added
+
+- Added support for Firefox containers [kionsoftware/kion-cli/pull/72]
+- Added support for Windows Command Prompt and PowerShell [kionsoftware/kion-cli/pull/72]
+- Configured subshells to pull and set `HISTFILE` in zsh [kionsoftware/kion-cli/pull/70]
+
+### Fixed
+
+- Exit non-zero if an error is encountered [kionsoftware/kion-cli/pull/65]
+
 [0.7.0] - 2024.09.18
 --------------------
 
