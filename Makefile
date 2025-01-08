@@ -52,11 +52,37 @@ init:
 	cp tools/pre-commit .git/hooks/pre-commit
 	chmod 755 .git/hooks/pre-commit
 
+build-darwin-arm64:
+	@printf "${B}${UN}${BLU}Building Kion CLI for Darwin (ARM64):${NRM}\n"
+	GOOS=darwin GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o kion-darwin-arm
+
+build-darwin-amd64:
+	@printf "${B}${UN}${BLU}Building Kion CLI for Darwin (AMD64):${NRM}\n"
+	GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o kion-darwin
+
+build-linux-arm64:
+	@printf "${B}${UN}${BLU}Building Kion CLI for Linux (ARM64):${NRM}\n"
+	GOOS=linux GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o kion-linux-arm
+
+build-linux-amd64:
+	@printf "${B}${UN}${BLU}Building Kion CLI for Linux (AMD64):${NRM}\n"
+	GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o kion-linux
+
+build-win-arm64:
+	@printf "${B}${UN}${BLU}Building Kion CLI for Windows (ARM64):${NRM}\n"
+	GOOS=windows GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o kion-arm.exe
+
+build-win-amd64:
+	@printf "${B}${UN}${BLU}Building Kion CLI for Windows (AMD64):${NRM}\n"
+	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o kion.exe
+
 build:
 	@printf "${B}${UN}${BLU}Building Kion CLI:${NRM}\n"
+ifeq ($(OS),Windows_NT)
+	go build -ldflags "$(LDFLAGS)" -o kion.exe
+else
 	go build -ldflags "$(LDFLAGS)" -o kion
-	@printf "${B}${UN}${BLU}Building Kion CLI for Windows:${NRM}\n"
-	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o kion.exe
+endif
 
 gofmt:
 	@printf "${B}${UN}${BLU}Running gofmt:${NRM}\n"
