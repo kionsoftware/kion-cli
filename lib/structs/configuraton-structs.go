@@ -36,6 +36,7 @@ type Favorite struct {
 	CAR        string `yaml:"cloud_access_role"`
 	AccessType string `yaml:"access_type"`
 	Region     string `yaml:"region"`
+	Service    string `yaml:"service"`
 }
 
 // Profile holds an alternate configuration for Kion and Favorites.
