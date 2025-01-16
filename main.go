@@ -43,6 +43,14 @@ var (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+// getSecondArgument returns the second argument passed to the cli.
+func getSecondArgument(cCtx *cli.Context) string {
+	if cCtx.Args().Len() > 0 {
+		return cCtx.Args().Get(0)
+	}
+	return ""
+}
+
 // setEndpoint sets the target Kion installation to interact with. If not
 // passed to the tool as an argument, set in the env, or present in the
 // configuration dotfile it will prompt the user to provide it.
@@ -708,7 +716,7 @@ func favorites(cCtx *cli.Context) error {
 			AwsIamRoleName: car.AwsIamRoleName,
 			Region:         favorite.Region,
 		}
-		return helper.OpenBrowserRedirect(url, session, config.Browser)
+		return helper.OpenBrowserRedirect(url, session, config.Browser, favorite.Service)
 	} else {
 		// placeholder for our stak
 		var stak kion.STAK
@@ -787,6 +795,9 @@ func fedConsole(cCtx *cli.Context) error {
 		return err
 	}
 
+	// grab the second argument, used as a redirect parameter
+	redirect := getSecondArgument(cCtx)
+
 	session := structs.SessionInfo{
 		AccountName:    car.AccountName,
 		AccountNumber:  car.AccountNumber,
@@ -794,7 +805,7 @@ func fedConsole(cCtx *cli.Context) error {
 		AwsIamRoleName: car.AwsIamRoleName,
 		Region:         cCtx.String("region"),
 	}
-	return helper.OpenBrowserRedirect(url, session, config.Browser)
+	return helper.OpenBrowserRedirect(url, session, config.Browser, redirect)
 }
 
 // listFavorites prints out the users stored favorites. Extra information is

@@ -191,11 +191,21 @@ func OpenBrowser(url string, typeID uint) error {
 // OpenBrowserDirect opens up a URL in the users system default browser. It
 // uses the redirect_uri query parameter to handle the logout and redirect to
 // the federated login page.
-func OpenBrowserRedirect(target string, session structs.SessionInfo, config structs.Browser) error {
+func OpenBrowserRedirect(target string, session structs.SessionInfo, config structs.Browser, redirect string) error {
 	var err error
 	var logoutURL string
 	var replacement string
 
+	// inject a redirect to service if provided
+	if redirect != "" {
+		re := regexp.MustCompile(`(Destination=[^&]+)`)
+		target = re.ReplaceAllStringFunc(target, func(match string) string {
+			parts := re.FindStringSubmatch(match)
+			return fmt.Sprintf("%s%s", parts[1], redirect+"%2F")
+		})
+	}
+
+	// determine the logout url based on the account type
 	switch session.AccountTypeID {
 	case 1:
 		// commmercial
