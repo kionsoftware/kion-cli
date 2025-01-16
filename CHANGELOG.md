@@ -12,6 +12,8 @@ Notes for upgrading...
 
 ### Added
 
+- Ability to federate directly to a service [kionsoftware/kion-cli/pull/77]
+
 ### Changed
 
 ### Deprecated

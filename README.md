@@ -286,6 +286,14 @@ OPTIONS
 __Run Command:__
 
 ```text
+ARGS
+
+  [service]                            Optional argument to specify a service
+                                       page to open as opposed to the default
+                                       dashboard. For `kion con rds` would
+                                       federate directly to the RDS services
+                                       page.
+
 OPTIONS
 
   --favorite val, --fav val, -f val    Specify which favorite to run against.
@@ -398,6 +406,8 @@ favorites[N].name                  Favorite name, used when calling `kion fav [n
 favorites[N].account               Account number associated with the favorite.
 favorites[N].cloud_access_role     Cloud Access Role used to authenicate with the favorite.
 favorites[N].access_type           Favorite access type, 'web' or 'cli', defaults 'cli'.
+favorites[N].service               Service to open by default, for example 'rds', 'ec2', etc.
+                                   Applies only to 'web' access types, defaults to the dashboard.
 
 PROFILES
 --------
