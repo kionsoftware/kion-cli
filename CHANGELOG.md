@@ -12,8 +12,6 @@ Notes for upgrading...
 
 ### Added
 
-- Ability to federate directly to a service [kionsoftware/kion-cli/pull/77]
-
 ### Changed
 
 ### Deprecated
@@ -21,6 +19,31 @@ Notes for upgrading...
 ### Removed
 
 ### Fixed
+
+[0.9.0] - 2025.01.16
+--------------------
+
+Version 0.9.0 adds the ability to federate directly into a specific service through favorites or the `console` command. No more hopping into the console dashboard then searching for and navigating to your destination. Note that the specified service is injected into the federation URLs `Destination` parameter. So, for example, the full path for the RDS service is `/rds/home?region=us-east-1#Home`, we just need the first part of the path `rds`.
+
+```bash
+# Add a service to your favorites
+favorites:
+  - name: mysandbox
+    account: "121212121212"
+    cloud_access_role: Admin
+    access_type: web
+    service: rds
+
+# Then call it
+kion fav mysandbox
+
+# Or step through the selection wizard
+kion con rds
+```
+
+### Added
+
+- Ability to federate directly to a service [kionsoftware/kion-cli/pull/77]
 
 [0.8.0] - 2025.01.07
 --------------------
