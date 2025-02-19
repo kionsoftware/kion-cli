@@ -1,0 +1,172 @@
+.\"Modified from man(1) of FreeBSD, the NetBSD mdoc.template, and mdoc.samples.
+.\"See Also:
+.\"man mdoc.samples for a complete listing of options
+.\"man mdoc for the short list of editing options
+.\"/usr/share/misc/mdoc.template
+.Dd 8/4/10               \" DATE
+.Dt KION 1               \" Program name and manual section number
+.Os Darwin
+.Sh NAME                 \" Section Header - required - don't modify
+.Nm kion
+.Nd Kion on the command line.
+.Sh SYNOPSIS             \" Section Header - required - don't modify
+.Nm kion
+.Op Ar global options    \" [global options]
+.Op Ar command           \" [command]
+.Op Ar command options   \" [command options]
+.Op Ar arg               \" [arg]
+
+.Sh DESCRIPTION
+The Kion CLI allows users to perform common Kion workflows via the command line. Users can quickly generate short-term access keys (stak) or federate into the cloud service provider web console via configured favorites or by walking through an account and role selection wizard.
+
+
+.Sh GLOBAL OPTIONS
+.Bl -tag -width "-cloud-access-role"
+.It --endpoint URL, -e URL, --url URL
+URL of the Kion instance to interface with.
+.It --user USER, -u USER, --username USER
+Username used for authenticating with Kion.
+.It --password PASSWORD, -p PASSWORD
+Password used for authenticating with Kion.
+.It --idms IDMS_ID, -i IDMS_ID
+IDMS ID with which to authenticate if using username and password.
+.It --saml_metadata_file FILENAME|URL
+FILENAME or URL of the identity provider's XML metadata document.
+.It --saml_sp_issuer ISSUER
+SAML Service Provider issuer value from Kion.
+.It --token TOKEN, -t TOKEN
+Token (API or Bearer) used to authenticate.
+.It --disable-cache
+Disable the use of cache for Kion CLI.
+.It --profile PROFILE
+Use the specified PROFILE from the Kion CLI configuration file.
+.It --help, -h
+Print usage text.
+.It --version, -v
+Print the Kion CLI version.
+.El
+
+.Sh COMMANDS
+.Bl -tag -width "-cloud-access-role"
+.It stak, s
+Generate short-term access keys.
+.Bl -tag -width "-cloud-access-role"
+.It --print, -p
+Print STAK only.
+.It --account val, --acc val, -a val
+Target account number, must be passed with --car.
+.It --alias val, --aka val, -l val
+Target account alias, must be passed with --car.
+.It --car val, --cloud-access-role val, -c val
+Target cloud access role, must be passed with --account or --alias.
+.It --region val, -r val
+Specify which region to target.
+.It --save, -s
+Save short-term keys to an AWS credentials profile.
+.It --credential-process
+Setup Kion CLI as a credentials process subsystem.
+.It --help, -h
+Print usage text.
+.El
+
+.It favorite, fav, f
+Access pre-configured favorites.
+.Bl -tag -width "-cloud-access-role"
+.It list
+List all configured favorites.
+.It --print, -p
+Print STAK only.
+.It --credential-process
+Setup Kion CLI as a credentials process subsystem.
+.It --help, -h
+Print usage text.
+.El
+
+.It console, con, c
+Federate into the cloud service provider console.
+.Bl -tag -width "-cloud-access-role"
+.It --account val, --acc val, -a val
+Target account number, must be passed with --car.
+.It --alias val, --aka val, -l val
+Target account alias, must be passed with --car.
+.It --car val, --cloud-access-role val, -c val
+Target cloud access role, must be passed with --account or --alias.
+.It --help, -h
+Print usage text.
+.El
+
+.It run
+Run a command with short-term access keys.
+.Bl -tag -width "-cloud-access-role"
+.It --favorite val, --fav val, -f val
+Specify which favorite to run against.
+.It --account val, -acc val, -a val
+Specify which account to target, must be passed with --car.
+.It --alias val, --aka val, -l val
+Target account alias, must be passed with --car.
+.It --car val, -c val
+Specify which Cloud Access Role to use, must be passed with --account or --alias.
+.It --region val, -r val
+Specify which region to target.
+.It --help, -h
+Print usage text.
+.El
+
+.It util
+Tools for managing Kion CLI.
+
+.Sh PRECEDENCE
+Configuration settings are applied in the following order of precedence:
+.Bl -enum
+.It Flags
+Command-line flags have the highest precedence and will override any other settings.
+.It Environment Variables
+Environment variables override settings in the configuration file and default values.
+.It Configuration File
+Settings specified in the configuration file override default values.
+.It Default Values
+Default values are used when no other settings are provided.
+.El
+
+.Sh ENVIRONMENT VARIABLES
+.Bl -tag -width "KION_SAML_SP_ISSUER"
+.It KION_CONFIG
+Path to the Kion CLI configuration file. Defaults to ~/.kion.yml.
+.It KION_URL
+URL of the Kion instance to interact with.
+.It KION_USERNAME
+Username used for authenticating with Kion.
+.It KION_PASSWORD
+Password used for authenticating with Kion.
+.It KION_IDMS_ID
+IDMS ID with which to authenticate if using username and password.
+.It KION_API_KEY
+API key used to authenticate.
+.It KION_SAML_METADATA_FILE
+FILENAME or URL of the identity provider's XML metadata document.
+.It KION_SAML_SP_ISSUER
+The Kion IDMS issuer value.
+.El
+
+.Sh FILES
+.Bl -tag -width "~/.kion.yml"
+.It Pa ~/.kion.yml
+The user configuration file. Defines credentials, target Kion instance, and a list of favorites.
+.El
+
+.Sh EXAMPLES
+.Bl -tag -width "kion console --account 111122223333 --car Admin"
+.It kion fav sandbox
+Open the sandbox AWS console favorited in the config.
+.It kion stak --print --account 121212121212 --car Admin
+Generate and print keys for an AWS account.
+.It kion console --account 111122223333 --car Admin
+Federate into a web console using an account number.
+.El
+
+.Sh SEE ALSO
+.Xr kion 1
+.Xr aws 1
+
+.\" .Sh BUGS              \" Document known, unremedied bugs
+.\" .Sh HISTORY           \" Document history if command behaves in a unique manner
