@@ -2,6 +2,7 @@ package kion
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -17,6 +18,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	saml2 "github.com/russellhaering/gosaml2"
 	samlTypes "github.com/russellhaering/gosaml2/types"
@@ -235,24 +237,31 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 	if err != nil {
 		log.Fatalf("The login info is invalid.\n %v", err)
 	}
-	var chromeCommand *exec.Cmd
+
+	// define a context with 15 second timeout
+	var browserCommand *exec.Cmd
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// identify command based on operating system
 	switch runtime.GOOS {
 	case "windows":
-		chromeCommand = exec.Command("start", "chrome", authURL)
+		browserCommand = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", authURL)
 	case "darwin":
-		chromeCommand = exec.Command("open", authURL)
+		browserCommand = exec.CommandContext(ctx, "open", authURL)
 	case "linux":
-		chromeCommand = exec.Command("/usr/bin/google-chrome", "--new-window", authURL)
+		browserCommand = exec.CommandContext(ctx, "xdg-open", authURL)
+	default:
+		log.Println("Unsupported operating system:", runtime.GOOS)
+		return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
-	err = chromeCommand.Run()
-	if chromeCommand == nil || err != nil {
-		if err != nil {
-			println("Error opening Chrome browser: ", err)
-		} else {
-			println("Could not locate Chrome browser")
-		}
-		println("Visit this URL To Authenticate:")
-		println(authURL)
+
+	// run the command to open the browser
+	err = browserCommand.Run()
+	if ctx.Err() == context.DeadlineExceeded {
+		log.Println("Timeout reached while trying to open the browser.")
+	} else if err != nil {
+		log.Println("Error opening browser:", err)
 	}
 
 	server := &http.Server{Addr: ":" + SAMLLocalAuthPort}
@@ -432,24 +441,31 @@ func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, se
 	if err != nil {
 		log.Fatalf("The login info is invalid.\n %v", err)
 	}
-	var chromeCommand *exec.Cmd
+
+	// define a context with 15 second timeout
+	var browserCommand *exec.Cmd
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// identify command based on operating system
 	switch runtime.GOOS {
 	case "windows":
-		chromeCommand = exec.Command("start", "chrome", authURL)
+		browserCommand = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", authURL)
 	case "darwin":
-		chromeCommand = exec.Command("open", authURL)
+		browserCommand = exec.CommandContext(ctx, "open", authURL)
 	case "linux":
-		chromeCommand = exec.Command("/usr/bin/google-chrome", "--new-window", authURL)
+		browserCommand = exec.CommandContext(ctx, "xdg-open", authURL)
+	default:
+		log.Println("Unsupported operating system:", runtime.GOOS)
+		return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
-	err = chromeCommand.Run()
-	if chromeCommand == nil || err != nil {
-		if err != nil {
-			println("Error opening Chrome browser: ", err)
-		} else {
-			println("Could not locate Chrome browser")
-		}
-		println("Visit this URL To Authenticate:")
-		println(authURL)
+
+	// run the command to open the browser
+	err = browserCommand.Run()
+	if ctx.Err() == context.DeadlineExceeded {
+		log.Println("Timeout reached while trying to open the browser.")
+	} else if err != nil {
+		log.Println("Error opening browser:", err)
 	}
 
 	server := &http.Server{Addr: ":" + SAMLLocalAuthPort}
