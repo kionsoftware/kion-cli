@@ -20,6 +20,8 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+// Cmd is the main command object for the Kion CLI. It makes the configuration
+// and cache available to all command actions.
 type Cmd struct {
 	config *structs.Configuration
 	cache  cache.Cache
