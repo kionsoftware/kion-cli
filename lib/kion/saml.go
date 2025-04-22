@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	saml2 "github.com/russellhaering/gosaml2"
 	samlTypes "github.com/russellhaering/gosaml2/types"
 	dsig "github.com/russellhaering/goxmldsig"
@@ -93,42 +94,53 @@ type SamlCallbackResult struct {
 	Err  error
 }
 
-func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallbackResult) (*AuthData, error) {
+func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallbackResult, printUrl bool) (*AuthData, error) {
 	authURL, err := sp.BuildAuthURL("")
 	if err != nil {
 		log.Fatalf("The login info is invalid.\n %v", err)
 	}
 
-	// define a context with 15 second timeout
-	var browserCommand *exec.Cmd
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
+	if printUrl {
+		// print the authentication URL for the user to copy
+		color.Cyan("Please copy the following URL into your browser to authenticate:")
+		fmt.Printf("\n%s\n\n", authURL)
+	} else {
+		// define a context with 15 second timeout
+		var browserCommand *exec.Cmd
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
 
-	// identify command based on operating system
-	switch runtime.GOOS {
-	case "windows":
-		browserCommand = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", authURL)
-	case "darwin":
-		browserCommand = exec.CommandContext(ctx, "open", authURL)
-	case "linux":
-		browserCommand = exec.CommandContext(ctx, "xdg-open", authURL)
-	default:
-		log.Println("Unsupported operating system:", runtime.GOOS)
-		return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
-	}
+		// identify command based on operating system
+		switch runtime.GOOS {
+		case "windows":
+			browserCommand = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", authURL)
+		case "darwin":
+			browserCommand = exec.CommandContext(ctx, "open", authURL)
+		case "linux":
+			browserCommand = exec.CommandContext(ctx, "xdg-open", authURL)
+		default:
+			log.Println("Unsupported operating system:", runtime.GOOS)
+			return nil, fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
+		}
 
-	// run the command to open the browser
-	err = browserCommand.Run()
-	if ctx.Err() == context.DeadlineExceeded {
-		log.Println("Timeout reached while trying to open the browser.")
-	} else if err != nil {
-		log.Println("Error opening browser:", err)
+		// run the command to open the browser
+		err = browserCommand.Run()
+		if ctx.Err() == context.DeadlineExceeded {
+			log.Println("Timeout reached while trying to open the browser.")
+		} else if err != nil {
+			log.Println("Error opening browser:", err)
+		}
 	}
 
 	server := &http.Server{Addr: ":" + SAMLLocalAuthPort}
 
-	// create a timer for the 60-second timeout
-	timer := time.NewTimer(60 * time.Second)
+	// create a timer for the callback
+	var timer *time.Timer
+	if printUrl {
+		timer = time.NewTimer(180 * time.Second)
+	} else {
+		timer = time.NewTimer(60 * time.Second)
+	}
 
 	// goroutine to handle timeout and token receipt
 	go func() {
@@ -181,7 +193,7 @@ func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallback
 	return samlResult.Data, nil
 }
 
-func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string) (*AuthData, error) {
+func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string, printUrl bool) (*AuthData, error) {
 	certStore := dsig.MemoryX509CertificateStore{
 		Roots: []*x509.Certificate{},
 	}
@@ -322,11 +334,11 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 		}, Err: nil}
 	})
 
-	return callExternalAuth(sp, tokenChan)
+	return callExternalAuth(sp, tokenChan, printUrl)
 }
 
 // AuthenticateSAMLOld is the old version of AuthenticateSAML that does not use a cookie-based exchange.
-func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string) (*AuthData, error) {
+func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string, printUrl bool) (*AuthData, error) {
 	certStore := dsig.MemoryX509CertificateStore{
 		Roots: []*x509.Certificate{},
 	}
@@ -436,7 +448,7 @@ func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, se
 		}, Err: nil}
 	})
 
-	return callExternalAuth(sp, tokenChan)
+	return callExternalAuth(sp, tokenChan, printUrl)
 }
 
 func DownloadSAMLMetadata(metadataUrl string) (*samlTypes.EntityDescriptor, error) {

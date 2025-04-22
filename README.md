@@ -200,15 +200,18 @@ __Global Options:__
                                        configured that uses username and password
                                        it is not required to specify its ID.
 
---saml_metadata_file FILENAME|URL      FILENAME or URL of the identity provider's
+--saml-metadata-file FILENAME|URL      FILENAME or URL of the identity provider's
                                        XML metadata document.  If a URL, this file
                                        will be downloaded every time the CLI app
                                        is run.  If a local file, this should be an
                                        absolute path to a file on your computer.
 
---saml_sp_issuer ISSUER                SAML Service Provider issuer value from Kion
+--saml-sp-issuer ISSUER                SAML Service Provider issuer value from Kion
                                        for example:
                                        https://mykioninstance.example/api/v1/saml/auth/1
+
+--saml-print-url                       Print the authentication URL instead of opening
+                                       it automatically with the default browser.
 
 --token TOKEN, -t TOKEN                Token (API or Bearer) used to authenticate.
 
@@ -376,6 +379,9 @@ KION_SAML_METADATA_FILE  FILENAME or URL of the identity provider's XML metadata
 KION_SAML_SP_ISSUER      The Kion IDMS issuer value, for example
                          https://mykioninstance.example/api/v1/saml/auth/1
 
+KION_SAML_PRINT_URL      "TRUE" to print the authentication url as opposed to
+                         automatically opening it in the default browser.
+                         Defaults to "FALSE".
 
 The following are maintained for compatibility with older Kion utilities:
 
@@ -398,7 +404,11 @@ kion.password                      Password for authentication, to be paired wit
 kion.idms_id                       IDMS ID, if using a custom IDMS in Kion.
 kion.saml_metadata_file            SAML metadata file location, URL or path.
 kion.saml_sp_issuer                Entity ID for the Kion SAML IDMS.
-kion.disable_cache                 Prevents Kion CLI from caching STAK if 'true', defaults 'false'.
+kion.saml_print_url                Set 'true' to print the authentication url as opposed to
+                                   automatically opening it in the default browser.
+                                   Defaults to 'false'.
+kion.disable_cache                 Prevents Kion CLI from caching STAK if 'true', defaults
+                                   to 'false'.
 
 FAVORITES
 ---------
@@ -407,7 +417,8 @@ favorites[N].account               Account number associated with the favorite.
 favorites[N].cloud_access_role     Cloud Access Role used to authenicate with the favorite.
 favorites[N].access_type           Favorite access type, 'web' or 'cli', defaults 'cli'.
 favorites[N].service               Service to open by default, for example 'rds', 'ec2', etc.
-                                   Applies only to 'web' access types, defaults to the dashboard.
+                                   Applies only to 'web' access types, defaults to the
+                                   main dashboard.
 
 PROFILES
 --------
@@ -416,8 +427,10 @@ profiles[NAME].FAVORITES           An instance of FAVORITES as defined above.
 
 BROWSER
 -------
-browser.firefox_container          Boolean to enable Firefox container support, defaults 'false'.
-                                   * Depends on the "Open external links in a container" plugin.
+browser.firefox_container          Boolean to enable Firefox container support, defaults
+                                   to 'false'.
+                                   ** Depends on the "Open external links in a container"
+                                   Firefox plugin.
 ```
 
 Note: if the authentication password is not provided as a Flag / Environment Variable / Configuration file entry, kion will prompt for the password on the command line. Kion will cache this password in the system keychain's encrypted storage. This may be preferable in environments where plaintext storage of credentials is frowned upon.
