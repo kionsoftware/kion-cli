@@ -195,7 +195,9 @@ func AuthSAML(cCtx *cli.Context) error {
 		authData, err = kion.AuthenticateSAMLOld(
 			config.Kion.Url,
 			samlMetadata,
-			samlServiceProviderIssuer)
+			samlServiceProviderIssuer,
+			config.Kion.SamlPrintUrl,
+		)
 		if err != nil {
 			return err
 		}
@@ -203,7 +205,9 @@ func AuthSAML(cCtx *cli.Context) error {
 		authData, err = kion.AuthenticateSAML(
 			config.Kion.Url,
 			samlMetadata,
-			samlServiceProviderIssuer)
+			samlServiceProviderIssuer,
+			config.Kion.SamlPrintUrl,
+		)
 		if err != nil {
 			return err
 		}
@@ -1044,6 +1048,13 @@ func main() {
 				EnvVars:     []string{"KION_SAML_SP_ISSUER"},
 				Usage:       "SAML Service Provider `ISSUER`",
 				Destination: &config.Kion.SamlIssuer,
+			},
+			&cli.BoolFlag{
+				Name:        "saml-print-url",
+				Value:       config.Kion.SamlPrintUrl,
+				EnvVars:     []string{"KION_SAML_PRINT_URL"},
+				Usage:       "print SAML URL instead of opening browser",
+				Destination: &config.Kion.SamlPrintUrl,
 			},
 			&cli.StringFlag{
 				Name:        "token",

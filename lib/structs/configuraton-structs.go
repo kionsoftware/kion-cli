@@ -25,6 +25,7 @@ type Kion struct {
 	IDMS             string `yaml:"idms_id"`
 	SamlMetadataFile string `yaml:"saml_metadata_file"`
 	SamlIssuer       string `yaml:"saml_sp_issuer"`
+	SamlPrintUrl     bool   `yaml:"saml_print_url"`
 	DisableCache     bool   `yaml:"disable_cache"`
 }
 
