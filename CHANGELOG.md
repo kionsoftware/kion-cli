@@ -20,6 +20,20 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.10.0] - yyyy-mm-dd
+---------------------
+
+Version 0.10.0 improves browser support for SAML based authentication and adds an option for printing the authentication URL as opposed to opening it in the users default browser. The option can be set with `kion.saml_print_url` in the configuration file, by the `--saml-print-url` flag, or with the `KION_SAML_PRINT_URL` environment variable. Normal precedent order applies.
+
+### Added
+
+- Option to print the SAML authentication url [kionsoftware/kion-cli/pull/84]
+- Add man page to Homebrew based installs [kionsoftware/kion-cli/pull/79]
+
+### Changed
+
+- Modified browser calls to be more general and use user defaults [kionsoftware/kion-cli/pull/83]
+
 [0.9.0] - 2025.01.16
 --------------------
 
