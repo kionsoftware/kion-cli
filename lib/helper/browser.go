@@ -191,7 +191,7 @@ func OpenBrowser(url string, typeID uint) error {
 // OpenBrowserDirect opens up a URL in the users system default browser. It
 // uses the redirect_uri query parameter to handle the logout and redirect to
 // the federated login page.
-func OpenBrowserRedirect(target string, session structs.SessionInfo, config structs.Browser, redirect string) error {
+func OpenBrowserRedirect(target string, session structs.SessionInfo, config structs.Browser, redirect string, firefoxContainerName string) error {
 	var err error
 	var logoutURL string
 	var replacement string
@@ -236,10 +236,19 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 	// generate the federation link
 	var federationLink string
 	if config.FirefoxContainers {
-		if runtime.GOOS == "windows" {
-			federationLink = fmt.Sprintf("ext+container:url=%s^&name=%s", encodedUrlOriginal, url.QueryEscape(session.AccountName))
+		var containerName string
+
+		// use the firefox container name if provided
+		if firefoxContainerName != "" {
+			containerName = firefoxContainerName
 		} else {
-			federationLink = fmt.Sprintf("ext+container:url=%s&name=%s", encodedUrlOriginal, url.QueryEscape(session.AccountName))
+			containerName = session.AccountName
+		}
+
+		if runtime.GOOS == "windows" {
+			federationLink = fmt.Sprintf("ext+container:url=%s^&name=%s", encodedUrlOriginal, url.QueryEscape(containerName))
+		} else {
+			federationLink = fmt.Sprintf("ext+container:url=%s&name=%s", encodedUrlOriginal, url.QueryEscape(containerName))
 		}
 	} else {
 		federationLink = fmt.Sprintf("%s%s", logoutURL, encodedUrlRedirect)
