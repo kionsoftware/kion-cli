@@ -6,6 +6,9 @@ Release SOP
     - Write release paragraph at the top of the new release section in changelog
     - Ensure all non-backend, non-administrative PR's are accounted for in subsections (changed, added, etc)
     - Stub out new placeholder for next release at top of changelog
+3. Verify all documentation is in place for the new features:
+    - Repo `README.md` file
+    - The `kion.1` and/or other man page(s)
 3. Push and merge into main
 4. Checkout main locally, pull from upstream
 5. Tag with the release version and push
