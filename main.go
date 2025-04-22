@@ -154,6 +154,13 @@ func main() {
 				Usage:       "SAML Service Provider `ISSUER`",
 				Destination: &config.Kion.SamlIssuer,
 			},
+			&cli.BoolFlag{
+				Name:        "saml-print-url",
+				Value:       config.Kion.SamlPrintUrl,
+				EnvVars:     []string{"KION_SAML_PRINT_URL"},
+				Usage:       "print SAML URL instead of opening browser",
+				Destination: &config.Kion.SamlPrintUrl,
+			},
 			&cli.StringFlag{
 				Name:        "token",
 				Aliases:     []string{"t"},
