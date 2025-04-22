@@ -134,8 +134,13 @@ func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallback
 
 	server := &http.Server{Addr: ":" + SAMLLocalAuthPort}
 
-	// create a timer for the 60-second timeout
-	timer := time.NewTimer(60 * time.Second)
+	// create a timer for the callback
+	var timer *time.Timer
+	if printUrl {
+		timer = time.NewTimer(180 * time.Second)
+	} else {
+		timer = time.NewTimer(60 * time.Second)
+	}
 
 	// goroutine to handle timeout and token receipt
 	go func() {
