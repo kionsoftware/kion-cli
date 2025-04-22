@@ -141,7 +141,9 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 		authData, err = kion.AuthenticateSAMLOld(
 			c.config.Kion.Url,
 			samlMetadata,
-			samlServiceProviderIssuer)
+			samlServiceProviderIssuer,
+			c.config.Kion.SamlPrintUrl,
+		)
 		if err != nil {
 			return err
 		}
@@ -149,7 +151,9 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 		authData, err = kion.AuthenticateSAML(
 			c.config.Kion.Url,
 			samlMetadata,
-			samlServiceProviderIssuer)
+			samlServiceProviderIssuer,
+			c.config.Kion.SamlPrintUrl,
+		)
 		if err != nil {
 			return err
 		}
