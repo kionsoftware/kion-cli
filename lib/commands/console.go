@@ -61,5 +61,5 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 		AwsIamRoleName: car.AwsIamRoleName,
 		Region:         cCtx.String("region"),
 	}
-	return helper.OpenBrowserRedirect(url, session, c.config.Browser, redirect)
+	return helper.OpenBrowserRedirect(url, session, c.config.Browser, redirect, "")
 }

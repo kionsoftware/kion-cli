@@ -91,7 +91,7 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 			AwsIamRoleName: car.AwsIamRoleName,
 			Region:         favorite.Region,
 		}
-		return helper.OpenBrowserRedirect(url, session, c.config.Browser, favorite.Service)
+		return helper.OpenBrowserRedirect(url, session, c.config.Browser, favorite.Service, favorite.FirefoxContainerName)
 	} else {
 		// placeholder for our stak
 		var stak kion.STAK
