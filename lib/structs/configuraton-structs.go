@@ -32,12 +32,13 @@ type Kion struct {
 // Favorite holds information about user defined favorites used to quickly
 // access desired accounts.
 type Favorite struct {
-	Name       string `yaml:"name"`
-	Account    string `yaml:"account"`
-	CAR        string `yaml:"cloud_access_role"`
-	AccessType string `yaml:"access_type"`
-	Region     string `yaml:"region"`
-	Service    string `yaml:"service"`
+	Name                 string `yaml:"name"`
+	Account              string `yaml:"account"`
+	CAR                  string `yaml:"cloud_access_role"`
+	AccessType           string `yaml:"access_type"`
+	Region               string `yaml:"region"`
+	Service              string `yaml:"service"`
+	FirefoxContainerName string `yaml:"firefox_container_name"`
 }
 
 // Profile holds an alternate configuration for Kion and Favorites.

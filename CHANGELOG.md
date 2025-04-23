@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 Notes for upgrading...
 
 ### Added
+- Ability to specify a specific Firefox container name to use when federating into a web console [kionsoftware/kion-cli/pull/86]
 
 ### Changed
 
