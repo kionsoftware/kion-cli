@@ -11,7 +11,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/). This proj
 Notes for upgrading...
 
 ### Added
-- Ability to specify a specific Firefox container name to use when federating into a web console [kionsoftware/kion-cli/pull/86]
 
 ### Changed
 
@@ -20,6 +19,21 @@ Notes for upgrading...
 ### Removed
 
 ### Fixed
+
+[0.10.0] - yyyy-mm-dd
+---------------------
+
+Version 0.10.0 adds the ability to target/name Firefox containers when federating with favorites, improves browser support for SAML based authentication, and adds an option for printing the authentication URL as opposed to opening it in the users default browser. The SAML auth URL option can be set with `kion.saml_print_url` in the configuration file, by the `--saml-print-url` flag, or with the `KION_SAML_PRINT_URL` environment variable. Normal precedent order applies.
+
+### Added
+
+- Option to print the SAML authentication url [kionsoftware/kion-cli/pull/84]
+- Man page to Homebrew based installs [kionsoftware/kion-cli/pull/79]
+- Ability to target a specific Firefox container when federating [kionsoftware/kion-cli/pull/86]
+
+### Changed
+
+- Modified browser calls to be more general and use user defaults [kionsoftware/kion-cli/pull/83]
 
 [0.9.0] - 2025.01.16
 --------------------

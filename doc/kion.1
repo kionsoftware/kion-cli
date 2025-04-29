@@ -30,10 +30,12 @@ Username used for authenticating with Kion.
 Password used for authenticating with Kion.
 .It --idms IDMS_ID, -i IDMS_ID
 IDMS ID with which to authenticate if using username and password.
-.It --saml_metadata_file FILENAME|URL
+.It --saml-metadata-file FILENAME|URL
 FILENAME or URL of the identity provider's XML metadata document.
-.It --saml_sp_issuer ISSUER
+.It --saml-sp-issuer ISSUER
 SAML Service Provider issuer value from Kion.
+.It --saml-print-url
+Print the authentication URL instead of opening it automatically with the default browser.
 .It --token TOKEN, -t TOKEN
 Token (API or Bearer) used to authenticate.
 .It --disable-cache
@@ -146,6 +148,8 @@ API key used to authenticate.
 FILENAME or URL of the identity provider's XML metadata document.
 .It KION_SAML_SP_ISSUER
 The Kion IDMS issuer value.
+.It KION_SAML_PRINT_URL
+"TRUE" to print the authentication url as opposed to automatically opening it in the default browser. Defaults to "FALSE".
 .El
 
 .Sh FILES
