@@ -32,7 +32,7 @@ class REPLACE_CLASSNAME < Formula
       end
       system "go", "build", "-ldflags", "-X main.kionCliVersion=#{version}", "-o", "#{bin}/kion", "."
     end
-    man1.install "doc/kion.1"
+    man1.install(Dir[buildpath/"doc/man1/*"])
   end
 
   # test install
