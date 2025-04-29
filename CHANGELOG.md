@@ -28,7 +28,7 @@ Version 0.10.0 adds the ability to target/name Firefox containers when federatin
 ### Added
 
 - Option to print the SAML authentication url [kionsoftware/kion-cli/pull/84]
-- Add man page to Homebrew based installs [kionsoftware/kion-cli/pull/79]
+- Man page to Homebrew based installs [kionsoftware/kion-cli/pull/79]
 - Ability to target a specific Firefox container when federating [kionsoftware/kion-cli/pull/86]
 
 ### Changed
