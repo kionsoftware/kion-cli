@@ -397,43 +397,45 @@ __Configuration File:__
 ```text
 KION
 ----
-kion.url                              URL to the target Kion instance.
-kion.api_key                          API key used to authenticate.
-kion.username                         Username for authentication, to be paried with password.
-kion.password                         Password for authentication, to be paired with username.
-kion.idms_id                          IDMS ID, if using a custom IDMS in Kion.
-kion.saml_metadata_file               SAML metadata file location, URL or path.
-kion.saml_sp_issuer                   Entity ID for the Kion SAML IDMS.
-kion.saml_print_url                   Set 'true' to print the authentication url as opposed to
-                                      automatically opening it in the default browser.
-                                      Defaults to 'false'.
-kion.disable_cache                    Prevents Kion CLI from caching STAK if 'true', defaults
-                                      to 'false'.
+kion.url                             URL to the target Kion instance.
+kion.api_key                         API key used to authenticate.
+kion.username                        Username for authentication, to be paried with password.
+kion.password                        Password for authentication, to be paired with username.
+kion.idms_id                         IDMS ID, if using a custom IDMS in Kion.
+kion.saml_metadata_file              SAML metadata file location, URL or path.
+kion.saml_sp_issuer                  Entity ID for the Kion SAML IDMS.
+kion.saml_print_url                  Set 'true' to print the authentication url as opposed to
+                                     automatically opening it in the default browser.
+                                     Defaults to 'false'.
+kion.disable_cache                   Prevents Kion CLI from caching STAK if 'true', defaults
+                                     to 'false'.
 
 FAVORITES
 ---------
-favorites[N].name                     Favorite name, used when calling `kion fav [name]`
-favorites[N].account                  Account number associated with the favorite.
-favorites[N].cloud_access_role        Cloud Access Role used to authenicate with the favorite.
-favorites[N].access_type              Favorite access type, 'web' or 'cli', defaults 'cli'.
-favorites[N].service                  Service to open by default, for example 'rds', 'ec2', etc.
-                                      Applies only to 'web' access types, defaults to the
-                                      main dashboard.
-favorites[N].firefox_container_name   Firefox container name to use when opening the favorite.
-                                      Applies only to 'web' access types, defaults to the favorite name.
-                                      ** Only applies if the 'browser.firefox_container' option is set to 'true'.
+favorites[N].name                    Favorite name, used when calling `kion fav [name]`
+favorites[N].account                 Account number associated with the favorite.
+favorites[N].cloud_access_role       Cloud Access Role used to authenicate with the favorite.
+favorites[N].access_type             Favorite access type, 'web' or 'cli', defaults 'cli'.
+favorites[N].service                 Service to open by default, for example 'rds', 'ec2', etc.
+                                     Applies only to 'web' access types, defaults to the
+                                     main dashboard.
+favorites[N].firefox_container_name  Firefox container name to use when opening the favorite.
+                                     Applies only to 'web' access types, defaults to the
+                                     favorite name.
+                                     ** Only applies if the 'browser.firefox_container'
+                                     option is set to 'true'.
 
 PROFILES
 --------
-profiles[NAME].KION                An instance of KION as defined above.
-profiles[NAME].FAVORITES           An instance of FAVORITES as defined above.
+profiles[NAME].KION                  An instance of KION as defined above.
+profiles[NAME].FAVORITES             An instance of FAVORITES as defined above.
 
 BROWSER
 -------
-browser.firefox_container          Boolean to enable Firefox container support, defaults
-                                   to 'false'.
-                                   ** Depends on the "Open external links in a container"
-                                   Firefox plugin.
+browser.firefox_container            Boolean to enable Firefox container support, defaults
+                                     to 'false'.
+                                     ** Depends on the "Open external links in a container"
+                                     Firefox plugin.
 ```
 
 Note: if the authentication password is not provided as a Flag / Environment Variable / Configuration file entry, kion will prompt for the password on the command line. Kion will cache this password in the system keychain's encrypted storage. This may be preferable in environments where plaintext storage of credentials is frowned upon.
