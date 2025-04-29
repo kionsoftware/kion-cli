@@ -1,0 +1,58 @@
+name: Bug Report
+description: Open a bug/issue ticket with the Kion CLI.
+title: "[Bug]: "
+labels: ["bug"]
+assignees: codybuell
+
+body:
+    - type: markdown
+      attributes:
+        value: |
+
+          **Before** reporting an issue, make sure to read the [documentation](https://github.com/kionsoftware/kion-cli) and search [existing issues](https://github.com/kionsoftware/kion-cli/issues).
+
+    - type: input
+      attributes:
+        label: "Kion CLI version (`kion --version`)"
+        placeholder: "v0.10.0 / commit d43f80b"
+      validations:
+        required: true
+
+    - type: input
+      attributes:
+        label: "Operating system/version"
+        placeholder: "MacOS 11.5 / Ubuntu 20.04 / Windows 11"
+      validations:
+        required: true
+
+    - type: input
+      attributes:
+        label: "Installation method"
+        placeholder: "Homebrew / Manual with Go 1.22 / Other"
+      validations:
+        required: true
+
+    - type: textarea
+      attributes:
+        label: Describe the bug
+        description: Please provide a clear and concise description of what the bug is. Please include any related errors you see.
+      validations:
+        required: true
+
+    - type: textarea
+      attributes:
+        label: Steps To Reproduce
+        description: Steps to reproduce the behavior.
+        placeholder: |
+          1.
+          2.
+          3.
+      validations:
+        required: true
+
+    - type: textarea
+      attributes:
+        label: Expected Behavior
+        description: A concise description of what you expected to happen.
+      validations:
+        required: true
