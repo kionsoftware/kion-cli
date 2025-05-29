@@ -346,6 +346,10 @@ __Util Commands:__
 SUB COMMANDS
 
   flush-cache                          Clear out all cache entries for the Kion CLI.
+
+  push-favorites                       Push locally defined favorites up to Kion.
+                                       This will overwrite any favorites in Kion that have the same name.
+                                       After pushing, you are prompted to delete local favorites.
 ```
 
 __Environment:__
