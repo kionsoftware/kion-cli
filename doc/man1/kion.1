@@ -116,6 +116,14 @@ Print usage text.
 
 .It util
 Tools for managing Kion CLI.
+.Bl -tag -width "flush-cache"
+.It flush-cache
+Clear out all cache entries for the Kion CLI.
+.It push-favorites
+Push locally defined favorites up to Kion.
+This will overwrite any favorites in Kion that have the same name.
+After pushing, you are prompted to delete local favorites.
+.El
 
 .Sh PRECEDENCE
 Configuration settings are applied in the following order of precedence:
