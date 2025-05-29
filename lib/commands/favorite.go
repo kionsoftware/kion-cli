@@ -3,6 +3,8 @@ package commands
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"sort"
 	"time"
 
 	"github.com/kionsoftware/kion-cli/lib/helper"
@@ -11,15 +13,35 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// ListFavorites prints out the users stored favorites. Extra information is
-// provided if the verbose flag is set.
+// ListFavorites prints out the users stored favorites and favorites from the Kion API.
+// Extra information is provided if the verbose flag is set.
 func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
-	// map our favorites for ease of use
-	fNames, fMap := helper.MapFavs(c.config.Favorites)
+
+	// get the combined list of favorites from the CLI config and the Kion API (if compatible)
+	useApi := cCtx.App.Metadata["useFavoritesAPI"].(bool)
+	var apiFavorites []structs.Favorite
+	var err error
+	if useApi {
+		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
+		if err != nil {
+			fmt.Printf("Error retrieving favorites from API: %v\n", err)
+			return nil
+		}
+	}
+	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites)
+	if err != nil {
+		fmt.Printf("Error combining favorites: %v\n", err)
+		return nil
+	}
+
+	// sort favorites by name
+	sort.Slice(result.All, func(i, j int) bool {
+		return result.All[i].Name < result.All[j].Name
+	})
 
 	// print it out
 	if cCtx.Bool("verbose") {
-		for _, f := range fMap {
+		for _, f := range result.All {
 			accessType := f.AccessType
 			if accessType == "" {
 				accessType = "cli (Default)"
@@ -31,10 +53,27 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n   region: %v\n", f.Name, f.Account, f.CAR, accessType, region)
 		}
 	} else {
-		for _, f := range fNames {
-			fmt.Printf(" %v\n", f)
+		// match the generated alias name format: <normalized acct name>_<CAR>_(web|cli)_<region>
+		generatedNameRe := `\w+_\w+_(web|cli)_\w+-\w+-\d`
+		re, err := regexp.Compile(generatedNameRe)
+		if err != nil {
+			fmt.Printf("Error compiling regex for favorite alias matching: %v\n", err)
+			return nil
+		}
+
+		for _, f := range result.All {
+			matched := re.MatchString(f.Name)
+
+			// if match, just print the name, which has all of the extra information
+			// else, print the name with all of the extra information
+			if matched {
+				fmt.Printf(" %v\n", f.Name)
+			} else {
+				fmt.Printf(" %v (%v %v %v %v)\n", f.Name, f.Account, f.CAR, f.AccessType, f.Region)
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -43,12 +82,29 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 // argument it is used, otherwise the user is walked through a wizard to make a
 // selection.
 func (c *Cmd) Favorites(cCtx *cli.Context) error {
-	// map our favorites for ease of use
-	fNames, fMap := helper.MapFavs(c.config.Favorites)
+
+	// get the combined list of favorites from the CLI config and the Kion API (if compatible)
+	useApi := cCtx.App.Metadata["useFavoritesAPI"].(bool)
+	var apiFavorites []structs.Favorite
+	var err error
+	if useApi {
+		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
+		if err != nil {
+			fmt.Printf("Error retrieving favorites from API: %v\n", err)
+			return nil
+		}
+	}
+	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites)
+	if err != nil {
+		fmt.Printf("Error combining favorites: %v\n", err)
+		return nil
+	}
+
+	// run favorites through MapFavs
+	fNames, fMap := helper.MapFavs(result.All)
 
 	// if arg passed is a valid favorite use it else prompt
 	var fav string
-	var err error
 	if fMap[cCtx.Args().First()] != (structs.Favorite{}) {
 		fav = cCtx.Args().First()
 	} else {
