@@ -130,3 +130,100 @@ func FindCARByName(cars []kion.CAR, carName string) (*kion.CAR, error) {
 	}
 	return &kion.CAR{}, fmt.Errorf("cannot find cloud access role with name %v", carName)
 }
+
+// NormalizeAccessType normalizes the access type string returned from the Kion API
+// to the values used by the CLI.
+// It converts "console_access" to "web", and
+// "short_term_key_access" to "cli".
+// If the access type does not match any of these, it returns the original string.
+func NormalizeAccessType(accessType string) string {
+	switch accessType {
+	case "console_access":
+		return "web"
+	case "short_term_key_access":
+		return "cli"
+	default:
+		return accessType
+	}
+}
+
+// CombineFavorites combines local favorites with API favorites, ensuring that
+// local favorites are prioritized and that there are no duplicates or name conflicts.
+// It returns a slice of Favorites that contains all unique favorites, with local
+// favorites appearing first. If an API favorite has no name, it attempts to
+// generate a name based on the account name, car, access type, and region.
+func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite) (structs.FavoritesComparison, error) {
+	result := structs.FavoritesComparison{
+		All:        []structs.Favorite{},
+		Exact:      []structs.Favorite{},
+		NonMatches: []structs.Favorite{},
+		Conflicts:  []structs.Favorite{},
+		LocalOnly:  []structs.Favorite{},
+	}
+
+	// Track all "exact" matches by a unique composite key
+	exactMap := make(map[string]bool)
+
+	// Start with local favorites in the final set
+	result.All = append(result.All, localFavs...)
+
+	for _, apiFav := range apiFavs {
+
+		// default region to us-east-1
+		if apiFav.Region == "" {
+			apiFav.Region = "us-east-1"
+		}
+
+		apiKey := fmt.Sprintf("%s|%s|%s|%s|%s", apiFav.Name, apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
+		apiFav.AccessType = NormalizeAccessType(apiFav.AccessType)
+		foundMatch := false
+
+		for _, localFav := range localFavs {
+
+			// default region to us-east-1
+			if localFav.Region == "" {
+				localFav.Region = "us-east-1"
+			}
+
+			localKey := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)
+
+			// Exact match
+			if apiKey == localKey {
+				foundMatch = true
+				exactMap[localKey] = true
+				result.Exact = append(result.Exact, localFav)
+				break
+			}
+
+			// Name conflict
+			if apiFav.Name == localFav.Name {
+				apiFav.Name = fmt.Sprintf("%s (conflict)", apiFav.Name)
+				result.All = append(result.All, apiFav)
+				result.Conflicts = append(result.Conflicts, localFav)
+				foundMatch = true
+				break
+			}
+		}
+
+		if !foundMatch {
+			result.All = append(result.All, apiFav)
+			result.NonMatches = append(result.NonMatches, apiFav)
+		}
+	}
+
+	// Determine which localFavs were not part of exact matches
+	for _, localFav := range localFavs {
+
+		// default region to us-east-1
+		if localFav.Region == "" {
+			localFav.Region = "us-east-1"
+		}
+
+		key := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)
+		if !exactMap[key] {
+			result.LocalOnly = append(result.LocalOnly, localFav)
+		}
+	}
+
+	return result, nil
+}
