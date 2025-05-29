@@ -20,7 +20,19 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.10.0] - yyyy-mm-dd
+[0.11.0] - 2025-06-06
+-------------------------
+
+Version 0.11.0 adds support to use the Kion Favorites API endpoints (requires Kion version 3.13.0 or higher). This allows Kion to be the new source
+of truth for your configured favorites.
+
+### Added
+
+- Ability to list and use favorites (aliases) that are set in Kion
+- New utility command to push local favorites up to Kion (`util push-favorites`)
+- Option to delete local favorites once they've been pushed up
+
+[0.10.0] - 2025-04-29
 ---------------------
 
 Version 0.10.0 adds the ability to target/name Firefox containers when federating with favorites, improves browser support for SAML based authentication, and adds an option for printing the authentication URL as opposed to opening it in the users default browser. The SAML auth URL option can be set with `kion.saml_print_url` in the configuration file, by the `--saml-print-url` flag, or with the `KION_SAML_PRINT_URL` environment variable. Normal precedent order applies.
