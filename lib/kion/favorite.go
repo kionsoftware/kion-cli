@@ -75,8 +75,7 @@ func GetAPIFavorites(host string, token string) ([]structs.Favorite, int, error)
 func CreateFavorite(host string, token string, favorite structs.Favorite) (structs.Favorite, int, error) {
 	url := fmt.Sprintf("%v/api/v3/user-cloud-access-role-alias", host)
 	query := map[string]string{}
-	var data interface{}
-	data = map[string]string{
+	data := map[string]string{
 		"alias_name":             favorite.Name,
 		"account_number":         favorite.Account,
 		"cloud_access_role_name": favorite.CAR,
@@ -105,8 +104,7 @@ func CreateFavorite(host string, token string, favorite structs.Favorite) (struc
 func DeleteFavorite(host string, token string, favoriteName string) (int, error) {
 	url := fmt.Sprintf("%v/api/v3/user-cloud-access-role-alias", host)
 	query := map[string]string{}
-	var data interface{}
-	data = map[string]string{"alias_name": favoriteName}
+	data := map[string]string{"alias_name": favoriteName}
 	resp, statusCode, err := runQuery("DELETE", url, token, query, data)
 	if err != nil {
 		return statusCode, err
