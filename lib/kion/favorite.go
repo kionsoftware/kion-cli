@@ -94,6 +94,11 @@ func CreateFavorite(host string, token string, favorite structs.Favorite) (struc
 		return structs.Favorite{}, 0, jsonErr
 	}
 
+	// check if the response is successful
+	if statusCode != 201 && statusCode != 200 {
+		return structs.Favorite{}, statusCode, fmt.Errorf("failed to create favorite: %s", string(resp))
+	}
+
 	return createdFav, statusCode, nil
 }
 

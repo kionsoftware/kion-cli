@@ -118,28 +118,19 @@ func (c *Cmd) PushFavorites(configPath string) func(cCtx *cli.Context) error {
 					f.AccessType = "short_term_key_access"
 				}
 
-				deleteStatus, err := kion.DeleteFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f.Name)
+				_, err := kion.DeleteFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f.Name)
 				if err != nil {
 					color.Red("Error deleting favorite %s: %v\n", f.Name, err)
 					continue
 				}
-				if deleteStatus == 200 {
-					color.Green("Successfully deleted conflicting favorite: %s\n", f.Name)
-				} else {
-					color.Red("Failed to delete conflicting favorite %s, status code: %d\n", f.Name, deleteStatus)
-					continue
-				}
+				color.Green("Successfully deleted conflicting favorite: %s\n", f.Name)
 
-				_, status, err := kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
+				_, _, err = kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
 				if err != nil {
 					color.Red("Error creating favorite %s: %v\n", f.Name, err)
 					continue
 				}
-				if status == 201 || status == 200 {
-					color.Green("Successfully created favorite: %s\n", f.Name)
-				} else {
-					color.Red("Failed to create favorite %s, status code: %d\n", f.Name, status)
-				}
+				color.Green("Successfully created favorite: %s\n", f.Name)
 			}
 
 			// send to the DeleteLocalFavorites function to remove local favorites after successful push
