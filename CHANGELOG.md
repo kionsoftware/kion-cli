@@ -23,8 +23,7 @@ Notes for upgrading...
 [0.11.0] - 2025-06-06
 -------------------------
 
-Version 0.11.0 adds support to use the Kion Favorites API endpoints (requires Kion version 3.13.0 or higher). This allows Kion to be the new source
-of truth for your configured favorites.
+Version 0.11.0 adds support to use the Kion Favorites API endpoints (requires Kion version 3.13.0 or higher). This allows Kion to be the new source of truth for your configured favorites.
 
 ### Added
 
