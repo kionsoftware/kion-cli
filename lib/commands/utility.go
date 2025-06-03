@@ -27,7 +27,7 @@ func (c *Cmd) PushFavorites(configPath string) func(cCtx *cli.Context) error {
 				fmt.Printf("Error retrieving favorites from API: %v\n", err)
 				return nil
 			}
-			result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites)
+			result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
 			if err != nil {
 				fmt.Printf("Error combining favorites: %v\n", err)
 				return nil
