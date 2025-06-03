@@ -403,7 +403,7 @@ KION
 ----
 kion.url                             URL to the target Kion instance.
 kion.api_key                         API key used to authenticate.
-kion.username                        Username for authentication, to be paried with password.
+kion.username                        Username for authentication, to be paired with password.
 kion.password                        Password for authentication, to be paired with username.
 kion.idms_id                         IDMS ID, if using a custom IDMS in Kion.
 kion.saml_metadata_file              SAML metadata file location, URL or path.
