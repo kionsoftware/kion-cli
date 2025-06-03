@@ -13,8 +13,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// ListFavorites prints out the users stored favorites and favorites from the Kion API.
-// Extra information is provided if the verbose flag is set.
+// ListFavorites prints out the users stored favorites and favorites from the
+// Kion API. Extra information is provided if the verbose flag is set.
 func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 
 	// get the combined list of favorites from the CLI config and the Kion API (if compatible)
@@ -25,13 +25,13 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
 		if err != nil {
 			fmt.Printf("Error retrieving favorites from API: %v\n", err)
-			return nil
+			return err
 		}
 	}
 	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites)
 	if err != nil {
 		fmt.Printf("Error combining favorites: %v\n", err)
-		return nil
+		return err
 	}
 
 	// sort favorites by name
