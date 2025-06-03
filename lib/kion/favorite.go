@@ -48,23 +48,26 @@ func GetAPIFavorites(host string, token string) ([]structs.Favorite, int, error)
 		}
 
 		// if the upstream favorite has no name (alias), attempt to look up the account name
-		// and create an alias out of the account name, car, access type, and region
+		// and create an alias out of the account name, car, access type, and region. If that
+		// lookup fails, use the account number instead.
 		if apiFav.Name == "" {
+			var newName string
+
 			account, status, err := GetAccount(host, token, apiFav.Account)
-			if err != nil {
-				fmt.Printf("failed looking up account name for account number %s: %v\n", apiFav.Account, err)
-				apiFav.Name = "unset"
+			if account != nil && status == 200 {
+				newName = fmt.Sprintf("%s_%s_%s_%s", strings.Replace(account.Name, " ", "", -1), apiFav.CAR, apiFav.AccessType, apiFav.Region)
+			} else {
+				if err != nil {
+					fmt.Printf("failed looking up account name for account number %s: %v\n", apiFav.Account, err)
+				}
+				newName = fmt.Sprintf("%s_%s_%s_%s", strings.Replace(apiFav.Account, " ", "", -1), apiFav.CAR, apiFav.AccessType, apiFav.Region)
 			}
 
-			if account != nil && status == 200 {
-				newName := fmt.Sprintf("%s_%s_%s_%s", strings.Replace(account.Name, " ", "", -1), apiFav.CAR, apiFav.AccessType, apiFav.Region)
-				if len(newName) > 50 {
-					newName = fmt.Sprintf("%s...", newName[:47])
-				}
-				apiFav.Name = newName
-			} else {
-				apiFav.Name = "unset"
+			if len(newName) > 50 {
+				newName = fmt.Sprintf("%s...", newName[:47])
 			}
+			apiFav.Name = newName
+
 		}
 		apiFavorites = append(apiFavorites, apiFav)
 	}
