@@ -127,10 +127,10 @@ func (c *Cmd) PushFavorites(configPath string) func(cCtx *cli.Context) error {
 
 				_, _, err = kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
 				if err != nil {
-					color.Red("Error creating favorite %s: %v\n", f.Name, err)
+					color.Red("Error creating favorite %s: %v", f.Name, err)
 					continue
 				}
-				color.Green("Successfully created favorite: %s\n", f.Name)
+				color.Green("Successfully created favorite: %s", f.Name)
 			}
 
 			// send to the DeleteLocalFavorites function to remove local favorites after successful push
