@@ -42,17 +42,6 @@ type Favorite struct {
 	CloudServiceProvider string `json:"cloud_service_provider"`
 }
 
-// FavoritesComparison holds the results of comparing local favorites with API
-// favorites. It includes all favorites, exact matches, non-matches, conflicts,
-// and local-only favorites. It's returned by the CombineFavorites function.
-type FavoritesComparison struct {
-	All        []Favorite // Combined local + API, deduplicated and deconflicted
-	Exact      []Favorite // Exact matches (local + API)
-	NonMatches []Favorite // API-only favorites
-	Conflicts  []Favorite // Name conflicts (same name, different settings)
-	LocalOnly  []Favorite // Local-only favorites (not matched in API)
-}
-
 // Profile holds an alternate configuration for Kion and Favorites.
 type Profile struct {
 	Kion      Kion       `yaml:"kion"`
