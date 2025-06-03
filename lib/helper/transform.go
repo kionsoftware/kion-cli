@@ -163,7 +163,8 @@ func NormalizeAccessType(accessType string) string {
 // It returns a slice of Favorites that contains all unique favorites, with local
 // favorites appearing first. If an API favorite has no name, it attempts to
 // generate a name based on the account name, car, access type, and region.
-func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite) (FavoritesComparison, error) {
+func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, defaultRegion string) (FavoritesComparison, error) {
+
 	result := FavoritesComparison{}
 
 	// Track all exact matches by a unique composite key
@@ -174,11 +175,13 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite) 
 
 	for _, apiFav := range apiFavs {
 
-		// default region to us-east-1
 		if apiFav.Region == "" {
-			apiFav.Region = "us-east-1"
+			if defaultRegion != "" {
+				apiFav.Region = defaultRegion
+			} else {
+				apiFav.Region = "us-east-1"
+			}
 		}
-
 		apiKey := fmt.Sprintf("%s|%s|%s|%s|%s", apiFav.Name, apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
 		apiFav.AccessType = NormalizeAccessType(apiFav.AccessType)
 		foundMatch := false
@@ -221,7 +224,11 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite) 
 
 		// default region to us-east-1
 		if localFav.Region == "" {
-			localFav.Region = "us-east-1"
+			if defaultRegion != "" {
+				localFav.Region = defaultRegion
+			} else {
+				localFav.Region = "us-east-1"
+			}
 		}
 
 		key := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)

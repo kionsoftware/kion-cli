@@ -28,7 +28,7 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 			return err
 		}
 	}
-	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites)
+	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
 	if err != nil {
 		fmt.Printf("Error combining favorites: %v\n", err)
 		return err
@@ -94,7 +94,7 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 			return nil
 		}
 	}
-	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites)
+	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
 	if err != nil {
 		fmt.Printf("Error combining favorites: %v\n", err)
 		return nil
