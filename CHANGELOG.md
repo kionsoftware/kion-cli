@@ -30,6 +30,7 @@ Version 0.11.0 adds support to use the Kion Favorites API endpoints (requires Ki
 - Ability to list and use favorites (aliases) that are set in Kion
 - New utility command to push local favorites up to Kion (`util push-favorites`)
 - Option to delete local favorites once they've been pushed up
+- New `default_region` property to the config file
 
 [0.10.0] - 2025-04-29
 ---------------------

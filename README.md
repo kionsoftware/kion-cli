@@ -63,6 +63,7 @@ Setup
     kion:
       url: https://mykion.example
       api_key: [api key]
+      default_region: us-east-1       # used for any favorites that don't have region set
     favorites:
       - name: sandbox
         account: "111122223333"
