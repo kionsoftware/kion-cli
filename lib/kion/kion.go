@@ -41,6 +41,9 @@ func runQuery(method string, url string, token string, query map[string]string, 
 		req.Header.Add("Authorization", "Bearer "+token)
 	}
 
+	// identify the source of the request
+	req.Header.Add("kion-source", "kion-cli")
+
 	// send the request
 	client := &http.Client{}
 	resp, err := client.Do(req)
