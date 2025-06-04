@@ -25,12 +25,12 @@ func (c *Cmd) PushFavorites(configPath string) func(cCtx *cli.Context) error {
 			apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
 			if err != nil {
 				fmt.Printf("Error retrieving favorites from API: %v\n", err)
-				return nil
+				return err
 			}
 			result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
 			if err != nil {
 				fmt.Printf("Error combining favorites: %v\n", err)
-				return nil
+				return err
 			}
 
 			// check if there's anything to push
@@ -62,7 +62,7 @@ func (c *Cmd) PushFavorites(configPath string) func(cCtx *cli.Context) error {
 			selection, err := helper.PromptSelect("\nDo you want to push your local favorites to the Kion API?", []string{"no", "yes"})
 			if err != nil {
 				fmt.Printf("Error prompting for confirmation: %v\n", err)
-				return nil
+				return err
 			}
 			if selection == "no" {
 				fmt.Println("\nAborting push of favorites.")
