@@ -170,7 +170,18 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 	// Track all exact matches by a unique composite key
 	exactMap := make(map[string]bool)
 
-	// Start with local favorites in the final set
+	// Ensure all local favorites have a region set
+	for i := range localFavs {
+		if localFavs[i].Region == "" {
+			if defaultRegion != "" {
+				localFavs[i].Region = defaultRegion
+			} else {
+				localFavs[i].Region = "us-east-1"
+			}
+		}
+	}
+
+	// Start with localFavs in the final set
 	result.All = append(result.All, localFavs...)
 
 	for _, apiFav := range apiFavs {
@@ -187,11 +198,6 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 		foundMatch := false
 
 		for _, localFav := range localFavs {
-
-			// default region to us-east-1
-			if localFav.Region == "" {
-				localFav.Region = "us-east-1"
-			}
 
 			localKey := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)
 
@@ -221,15 +227,6 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 
 	// Determine which localFavs were not part of exact matches
 	for _, localFav := range localFavs {
-
-		// default region to us-east-1
-		if localFav.Region == "" {
-			if defaultRegion != "" {
-				localFav.Region = defaultRegion
-			} else {
-				localFav.Region = "us-east-1"
-			}
-		}
 
 		key := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)
 		if !exactMap[key] {
