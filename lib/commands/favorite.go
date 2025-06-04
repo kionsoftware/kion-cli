@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"sort"
 	"time"
 
@@ -53,24 +52,8 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n   region: %v\n", f.Name, f.Account, f.CAR, accessType, region)
 		}
 	} else {
-		// match the generated alias name format: <normalized acct name>_<CAR>_(web|cli)_<region>
-		generatedNameRe := `\w+_\w+_(web|cli)_\w+-\w+-\d`
-		re, err := regexp.Compile(generatedNameRe)
-		if err != nil {
-			fmt.Printf("Error compiling regex for favorite alias matching: %v\n", err)
-			return nil
-		}
-
 		for _, f := range result.All {
-			matched := re.MatchString(f.Name)
-
-			// if match, just print the name, which has all of the extra information
-			// else, print the name with all of the extra information
-			if matched {
-				fmt.Printf(" %v\n", f.Name)
-			} else {
-				fmt.Printf(" %v (%v %v %v %v)\n", f.Name, f.Account, f.CAR, f.AccessType, f.Region)
-			}
+			fmt.Printf(" %v (%v %v %v %v)\n", f.Name, f.Account, f.CAR, f.AccessType, f.Region)
 		}
 	}
 
