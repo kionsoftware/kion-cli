@@ -65,7 +65,7 @@ func (c *Cmd) PushFavorites(configPath string) func(cCtx *cli.Context) error {
 				return nil
 			}
 			if selection == "no" {
-				fmt.Println("Aborting push of favorites.")
+				fmt.Println("\nAborting push of favorites.")
 				return nil
 			}
 
@@ -75,7 +75,7 @@ func (c *Cmd) PushFavorites(configPath string) func(cCtx *cli.Context) error {
 					return err
 				}
 				if confirm == "no" {
-					fmt.Println("Aborting push of favorites due to conflicts.")
+					fmt.Println("\nAborting push of favorites due to conflicts.")
 					return nil
 				}
 			}
@@ -179,9 +179,9 @@ func (c *Cmd) DeleteLocalFavorites(configPath string) func(cCtx *cli.Context) er
 				color.Red("Error saving updated config: %v\n", err)
 				return nil
 			}
-			color.Green("Local favorites deleted after successful push to Kion API.")
+			color.Green("\nLocal favorites deleted after successful push to Kion API.\n")
 		} else {
-			color.Green("Keeping local favorites.")
+			color.Green("\nKeeping local favorites.\n")
 		}
 
 		return nil
