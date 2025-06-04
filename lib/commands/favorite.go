@@ -74,13 +74,13 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
 		if err != nil {
 			fmt.Printf("Error retrieving favorites from API: %v\n", err)
-			return nil
+			return err
 		}
 	}
 	result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
 	if err != nil {
 		fmt.Printf("Error combining favorites: %v\n", err)
-		return nil
+		return err
 	}
 
 	// run favorites through MapFavs
