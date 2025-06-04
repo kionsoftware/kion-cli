@@ -142,22 +142,6 @@ func FindCARByName(cars []kion.CAR, carName string) (*kion.CAR, error) {
 	return &kion.CAR{}, fmt.Errorf("cannot find cloud access role with name %v", carName)
 }
 
-// NormalizeAccessType normalizes the access type string returned from the Kion API
-// to the values used by the CLI.
-// It converts "console_access" to "web", and
-// "short_term_key_access" to "cli".
-// If the access type does not match any of these, it returns the original string.
-func NormalizeAccessType(accessType string) string {
-	switch accessType {
-	case "console_access":
-		return "web"
-	case "short_term_key_access":
-		return "cli"
-	default:
-		return accessType
-	}
-}
-
 // CombineFavorites combines local favorites with API favorites, ensuring that
 // local favorites are prioritized and that there are no duplicates or name conflicts.
 // It returns a slice of Favorites that contains all unique favorites, with local
@@ -194,7 +178,7 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 			}
 		}
 		apiKey := fmt.Sprintf("%s|%s|%s|%s|%s", apiFav.Name, apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
-		apiFav.AccessType = NormalizeAccessType(apiFav.AccessType)
+		apiFav.AccessType = kion.NormalizeAccessType(apiFav.AccessType)
 		foundMatch := false
 
 		for _, localFav := range localFavs {

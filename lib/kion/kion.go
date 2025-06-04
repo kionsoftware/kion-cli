@@ -129,3 +129,19 @@ func GetSessionDuration(host string, token string) (int, error) {
 
 	return response.Data.Duration, nil
 }
+
+// NormalizeAccessType normalizes the access type string returned from the Kion API
+// to the values used by the CLI.
+// It converts "console_access" to "web", and
+// "short_term_key_access" to "cli".
+// If the access type does not match any of these, it returns the original string.
+func NormalizeAccessType(accessType string) string {
+	switch accessType {
+	case "console_access":
+		return "web"
+	case "short_term_key_access":
+		return "cli"
+	default:
+		return accessType
+	}
+}

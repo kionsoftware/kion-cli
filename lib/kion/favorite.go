@@ -41,11 +41,7 @@ func GetAPIFavorites(host string, token string) ([]structs.Favorite, int, error)
 	for _, apiFav := range favResp.Favorites {
 
 		// normalize the access type to match what the CLI uses
-		if apiFav.AccessType == "console_access" {
-			apiFav.AccessType = "web"
-		} else if apiFav.AccessType == "short_term_key_access" {
-			apiFav.AccessType = "cli"
-		}
+		apiFav.AccessType = NormalizeAccessType(apiFav.AccessType)
 
 		// handle upstream favorites with no alias
 		if apiFav.Name == "" {
