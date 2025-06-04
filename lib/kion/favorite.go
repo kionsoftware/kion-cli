@@ -3,7 +3,6 @@ package kion
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/kionsoftware/kion-cli/lib/structs"
 )
@@ -40,6 +39,7 @@ func GetAPIFavorites(host string, token string) ([]structs.Favorite, int, error)
 
 	var apiFavorites []structs.Favorite
 	for _, apiFav := range favResp.Favorites {
+
 		// normalize the access type to match what the CLI uses
 		if apiFav.AccessType == "console_access" {
 			apiFav.AccessType = "web"
@@ -47,27 +47,9 @@ func GetAPIFavorites(host string, token string) ([]structs.Favorite, int, error)
 			apiFav.AccessType = "cli"
 		}
 
-		// if the upstream favorite has no name (alias), attempt to look up the account name
-		// and create an alias out of the account name, car, access type, and region. If that
-		// lookup fails, use the account number instead.
+		// handle upstream favorites with no alias
 		if apiFav.Name == "" {
-			var newName string
-
-			account, status, err := GetAccount(host, token, apiFav.Account)
-			if account != nil && status == 200 {
-				newName = fmt.Sprintf("%s_%s_%s_%s", strings.Replace(account.Name, " ", "", -1), apiFav.CAR, apiFav.AccessType, apiFav.Region)
-			} else {
-				if err != nil {
-					fmt.Printf("failed looking up account name for account number %s: %v\n", apiFav.Account, err)
-				}
-				newName = fmt.Sprintf("%s_%s_%s_%s", strings.Replace(apiFav.Account, " ", "", -1), apiFav.CAR, apiFav.AccessType, apiFav.Region)
-			}
-
-			if len(newName) > 50 {
-				newName = fmt.Sprintf("%s...", newName[:47])
-			}
-			apiFav.Name = newName
-
+			apiFav.Name = fmt.Sprintf("[unaliased] (%s %s %s %s)", apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
 		}
 		apiFavorites = append(apiFavorites, apiFav)
 	}
