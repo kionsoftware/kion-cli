@@ -19,11 +19,11 @@ import (
 // favorites. It includes all favorites, exact matches, non-matches, conflicts,
 // and local-only favorites. It's returned by the CombineFavorites function.
 type FavoritesComparison struct {
-	All        []structs.Favorite // Combined local + API, deduplicated and deconflicted
-	Exact      []structs.Favorite // Exact matches (local + API)
-	NonMatches []structs.Favorite // API-only favorites
-	Conflicts  []structs.Favorite // Name conflicts (same name, different settings)
-	LocalOnly  []structs.Favorite // Local-only favorites (not matched in API)
+	All       []structs.Favorite // Combined local + API, deduplicated and deconflicted
+	Exact     []structs.Favorite // Exact matches (local + API)
+	APIOnly   []structs.Favorite // API-only favorites
+	Conflicts []structs.Favorite // Name conflicts (same name, different settings)
+	LocalOnly []structs.Favorite // Local-only favorites (not matched in API)
 }
 
 // MapProjects transforms a slice of Projects into a slice of their names and a
@@ -205,13 +205,12 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 
 		if !foundMatch {
 			result.All = append(result.All, apiFav)
-			result.NonMatches = append(result.NonMatches, apiFav)
+			result.APIOnly = append(result.APIOnly, apiFav)
 		}
 	}
 
 	// Determine which localFavs were not part of exact matches
 	for _, localFav := range localFavs {
-
 		key := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)
 		if !exactMap[key] {
 			result.LocalOnly = append(result.LocalOnly, localFav)
