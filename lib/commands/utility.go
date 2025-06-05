@@ -20,6 +20,15 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 
 	if cCtx.App.Metadata["useFavoritesAPI"].(bool) {
 
+		if len(c.config.Favorites) == 0 {
+			color.Yellow("No local favorites found for the current profile. Nothing to push.")
+			return nil
+		}
+
+		// track errors during the push process
+		// this will be used to determine if we should delete local favorites after the push
+		var errors bool
+
 		// get the combined list of favorites from the CLI config and the Kion API
 		apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
 		if err != nil {
@@ -34,11 +43,10 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 
 		// check if there's anything to push
 		if len(result.LocalOnly) == 0 && len(result.Conflicts) == 0 {
-			if len(c.config.Favorites) == len(apiFavorites) {
+			if len(c.config.Favorites) == len(apiFavorites) || len(c.config.Favorites) == len(result.Exact) {
 				color.Green("All favorites are already in sync between local and API.")
 				return c.DeleteLocalFavorites(cCtx)
 			}
-			color.Green("No local favorites to push to the Kion API.")
 			return nil
 		}
 
@@ -55,7 +63,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 				fmt.Printf(" - %s\n", f.Name)
 			}
 			color.Red("\nThese are favorites that exist in both the CLI config and the API with the same name, but have different settings.")
-			color.Red("Pushing these will overwrite the API favorites with the local settings.\n\n")
+			color.Red("Pushing these will overwrite the API favorites with the local settings.\n")
 		}
 
 		selection, err := helper.PromptSelect("\nDo you want to push your local favorites to the Kion API?", []string{"no", "yes"})
@@ -79,8 +87,6 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			}
 		}
 
-		fmt.Println("Pushing local favorites to the Kion API...")
-
 		for _, f := range result.LocalOnly {
 			if len(f.Name) > 50 {
 				color.Yellow("Trimming favorite %s because its name exceeds 50 characters.\n", f.Name)
@@ -95,15 +101,17 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 				f.AccessType = "short_term_key_access"
 			}
 
-			newFav, status, err := kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
+			_, status, err := kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
 			if err != nil {
 				color.Red("Error creating favorite %s: %v\n", f.Name, err)
+				errors = true
 				continue
 			}
 			if status == 201 || status == 200 {
-				color.Green("Successfully created favorite: %s\n", newFav)
+				color.Green("Successfully pushed %s favorite to Kion\n", f.Name)
 			} else {
-				color.Red("Failed to create favorite %s, status code: %d\n", f.Name, status)
+				color.Red("Failed to push favorite %s, status code: %d\n", f.Name, status)
+				errors = true
 			}
 		}
 
@@ -120,6 +128,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			_, err := kion.DeleteFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f.Name)
 			if err != nil {
 				color.Red("Error deleting favorite %s: %v\n", f.Name, err)
+				errors = true
 				continue
 			}
 			color.Green("Successfully deleted conflicting favorite: %s\n", f.Name)
@@ -127,13 +136,16 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			_, _, err = kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
 			if err != nil {
 				color.Red("Error creating favorite %s: %v", f.Name, err)
+				errors = true
 				continue
 			}
 			color.Green("Successfully created favorite: %s", f.Name)
 		}
 
 		// send to the DeleteLocalFavorites function to remove local favorites after successful push
-		return c.DeleteLocalFavorites(cCtx)
+		if !errors {
+			return c.DeleteLocalFavorites(cCtx)
+		}
 	} else {
 		color.Yellow("Favorites API is not enabled. This requires Kion version 3.13.0 or higher.")
 	}
@@ -141,7 +153,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 }
 
 func (c *Cmd) DeleteLocalFavorites(cCtx *cli.Context) error {
-	confirmDelete, err := helper.PromptSelect("Do you want to delete the local favorites that were pushed to the Kion API?", []string{"no", "yes"})
+	confirmDelete, err := helper.PromptSelect("Do you want to delete the local favorites?", []string{"no", "yes"})
 	if err != nil {
 		color.Red("Error prompting for deletion confirmation: %v\n", err)
 		return err
@@ -169,8 +181,6 @@ func (c *Cmd) DeleteLocalFavorites(cCtx *cli.Context) error {
 			profileConfig.Favorites = []structs.Favorite{}
 			config.Profiles[profile] = profileConfig
 		}
-
-		fmt.Printf("Deleting local favorites from %v profile...\n", profile)
 
 		// Save the updated config back to the file
 		err = helper.SaveConfig(configPath, config)
