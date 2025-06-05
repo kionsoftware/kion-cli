@@ -178,7 +178,7 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 			}
 		}
 		apiKey := fmt.Sprintf("%s|%s|%s|%s|%s", apiFav.Name, apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
-		apiFav.AccessType = kion.NormalizeAccessType(apiFav.AccessType)
+		apiFav.AccessType = kion.ConvertAccessType(apiFav.AccessType)
 		foundMatch := false
 
 		for _, localFav := range localFavs {
