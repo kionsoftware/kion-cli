@@ -44,7 +44,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 		// check if there's anything to push
 		if len(result.LocalOnly) == 0 && len(result.Conflicts) == 0 {
 			if len(c.config.Favorites) == len(apiFavorites) || len(c.config.Favorites) == len(result.Exact) {
-				color.Green("All favorites are already in sync between local and API.")
+				color.Green("All local favorites are already in sync with Kion.\n")
 				return c.DeleteLocalFavorites(cCtx)
 			}
 			return nil
