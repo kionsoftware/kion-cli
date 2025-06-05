@@ -160,7 +160,6 @@ func (c *Cmd) DeleteLocalFavorites(cCtx *cli.Context) error {
 		// otherwise delete favorites from the default profile
 		profile := cCtx.String("profile")
 		if profile == "" {
-			profile = "default"
 			config.Favorites = []structs.Favorite{}
 		} else {
 			profileConfig := config.Profiles[profile]
