@@ -212,6 +212,13 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	if !newSaml.Check(curVer) {
 		cCtx.App.Metadata["useOldSAML"] = true
 	}
+
+	// favorites API check
+	favoritesAPI, _ := version.NewConstraint(">=3.13.0")
+	if favoritesAPI.Check(curVer) {
+		cCtx.App.Metadata["useFavoritesAPI"] = true
+	}
+
 	// initialize the keyring
 	name := "kion-cli"
 	ring, err := keyring.Open(keyring.Config{

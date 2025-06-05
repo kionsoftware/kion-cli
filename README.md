@@ -63,6 +63,7 @@ Setup
     kion:
       url: https://mykion.example
       api_key: [api key]
+      default_region: us-east-1       # used for any favorites that don't have region set
     favorites:
       - name: sandbox
         account: "111122223333"
@@ -346,6 +347,11 @@ __Util Commands:__
 SUB COMMANDS
 
   flush-cache                          Clear out all cache entries for the Kion CLI.
+
+  push-favorites                       Push locally defined favorites up to Kion.
+                                       This will overwrite any favorites in Kion
+                                       that have the same name. After pushing, you
+                                       are prompted to delete local favorites.
 ```
 
 __Environment:__
@@ -399,7 +405,7 @@ KION
 ----
 kion.url                             URL to the target Kion instance.
 kion.api_key                         API key used to authenticate.
-kion.username                        Username for authentication, to be paried with password.
+kion.username                        Username for authentication, to be paired with password.
 kion.password                        Password for authentication, to be paired with username.
 kion.idms_id                         IDMS ID, if using a custom IDMS in Kion.
 kion.saml_metadata_file              SAML metadata file location, URL or path.

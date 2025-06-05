@@ -27,18 +27,20 @@ type Kion struct {
 	SamlIssuer       string `yaml:"saml_sp_issuer"`
 	SamlPrintUrl     bool   `yaml:"saml_print_url"`
 	DisableCache     bool   `yaml:"disable_cache"`
+	DefaultRegion    string `yaml:"default_region"`
 }
 
 // Favorite holds information about user defined favorites used to quickly
 // access desired accounts.
 type Favorite struct {
-	Name                 string `yaml:"name"`
-	Account              string `yaml:"account"`
-	CAR                  string `yaml:"cloud_access_role"`
-	AccessType           string `yaml:"access_type"`
-	Region               string `yaml:"region"`
+	Name                 string `yaml:"name" json:"alias_name"`
+	Account              string `yaml:"account" json:"account_number"`
+	CAR                  string `yaml:"cloud_access_role" json:"cloud_access_role_name"`
+	AccessType           string `yaml:"access_type" json:"access_type"`
+	Region               string `yaml:"region" json:"account_region"`
 	Service              string `yaml:"service"`
 	FirefoxContainerName string `yaml:"firefox_container_name"`
+	CloudServiceProvider string `json:"cloud_service_provider"`
 }
 
 // Profile holds an alternate configuration for Kion and Favorites.
