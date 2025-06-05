@@ -42,12 +42,17 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 		}
 
 		// check if there's anything to push
-		if len(result.LocalOnly) == 0 && len(result.Conflicts) == 0 {
-			if len(c.config.Favorites) == len(apiFavorites) || len(c.config.Favorites) == len(result.Exact) {
+		noChanges := len(result.LocalOnly) == 0 && len(result.Conflicts) == 0
+		inSync := len(c.config.Favorites) == len(apiFavorites) || len(c.config.Favorites) == len(result.Exact)
+		if noChanges {
+			if inSync {
 				color.Green("All local favorites are already in sync with Kion.\n")
 				return c.DeleteLocalFavorites(cCtx)
+			} else {
+				// No changes, but counts don't match exactly — do nothing
+				color.Yellow("No new or conflicting favorites to push, but local and API counts differ. Manual review may be needed.\n")
+				return nil
 			}
-			return nil
 		}
 
 		if len(result.LocalOnly) > 0 {
@@ -66,21 +71,14 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			color.Red("Pushing these will overwrite the API favorites with the local settings.\n")
 		}
 
-		selection, err := helper.PromptSelect("\nDo you want to push your local favorites to the Kion API?", []string{"no", "yes"})
-		if err != nil {
-			fmt.Printf("Error prompting for confirmation: %v\n", err)
-			return err
-		}
+		selection, _ := helper.PromptSelect("\nDo you want to push your local favorites to the Kion API?", []string{"no", "yes"})
 		if selection == "no" {
 			fmt.Println("\nAborting push of favorites.")
 			return nil
 		}
 
 		if len(result.Conflicts) > 0 {
-			confirm, err := helper.PromptSelect("You have some name conflicts with API favorites. Are you sure you want to continue pushing your local favorites?", []string{"no", "yes"})
-			if err != nil {
-				return err
-			}
+			confirm, _ := helper.PromptSelect("You have some name conflicts with API favorites. Are you sure you want to continue pushing your local favorites?", []string{"no", "yes"})
 			if confirm == "no" {
 				fmt.Println("\nAborting push of favorites due to conflicts.")
 				return nil
@@ -93,13 +91,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 				f.Name = f.Name[:50]
 			}
 
-			// set access type to match Kion API requirements
-			if f.AccessType == "web" {
-				f.AccessType = "console_access"
-			}
-			if f.AccessType == "cli" {
-				f.AccessType = "short_term_key_access"
-			}
+			f.AccessType = kion.ConvertAccessType(f.AccessType)
 
 			_, status, err := kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
 			if err != nil {
@@ -117,13 +109,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 
 		for _, f := range result.Conflicts {
 
-			// set access type to match Kion API requirements
-			if f.AccessType == "web" {
-				f.AccessType = "console_access"
-			}
-			if f.AccessType == "cli" {
-				f.AccessType = "short_term_key_access"
-			}
+			f.AccessType = kion.ConvertAccessType(f.AccessType)
 
 			_, err := kion.DeleteFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f.Name)
 			if err != nil {
