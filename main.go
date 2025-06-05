@@ -100,6 +100,7 @@ func main() {
 		Metadata: map[string]interface{}{
 			"useUpdatedCloudAccessRoleAPI": false,
 			"useOldSAML":                   false,
+			"configPath":                   configPath,
 		},
 
 		////////////////////
@@ -344,7 +345,7 @@ func main() {
 					{
 						Name:   "push-favorites",
 						Usage:  "Push configured favorites to Kion",
-						Action: cmd.PushFavorites(configPath),
+						Action: cmd.PushFavorites,
 					},
 				},
 			},
