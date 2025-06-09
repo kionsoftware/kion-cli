@@ -415,6 +415,8 @@ kion.saml_print_url                  Set 'true' to print the authentication url 
                                      Defaults to 'false'.
 kion.disable_cache                   Prevents Kion CLI from caching STAK if 'true', defaults
                                      to 'false'.
+kion.default_region                  The region to use for any favorites that do not have the
+                                     'region' property set.
 
 FAVORITES
 ---------
