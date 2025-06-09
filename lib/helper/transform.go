@@ -15,6 +15,17 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+// FavoritesComparison holds the results of comparing local favorites with API
+// favorites. It includes all favorites, exact matches, non-matches, conflicts,
+// and local-only favorites. It's returned by the CombineFavorites function.
+type FavoritesComparison struct {
+	All       []structs.Favorite // Combined local + API, deduplicated and deconflicted
+	Exact     []structs.Favorite // Exact matches (local + API)
+	APIOnly   []structs.Favorite // API-only favorites
+	Conflicts []structs.Favorite // Name conflicts (same name, different settings)
+	LocalOnly []structs.Favorite // Local-only favorites (not matched in API)
+}
+
 // MapProjects transforms a slice of Projects into a slice of their names and a
 // map indexed by their names.
 func MapProjects(projects []kion.Project) ([]string, map[string]kion.Project) {
@@ -129,4 +140,82 @@ func FindCARByName(cars []kion.CAR, carName string) (*kion.CAR, error) {
 		}
 	}
 	return &kion.CAR{}, fmt.Errorf("cannot find cloud access role with name %v", carName)
+}
+
+// CombineFavorites combines local favorites with API favorites, ensuring that
+// local favorites are prioritized and that there are no duplicates or name conflicts.
+// It returns a slice of Favorites that contains all unique favorites, with local
+// favorites appearing first. If an API favorite has no name, it attempts to
+// generate a name based on the account name, car, access type, and region.
+func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, defaultRegion string) (FavoritesComparison, error) {
+
+	result := FavoritesComparison{}
+
+	// Track all exact matches by a unique composite key
+	exactMap := make(map[string]bool)
+
+	// Ensure all local favorites have a region set
+	for i := range localFavs {
+		localFavs[i].Region = SetRegion(localFavs[i].Region, defaultRegion)
+	}
+
+	// Start with localFavs in the final set
+	result.All = append(result.All, localFavs...)
+
+	for _, apiFav := range apiFavs {
+
+		apiFav.Region = SetRegion(apiFav.Region, defaultRegion)
+		apiKey := fmt.Sprintf("%s|%s|%s|%s|%s", apiFav.Name, apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
+		apiFav.AccessType = kion.ConvertAccessType(apiFav.AccessType)
+		foundMatch := false
+
+		for _, localFav := range localFavs {
+
+			localKey := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)
+
+			// Exact match
+			if apiKey == localKey {
+				foundMatch = true
+				exactMap[localKey] = true
+				result.Exact = append(result.Exact, localFav)
+				break
+			}
+
+			// Name conflict
+			if apiFav.Name == localFav.Name {
+				apiFav.Name = fmt.Sprintf("%s (conflict)", apiFav.Name)
+				result.All = append(result.All, apiFav)
+				result.Conflicts = append(result.Conflicts, localFav)
+				foundMatch = true
+				break
+			}
+		}
+
+		if !foundMatch {
+			result.All = append(result.All, apiFav)
+			result.APIOnly = append(result.APIOnly, apiFav)
+		}
+	}
+
+	// Determine which localFavs were not part of exact matches
+	for _, localFav := range localFavs {
+		key := fmt.Sprintf("%s|%s|%s|%s|%s", localFav.Name, localFav.Account, localFav.CAR, localFav.AccessType, localFav.Region)
+		if !exactMap[key] {
+			result.LocalOnly = append(result.LocalOnly, localFav)
+		}
+	}
+
+	return result, nil
+}
+
+// SetRegion sets the region to a default if it is empty. If defaultRegion is
+// provided, it will use that; otherwise, it defaults to "us-east-1".
+func SetRegion(region string, defaultRegion string) string {
+	if region == "" {
+		if defaultRegion != "" {
+			return defaultRegion
+		}
+		return "us-east-1"
+	}
+	return region
 }
