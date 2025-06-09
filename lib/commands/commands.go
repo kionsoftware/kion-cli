@@ -212,42 +212,43 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	if !newSaml.Check(curVer) {
 		cCtx.App.Metadata["useOldSAML"] = true
 	}
-	// initialize the keyring
-	name := "kion-cli"
-	ring, err := keyring.Open(keyring.Config{
-		ServiceName: name,
-		KeyCtlScope: "session",
-
-		// osx
-		KeychainName:             "login",
-		KeychainTrustApplication: true,
-		KeychainSynchronizable:   false,
-
-		// kde wallet
-		KWalletAppID:  name,
-		KWalletFolder: name,
-
-		// gnome wallet (libsecret)
-		LibSecretCollectionName: "login",
-
-		// windows
-		WinCredPrefix: name,
-
-		// password store
-		PassPrefix: name,
-
-		//  encrypted file fallback
-		FileDir:          "~/.kion",
-		FilePasswordFunc: helper.PromptPassword,
-	})
-	if err != nil {
-		return err
-	}
 
 	// initialize the cache
 	if c.config.Kion.DisableCache {
+		ring := cache.NullKeyRing{}
 		c.cache = cache.NewNullCache(ring)
 	} else {
+		// initialize the keyring
+		name := "kion-cli"
+		ring, err := keyring.Open(keyring.Config{
+			ServiceName: name,
+			KeyCtlScope: "session",
+
+			// osx
+			KeychainName:             "login",
+			KeychainTrustApplication: true,
+			KeychainSynchronizable:   false,
+
+			// kde wallet
+			KWalletAppID:  name,
+			KWalletFolder: name,
+
+			// gnome wallet (libsecret)
+			LibSecretCollectionName: "login",
+
+			// windows
+			WinCredPrefix: name,
+
+			// password store
+			PassPrefix: name,
+
+			//  encrypted file fallback
+			FileDir:          "~/.kion",
+			FilePasswordFunc: helper.PromptPassword,
+		})
+		if err != nil {
+			return err
+		}
 		c.cache = cache.NewCache(ring)
 	}
 
