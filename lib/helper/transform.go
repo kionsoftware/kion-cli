@@ -156,13 +156,7 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 
 	// Ensure all local favorites have a region set
 	for i := range localFavs {
-		if localFavs[i].Region == "" {
-			if defaultRegion != "" {
-				localFavs[i].Region = defaultRegion
-			} else {
-				localFavs[i].Region = "us-east-1"
-			}
-		}
+		localFavs[i].Region = SetRegion(localFavs[i].Region, defaultRegion)
 	}
 
 	// Start with localFavs in the final set
@@ -170,13 +164,7 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 
 	for _, apiFav := range apiFavs {
 
-		if apiFav.Region == "" {
-			if defaultRegion != "" {
-				apiFav.Region = defaultRegion
-			} else {
-				apiFav.Region = "us-east-1"
-			}
-		}
+		apiFav.Region = SetRegion(apiFav.Region, defaultRegion)
 		apiKey := fmt.Sprintf("%s|%s|%s|%s|%s", apiFav.Name, apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
 		apiFav.AccessType = kion.ConvertAccessType(apiFav.AccessType)
 		foundMatch := false
@@ -218,4 +206,16 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 	}
 
 	return result, nil
+}
+
+// SetRegion sets the region to a default if it is empty. If defaultRegion is
+// provided, it will use that; otherwise, it defaults to "us-east-1".
+func SetRegion(region string, defaultRegion string) string {
+	if region == "" {
+		if defaultRegion != "" {
+			return defaultRegion
+		}
+		return "us-east-1"
+	}
+	return region
 }
