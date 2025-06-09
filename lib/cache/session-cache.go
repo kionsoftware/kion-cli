@@ -108,14 +108,12 @@ func (c *RealCache) GetSession() (kion.Session, bool, error) {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// SetSession implements the Cache interface for NullCache and wraps a common
-// function for storing session data.
+// SetSession implements the Cache interface for NullCache and does nothing.
 func (c *NullCache) SetSession(session kion.Session) error {
-	return setSession(c.keyring, session)
+	return nil
 }
 
-// GetSession implements the Cache interface for NullCache and wraps a common
-// function for retrieving session data.
+// GetSession implements the Cache interface for NullCache and returns an empty session, false, and a nil error.
 func (c *NullCache) GetSession() (kion.Session, bool, error) {
-	return getSession(c.keyring)
+	return kion.Session{}, false, nil
 }
