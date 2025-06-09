@@ -130,11 +130,10 @@ func GetSessionDuration(host string, token string) (int, error) {
 	return response.Data.Duration, nil
 }
 
-// ConvertAccessType converts the access type string between
-// what the API uses and the CLI.
-// It converts "console_access" to "web", and vice versa, and
-// "short_term_key_access" to "cli" and vice versa.
-// If the access type does not match any of these, it returns the original string.
+// ConvertAccessType converts the access type string between what the API uses
+// and the CLI. It converts "console_access" to "web", and vice versa, and
+// "short_term_key_access" to "cli" and vice versa. If the access type does
+// not match any of these, it returns the original string.
 func ConvertAccessType(accessType string) string {
 	switch accessType {
 	case "console_access":
