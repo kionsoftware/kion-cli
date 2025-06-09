@@ -22,7 +22,7 @@ func (c *Cmd) GenStaks(cCtx *cli.Context) error {
 	carName := cCtx.String("car")
 	accNum := cCtx.String("account")
 	accAlias := cCtx.String("alias")
-	region := cCtx.String("region")
+	region := helper.SetRegion(cCtx.String("region"), c.config.Kion.DefaultRegion)
 
 	// get command used and set cache validity buffer
 	action, buffer := getActionAndBuffer(cCtx)
