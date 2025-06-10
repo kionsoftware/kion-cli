@@ -49,6 +49,13 @@ func getSecondArgument(cCtx *cli.Context) string {
 	return ""
 }
 
+func getThirdArgument(cCtx *cli.Context) string {
+	if cCtx.Args().Len() > 0 {
+		return cCtx.Args().Get(1)
+	}
+	return ""
+}
+
 // setEndpoint sets the target Kion installation to interact with. If not
 // passed to the tool as an argument, set in the env, or present in the
 // configuration dotfile it will prompt the user to provide it.
@@ -213,11 +220,9 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useOldSAML"] = true
 	}
 
-	// initialize the cache
-	if c.config.Kion.DisableCache {
-		ring := cache.NullKeyRing{}
-		c.cache = cache.NewNullCache(ring)
-	} else {
+	// If the cache is not disabled, or if the user has requested to flush the cache,
+	// we initialize the real cache. Otherwise, we use a null cache.
+	if !c.config.Kion.DisableCache || getThirdArgument(cCtx) == "flush-cache" {
 		// initialize the keyring
 		name := "kion-cli"
 		ring, err := keyring.Open(keyring.Config{
@@ -250,6 +255,8 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 			return err
 		}
 		c.cache = cache.NewCache(ring)
+	} else {
+		c.cache = cache.NewNullCache()
 	}
 
 	return nil

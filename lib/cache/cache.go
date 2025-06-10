@@ -16,26 +16,6 @@ type Cache interface {
 	FlushCache() error
 }
 
-// NullKeyRing implements the keyring.Keyring interface but does nothing.
-// It is used when no keyring is available or when we want to disable caching.
-type NullKeyRing struct{}
-
-func (n NullKeyRing) Get(_ string) (keyring.Item, error) {
-	return keyring.Item{}, keyring.ErrKeyNotFound
-}
-func (n NullKeyRing) Set(_ keyring.Item) error {
-	return nil
-}
-func (n NullKeyRing) Remove(_ string) error {
-	return nil
-}
-func (n NullKeyRing) Keys() ([]string, error) {
-	return nil, nil
-}
-func (n NullKeyRing) GetMetadata(_ string) (keyring.Metadata, error) {
-	return keyring.Metadata{}, nil
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Real Cacher                                                               //
@@ -69,12 +49,9 @@ func NewCache(keyring keyring.Keyring) *RealCache {
 
 // NullCache implements the Cache interface and does nothing.
 type NullCache struct {
-	keyring keyring.Keyring
 }
 
 // NewNullCache creates a new NullCache.
-func NewNullCache(keyring keyring.Keyring) *NullCache {
-	return &NullCache{
-		keyring: keyring,
-	}
+func NewNullCache() *NullCache {
+	return &NullCache{}
 }
