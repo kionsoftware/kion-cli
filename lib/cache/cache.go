@@ -49,12 +49,9 @@ func NewCache(keyring keyring.Keyring) *RealCache {
 
 // NullCache implements the Cache interface and does nothing.
 type NullCache struct {
-	keyring keyring.Keyring
 }
 
 // NewNullCache creates a new NullCache.
-func NewNullCache(keyring keyring.Keyring) *NullCache {
-	return &NullCache{
-		keyring: keyring,
-	}
+func NewNullCache() *NullCache {
+	return &NullCache{}
 }

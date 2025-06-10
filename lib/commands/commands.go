@@ -49,6 +49,13 @@ func getSecondArgument(cCtx *cli.Context) string {
 	return ""
 }
 
+func getThirdArgument(cCtx *cli.Context) string {
+	if cCtx.Args().Len() > 0 {
+		return cCtx.Args().Get(1)
+	}
+	return ""
+}
+
 // setEndpoint sets the target Kion installation to interact with. If not
 // passed to the tool as an argument, set in the env, or present in the
 // configuration dotfile it will prompt the user to provide it.
@@ -212,43 +219,44 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	if !newSaml.Check(curVer) {
 		cCtx.App.Metadata["useOldSAML"] = true
 	}
-	// initialize the keyring
-	name := "kion-cli"
-	ring, err := keyring.Open(keyring.Config{
-		ServiceName: name,
-		KeyCtlScope: "session",
 
-		// osx
-		KeychainName:             "login",
-		KeychainTrustApplication: true,
-		KeychainSynchronizable:   false,
+	// If the cache is not disabled, or if the user has requested to flush the cache,
+	// we initialize the real cache. Otherwise, we use a null cache.
+	if !c.config.Kion.DisableCache || getThirdArgument(cCtx) == "flush-cache" {
+		// initialize the keyring
+		name := "kion-cli"
+		ring, err := keyring.Open(keyring.Config{
+			ServiceName: name,
+			KeyCtlScope: "session",
 
-		// kde wallet
-		KWalletAppID:  name,
-		KWalletFolder: name,
+			// osx
+			KeychainName:             "login",
+			KeychainTrustApplication: true,
+			KeychainSynchronizable:   false,
 
-		// gnome wallet (libsecret)
-		LibSecretCollectionName: "login",
+			// kde wallet
+			KWalletAppID:  name,
+			KWalletFolder: name,
 
-		// windows
-		WinCredPrefix: name,
+			// gnome wallet (libsecret)
+			LibSecretCollectionName: "login",
 
-		// password store
-		PassPrefix: name,
+			// windows
+			WinCredPrefix: name,
 
-		//  encrypted file fallback
-		FileDir:          "~/.kion",
-		FilePasswordFunc: helper.PromptPassword,
-	})
-	if err != nil {
-		return err
-	}
+			// password store
+			PassPrefix: name,
 
-	// initialize the cache
-	if c.config.Kion.DisableCache {
-		c.cache = cache.NewNullCache(ring)
-	} else {
+			//  encrypted file fallback
+			FileDir:          "~/.kion",
+			FilePasswordFunc: helper.PromptPassword,
+		})
+		if err != nil {
+			return err
+		}
 		c.cache = cache.NewCache(ring)
+	} else {
+		c.cache = cache.NewNullCache()
 	}
 
 	return nil
