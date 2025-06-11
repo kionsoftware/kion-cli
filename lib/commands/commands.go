@@ -142,6 +142,7 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		// profiles values
 		setStrings := make(map[string]string)
 		var disableCacheFlagged bool
+		var debugFlagged bool
 		setGlobalFlags := cCtx.FlagNames()
 		for _, flag := range setGlobalFlags {
 			switch flag {
@@ -161,6 +162,8 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 				setStrings["token"] = c.config.Kion.ApiKey
 			case "disable-cache":
 				disableCacheFlagged = true
+			case "debug":
+				debugFlagged = true
 			}
 		}
 
@@ -182,6 +185,9 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		}
 		if disableCacheFlagged {
 			c.config.Kion.DisableCache = true
+		}
+		if debugFlagged {
+			c.config.Kion.DebugMode = true
 		}
 	}
 
@@ -223,6 +229,9 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	// If the cache is not disabled, or if the user has requested to flush the cache,
 	// we initialize the real cache. Otherwise, we use a null cache.
 	if !c.config.Kion.DisableCache || getThirdArgument(cCtx) == "flush-cache" {
+		if c.config.Kion.DebugMode {
+			keyring.Debug = true
+		}
 		// initialize the keyring
 		name := "kion-cli"
 		ring, err := keyring.Open(keyring.Config{
