@@ -31,7 +31,7 @@ Version 0.11 adds a debug mode (`--debug`) to capture additional output, current
 
 ### Fixed
 
-- Disabling the cache will now properly prevent keyrings from being accessed. [https://github.com/kionsoftware/kion-cli/pull/94]
+- Disabling the cache will now properly prevent keyrings from being accessed. [kionsoftware/kion-cli/pull/94]
 
 [0.10.0] - 2025-04-29
 ---------------------
