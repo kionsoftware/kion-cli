@@ -181,6 +181,13 @@ func main() {
 				Usage:       "disable the use of caching",
 				Destination: &config.Kion.DisableCache,
 			},
+			&cli.BoolFlag{
+				Name:        "debug",
+				Value:       config.Kion.DebugMode,
+				EnvVars:     []string{"KION_DEBUG"},
+				Usage:       "enable debug mode for verbose logging",
+				Destination: &config.Kion.DebugMode,
+			},
 		},
 
 		////////////////

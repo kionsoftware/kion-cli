@@ -136,57 +136,13 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 
 	// switch profiles if specified
 	profileName := cCtx.String("profile")
-	if profileName != "" {
-
-		// grab all manually set global flags so we can honor them over the chosen
-		// profiles values
-		setStrings := make(map[string]string)
-		var disableCacheFlagged bool
-		setGlobalFlags := cCtx.FlagNames()
-		for _, flag := range setGlobalFlags {
-			switch flag {
-			case "endpoint":
-				setStrings["endpoint"] = c.config.Kion.Url
-			case "user":
-				setStrings["user"] = c.config.Kion.Username
-			case "password":
-				setStrings["password"] = c.config.Kion.Password
-			case "idms":
-				setStrings["idms"] = c.config.Kion.IDMS
-			case "saml-metadata-file":
-				setStrings["saml-metadata-file"] = c.config.Kion.SamlMetadataFile
-			case "saml-sp-issuer":
-				setStrings["saml-sp-issuer"] = c.config.Kion.SamlIssuer
-			case "token":
-				setStrings["token"] = c.config.Kion.ApiKey
-			case "disable-cache":
-				disableCacheFlagged = true
-			}
-		}
-
-		// grab the profile and if found and not empty override the default config
-		profile, found := c.config.Profiles[profileName]
-		if found {
-			c.config.Kion = profile.Kion
-			c.config.Favorites = profile.Favorites
-		} else {
-			return fmt.Errorf("profile not found: %s", profileName)
-		}
-
-		// honor any global flags that were set to maintain precedence
-		for key, value := range setStrings {
-			err := cCtx.Set(key, value)
-			if err != nil {
-				return err
-			}
-		}
-		if disableCacheFlagged {
-			c.config.Kion.DisableCache = true
-		}
+	err := c.handleProfile(profileName, cCtx)
+	if err != nil {
+		return err
 	}
 
 	// grab the Kion url if not already set
-	err := c.setEndpoint()
+	err = c.setEndpoint()
 	if err != nil {
 		return err
 	}
@@ -220,9 +176,21 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useOldSAML"] = true
 	}
 
-	// If the cache is not disabled, or if the user has requested to flush the cache,
+	err = c.initCache(cCtx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Cmd) initCache(cCtx *cli.Context) error {
+	// if the cache is not disabled, or if the user has requested to flush the cache,
 	// we initialize the real cache. Otherwise, we use a null cache.
 	if !c.config.Kion.DisableCache || getThirdArgument(cCtx) == "flush-cache" {
+		if c.config.Kion.DebugMode {
+			keyring.Debug = true
+		}
 		// initialize the keyring
 		name := "kion-cli"
 		ring, err := keyring.Open(keyring.Config{
@@ -259,6 +227,68 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		c.cache = cache.NewNullCache()
 	}
 
+	return nil
+}
+
+func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
+	if profileName != "" {
+
+		// grab all manually set global flags so we can honor them over the chosen
+		// profiles values
+		// bool values need to be explicitly handled here since we're not iterating
+		setStrings := make(map[string]string)
+		var disableCacheFlagged bool
+		var debugFlagged bool
+		setGlobalFlags := cCtx.FlagNames()
+		for _, flag := range setGlobalFlags {
+			switch flag {
+			case "endpoint":
+				setStrings["endpoint"] = c.config.Kion.Url
+			case "user":
+				setStrings["user"] = c.config.Kion.Username
+			case "password":
+				setStrings["password"] = c.config.Kion.Password
+			case "idms":
+				setStrings["idms"] = c.config.Kion.IDMS
+			case "saml-metadata-file":
+				setStrings["saml-metadata-file"] = c.config.Kion.SamlMetadataFile
+			case "saml-sp-issuer":
+				setStrings["saml-sp-issuer"] = c.config.Kion.SamlIssuer
+			case "token":
+				setStrings["token"] = c.config.Kion.ApiKey
+			// non-string flags
+			case "disable-cache":
+				disableCacheFlagged = true
+			case "debug":
+				debugFlagged = true
+			}
+		}
+
+		// grab the profile and if found and not empty override the default config
+		profile, found := c.config.Profiles[profileName]
+		if found {
+			c.config.Kion = profile.Kion
+			c.config.Favorites = profile.Favorites
+		} else {
+			return fmt.Errorf("profile not found: %s", profileName)
+		}
+
+		// honor any global flags that were set to maintain precedence
+		for key, value := range setStrings {
+			err := cCtx.Set(key, value)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Handle non-string flags
+		if disableCacheFlagged {
+			c.config.Kion.DisableCache = true
+		}
+		if debugFlagged {
+			c.config.Kion.DebugMode = true
+		}
+	}
 	return nil
 }
 

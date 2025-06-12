@@ -27,6 +27,7 @@ type Kion struct {
 	SamlIssuer       string `yaml:"saml_sp_issuer"`
 	SamlPrintUrl     bool   `yaml:"saml_print_url"`
 	DisableCache     bool   `yaml:"disable_cache"`
+	DebugMode        bool   `yaml:"debug_mode"`
 }
 
 // Favorite holds information about user defined favorites used to quickly

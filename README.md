@@ -217,6 +217,8 @@ __Global Options:__
 
 --disable-cache                        Disable the use of cache for Kion CLI.
 
+--debug                                Enables debug output for certain functions.
+
 --profile PROFILE                      Use the specified PROFILE from the Kion CLI
                                        configuration file. If no profile is specified
                                        the default will be used.

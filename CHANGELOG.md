@@ -20,7 +20,20 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.10.0] - yyyy-mm-dd
+[0.11.0] - 2025-06-13
+---------------------
+
+Version 0.11 adds a debug mode (`--debug`) to capture additional output, currently supports keyring operations. Additionally, cache handling is improved when utilizing the `--disable-cache` functionality to ensure the keyring is never initialized.
+
+### Added
+
+- Optional debug mode for increased output. [kionsoftware/kion-cli/pull/95]
+
+### Fixed
+
+- Disabling the cache will now properly prevent keyrings from being accessed. [kionsoftware/kion-cli/pull/94]
+
+[0.10.0] - 2025-04-29
 ---------------------
 
 Version 0.10.0 adds the ability to target/name Firefox containers when federating with favorites, improves browser support for SAML based authentication, and adds an option for printing the authentication URL as opposed to opening it in the users default browser. The SAML auth URL option can be set with `kion.saml_print_url` in the configuration file, by the `--saml-print-url` flag, or with the `KION_SAML_PRINT_URL` environment variable. Normal precedent order applies.
