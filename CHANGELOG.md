@@ -20,10 +20,10 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.11.0] - 2025-06-11
+[0.11.0] - 2025-06-13
 ---------------------
 
-Version 0.11 adds a debug mode (`--debug`) to capture additional output, currently support keyring operations. Additionally, cache handling is improved when utilizing the `--disable-cache` functionality to ensure the keyring is never initialized.
+Version 0.11 adds a debug mode (`--debug`) to capture additional output, currently supports keyring operations. Additionally, cache handling is improved when utilizing the `--disable-cache` functionality to ensure the keyring is never initialized.
 
 ### Added
 
@@ -31,7 +31,7 @@ Version 0.11 adds a debug mode (`--debug`) to capture additional output, current
 
 ### Fixed
 
-- Disabling the cache will now properly prevent keyrings from being accessed. `flush-cache` will continue to ignore the setting. [https://github.com/kionsoftware/kion-cli/pull/94]
+- Disabling the cache will now properly prevent keyrings from being accessed. [https://github.com/kionsoftware/kion-cli/pull/94]
 
 [0.10.0] - 2025-04-29
 ---------------------
