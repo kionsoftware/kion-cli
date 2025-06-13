@@ -107,6 +107,11 @@ func (c *Cmd) GenStaks(cCtx *cli.Context) error {
 	case "save":
 		return helper.SaveAWSCreds(stak, car)
 	case "subshell":
+		if !c.config.Kion.QuietMode {
+			if err := helper.PrintFavoriteConfig(os.Stdout, car, region, "cli"); err != nil {
+				return err
+			}
+		}
 		var displayAlais string
 		if accAlias != "" {
 			displayAlais = accAlias

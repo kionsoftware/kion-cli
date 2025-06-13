@@ -219,6 +219,8 @@ __Global Options:__
 
 --debug                                Enables debug output for certain functions.
 
+--quiet                                Reduces output for certain functions.
+
 --profile PROFILE                      Use the specified PROFILE from the Kion CLI
                                        configuration file. If no profile is specified
                                        the default will be used.
@@ -384,6 +386,10 @@ KION_SAML_SP_ISSUER      The Kion IDMS issuer value, for example
 KION_SAML_PRINT_URL      "TRUE" to print the authentication url as opposed to
                          automatically opening it in the default browser.
                          Defaults to "FALSE".
+
+KION_DEBUG               "TRUE" to enable verbose debugging of the Kion CLI.
+
+KION_QUIET               "TRUE" to reduce messages for quieter operation.
 
 The following are maintained for compatibility with older Kion utilities:
 

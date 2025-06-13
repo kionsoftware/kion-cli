@@ -32,3 +32,4 @@ kion:
   saml_print_url: false
   disable_cache: false
   debug_mode: false
+  quiet_mode: false
