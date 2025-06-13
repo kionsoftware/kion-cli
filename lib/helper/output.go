@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/kionsoftware/kion-cli/lib/kion"
 )
 
@@ -34,11 +35,26 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 
 	// conditionally print region
 	if region != "" {
-		fmt.Fprintf(w, "export AWS_REGION=%v\n", region)
+		fmt.Fprintf(w, "%v AWS_REGION=%v\n", export, region)
 	}
 
 	// print the stak
 	fmt.Fprintf(w, "%v AWS_ACCESS_KEY_ID=%v\nexport AWS_SECRET_ACCESS_KEY=%v\nexport AWS_SESSION_TOKEN=%v\n", export, stak.AccessKey, stak.SecretAccessKey, stak.SessionToken)
+
+	return nil
+}
+
+// PrintFavoriteConfig prints out how to save the current selection as a
+// favorite within the users configuration file.
+func PrintFavoriteConfig(w io.Writer, car kion.CAR, region string, access_type string) error {
+	color.New(color.FgBlue).Fprintf(w, "\nTo save your selection as a favorite add the following to\nyour configuration file under the 'favorites:' section:\n")
+	fmt.Fprintf(w, "  - name: ")
+	color.New(color.FgGreen).Fprintf(w, "[your favorite alias]\n")
+	fmt.Fprintf(w, "    account: %v\n    cloud_access_role: %v\n", car.AccountNumber, car.Name)
+	if region != "" {
+		fmt.Fprintf(w, "    region: %v\n", region)
+	}
+	fmt.Fprintf(w, "    access_type: %v\n\n", access_type)
 
 	return nil
 }

@@ -179,8 +179,11 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 		// profiles values
 		// bool values need to be explicitly handled here since we're not iterating
 		setStrings := make(map[string]string)
+
 		var disableCacheFlagged bool
 		var debugFlagged bool
+		var quietFlagged bool
+
 		setGlobalFlags := cCtx.FlagNames()
 		for _, flag := range setGlobalFlags {
 			switch flag {
@@ -203,6 +206,8 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 				disableCacheFlagged = true
 			case "debug":
 				debugFlagged = true
+			case "quiet":
+				quietFlagged = true
 			}
 		}
 
@@ -229,6 +234,9 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 		}
 		if debugFlagged {
 			c.config.Kion.DebugMode = true
+		}
+		if quietFlagged {
+			c.config.Kion.QuietMode = true
 		}
 	}
 	return nil

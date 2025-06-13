@@ -187,6 +187,13 @@ func main() {
 				Usage:       "enable debug mode for verbose logging",
 				Destination: &config.Kion.DebugMode,
 			},
+			&cli.BoolFlag{
+				Name:        "quiet",
+				Value:       config.Kion.QuietMode,
+				EnvVars:     []string{"KION_QUIET"},
+				Usage:       "enable quiet mode to reduce output",
+				Destination: &config.Kion.QuietMode,
+			},
 		},
 
 		////////////////

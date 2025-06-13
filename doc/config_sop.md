@@ -11,7 +11,7 @@ also be a global flag / option.
 1. Add the option to the configuration struct `lib/structs/configuraton-structs.go`
 2. Add the option to the defaults override file `lib/defaults/defaults.yml` only if it is non-sensitive in nature
 3. Set the option as a flag in `main.go`, this is what handles precedence as documented in the repo `README.md` file
-4. if a non string var add a manual re-setting of it for when profiles are switched
+4. If a non string var add a manual re-setting of it for when profiles are switched in `lib/commands/commands.go`
 5. Test to ensure precedence is being followed as expected:
   1. No `defaults.yml` entry, no config file
   2. Then add an override in `defaults.yml`

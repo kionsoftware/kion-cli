@@ -42,6 +42,8 @@ Token (API or Bearer) used to authenticate.
 Disable the use of cache for Kion CLI.
 .It --debug
 Enable debug mode for additional CLI output.
+.It --quiet
+Enable quiet mode for to reduce unnecessary output.
 .It --profile PROFILE
 Use the specified PROFILE from the Kion CLI configuration file.
 .It --help, -h
@@ -152,6 +154,10 @@ FILENAME or URL of the identity provider's XML metadata document.
 The Kion IDMS issuer value.
 .It KION_SAML_PRINT_URL
 "TRUE" to print the authentication url as opposed to automatically opening it in the default browser. Defaults to "FALSE".
+.It KION_DEBUG
+"TRUE" to enable verbose debugging of the Kion CLI.
+.It KION_QUIET
+"TRUE" to reduce messages for quieter operation.
 .El
 
 .Sh FILES

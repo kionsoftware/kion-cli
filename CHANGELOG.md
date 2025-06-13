@@ -23,11 +23,12 @@ Notes for upgrading...
 [0.12.0] - 2025.06.13
 ---------------------
 
-Version 0.12.0 adds the ability to create custom builds of the Kion CLI with customer specific configurations. This allows for easier team on boarding to the utility. See the __Custom Builds__ section in the repository `README.md` for details on usage.
+Version 0.12.0 adds the ability to create custom builds of the Kion CLI with customer specific configurations. This allows for easier team on boarding to the utility. See the __Custom Builds__ section in the repository `README.md` for details on usage. Additionally version 0.12.0 adds new output to the `stak` and `console` commands guiding users on how to create favorites for future use. The new output will be the default behavior but can be disabled with the new `quiet` option, configurable via the config file, `KION_QUIET` environment variable, or global option flag.
 
 ### Added
 
 - Ability to create custom Kion CLI binaries with user defined defaults [kionsoftware/kion-cli/pull/96]
+- Helper output showing users how to store recently accessed accounts a favorite [kionsoftware/kion-cli/pull/97]
 
 [0.11.0] - 2025-06-12
 ---------------------

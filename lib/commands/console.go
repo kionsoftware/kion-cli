@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/kionsoftware/kion-cli/lib/helper"
 	"github.com/kionsoftware/kion-cli/lib/kion"
@@ -53,6 +54,13 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 
 	// grab the second argument, used as a redirect parameter
 	redirect := getSecondArgument(cCtx)
+
+	// print out how to store as a favorite
+	if !c.config.Kion.QuietMode {
+		if err := helper.PrintFavoriteConfig(os.Stdout, car, cCtx.String("region"), "web"); err != nil {
+			return err
+		}
+	}
 
 	session := structs.SessionInfo{
 		AccountName:    car.AccountName,
