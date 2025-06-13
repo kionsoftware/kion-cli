@@ -28,7 +28,7 @@ Version 0.12.0 adds the ability to create custom builds of the Kion CLI with cus
 ### Added
 
 - Ability to create custom Kion CLI binaries with user defined defaults [kionsoftware/kion-cli/pull/96]
-- Helper output showing users how to store recently accessed accounts a favorite [kionsoftware/kion-cli/pull/97]
+- Helper output showing users how to store recently accessed accounts as a favorite [kionsoftware/kion-cli/pull/97]
 
 [0.11.0] - 2025-06-12
 ---------------------
