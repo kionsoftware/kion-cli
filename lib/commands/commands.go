@@ -41,7 +41,7 @@ func NewCommands(cfg *structs.Configuration) *Cmd {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// getSecondArgument returns the second argument passed to the cli.
+// getSecondArgument returns the second positional argument passed to the cli.
 func getSecondArgument(cCtx *cli.Context) string {
 	if cCtx.Args().Len() > 0 {
 		return cCtx.Args().Get(0)
@@ -49,6 +49,7 @@ func getSecondArgument(cCtx *cli.Context) string {
 	return ""
 }
 
+// getThirdArgument returns the third positional argument passed to the cli.
 func getThirdArgument(cCtx *cli.Context) string {
 	if cCtx.Args().Len() > 0 {
 		return cCtx.Args().Get(1)
@@ -119,6 +120,120 @@ func (c *Cmd) authStakCache(cCtx *cli.Context, carName string, accNum string, ac
 	return stak, err
 }
 
+// initCache initializes the cache based on the configuration. If the cache
+// is disabled or the user has requested to flush the cache, a null cache is
+// used. Otherwise, a real cache is initialized using the keyring library.
+func (c *Cmd) initCache(cCtx *cli.Context) error {
+	// if the cache is not disabled, or if the user has requested to flush the
+	// cache, we initialize the real cache. Otherwise, we use a null cache.
+	if !c.config.Kion.DisableCache || getThirdArgument(cCtx) == "flush-cache" {
+		if c.config.Kion.DebugMode {
+			keyring.Debug = true
+		}
+		// initialize the keyring
+		name := "kion-cli"
+		ring, err := keyring.Open(keyring.Config{
+			ServiceName: name,
+			KeyCtlScope: "session",
+
+			// osx
+			KeychainName:             "login",
+			KeychainTrustApplication: true,
+			KeychainSynchronizable:   false,
+
+			// kde wallet
+			KWalletAppID:  name,
+			KWalletFolder: name,
+
+			// gnome wallet (libsecret)
+			LibSecretCollectionName: "login",
+
+			// windows
+			WinCredPrefix: name,
+
+			// password store
+			PassPrefix: name,
+
+			// encrypted file fallback
+			FileDir:          "~/.kion",
+			FilePasswordFunc: helper.PromptPassword,
+		})
+		if err != nil {
+			return err
+		}
+		c.cache = cache.NewCache(ring)
+	} else {
+		c.cache = cache.NewNullCache()
+	}
+
+	return nil
+}
+
+// handleProfile checks if a profile is specified and if so, it overrides the
+// default configuration with the profile's values. It also honors any global
+// flags that were set in the CLI context, allowing them to take precedence over
+// the profile's values.
+func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
+	if profileName != "" {
+		// grab all manually set global flags so we can honor them over the chosen
+		// profiles values
+		// bool values need to be explicitly handled here since we're not iterating
+		setStrings := make(map[string]string)
+		var disableCacheFlagged bool
+		var debugFlagged bool
+		setGlobalFlags := cCtx.FlagNames()
+		for _, flag := range setGlobalFlags {
+			switch flag {
+			case "endpoint":
+				setStrings["endpoint"] = c.config.Kion.Url
+			case "user":
+				setStrings["user"] = c.config.Kion.Username
+			case "password":
+				setStrings["password"] = c.config.Kion.Password
+			case "idms":
+				setStrings["idms"] = c.config.Kion.IDMS
+			case "saml-metadata-file":
+				setStrings["saml-metadata-file"] = c.config.Kion.SamlMetadataFile
+			case "saml-sp-issuer":
+				setStrings["saml-sp-issuer"] = c.config.Kion.SamlIssuer
+			case "token":
+				setStrings["token"] = c.config.Kion.ApiKey
+			// non-string flags
+			case "disable-cache":
+				disableCacheFlagged = true
+			case "debug":
+				debugFlagged = true
+			}
+		}
+
+		// grab the profile and if found and not empty override the default config
+		profile, found := c.config.Profiles[profileName]
+		if found {
+			c.config.Kion = profile.Kion
+			c.config.Favorites = profile.Favorites
+		} else {
+			return fmt.Errorf("profile not found: %s", profileName)
+		}
+
+		// honor any global flags that were set to maintain precedence
+		for key, value := range setStrings {
+			err := cCtx.Set(key, value)
+			if err != nil {
+				return err
+			}
+		}
+
+		// handle non-string flags
+		if disableCacheFlagged {
+			c.config.Kion.DisableCache = true
+		}
+		if debugFlagged {
+			c.config.Kion.DebugMode = true
+		}
+	}
+	return nil
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Before & After Commands                                                   //
@@ -171,124 +286,18 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
 	}
 
+	// SAML metadata file handling
 	newSaml, _ := version.NewConstraint(">=3.8.0")
 	if !newSaml.Check(curVer) {
 		cCtx.App.Metadata["useOldSAML"] = true
 	}
 
+	// initialize the cache
 	err = c.initCache(cCtx)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func (c *Cmd) initCache(cCtx *cli.Context) error {
-	// if the cache is not disabled, or if the user has requested to flush the cache,
-	// we initialize the real cache. Otherwise, we use a null cache.
-	if !c.config.Kion.DisableCache || getThirdArgument(cCtx) == "flush-cache" {
-		if c.config.Kion.DebugMode {
-			keyring.Debug = true
-		}
-		// initialize the keyring
-		name := "kion-cli"
-		ring, err := keyring.Open(keyring.Config{
-			ServiceName: name,
-			KeyCtlScope: "session",
-
-			// osx
-			KeychainName:             "login",
-			KeychainTrustApplication: true,
-			KeychainSynchronizable:   false,
-
-			// kde wallet
-			KWalletAppID:  name,
-			KWalletFolder: name,
-
-			// gnome wallet (libsecret)
-			LibSecretCollectionName: "login",
-
-			// windows
-			WinCredPrefix: name,
-
-			// password store
-			PassPrefix: name,
-
-			//  encrypted file fallback
-			FileDir:          "~/.kion",
-			FilePasswordFunc: helper.PromptPassword,
-		})
-		if err != nil {
-			return err
-		}
-		c.cache = cache.NewCache(ring)
-	} else {
-		c.cache = cache.NewNullCache()
-	}
-
-	return nil
-}
-
-func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
-	if profileName != "" {
-
-		// grab all manually set global flags so we can honor them over the chosen
-		// profiles values
-		// bool values need to be explicitly handled here since we're not iterating
-		setStrings := make(map[string]string)
-		var disableCacheFlagged bool
-		var debugFlagged bool
-		setGlobalFlags := cCtx.FlagNames()
-		for _, flag := range setGlobalFlags {
-			switch flag {
-			case "endpoint":
-				setStrings["endpoint"] = c.config.Kion.Url
-			case "user":
-				setStrings["user"] = c.config.Kion.Username
-			case "password":
-				setStrings["password"] = c.config.Kion.Password
-			case "idms":
-				setStrings["idms"] = c.config.Kion.IDMS
-			case "saml-metadata-file":
-				setStrings["saml-metadata-file"] = c.config.Kion.SamlMetadataFile
-			case "saml-sp-issuer":
-				setStrings["saml-sp-issuer"] = c.config.Kion.SamlIssuer
-			case "token":
-				setStrings["token"] = c.config.Kion.ApiKey
-			// non-string flags
-			case "disable-cache":
-				disableCacheFlagged = true
-			case "debug":
-				debugFlagged = true
-			}
-		}
-
-		// grab the profile and if found and not empty override the default config
-		profile, found := c.config.Profiles[profileName]
-		if found {
-			c.config.Kion = profile.Kion
-			c.config.Favorites = profile.Favorites
-		} else {
-			return fmt.Errorf("profile not found: %s", profileName)
-		}
-
-		// honor any global flags that were set to maintain precedence
-		for key, value := range setStrings {
-			err := cCtx.Set(key, value)
-			if err != nil {
-				return err
-			}
-		}
-
-		// Handle non-string flags
-		if disableCacheFlagged {
-			c.config.Kion.DisableCache = true
-		}
-		if debugFlagged {
-			c.config.Kion.DebugMode = true
-		}
-	}
 	return nil
 }
 
