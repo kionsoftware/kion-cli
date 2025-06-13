@@ -25,7 +25,7 @@
 ################################################################################
 
 kion:
-  url: "https://portal.kion.io"
+  url: ""
   idms_id: ""
   saml_metadata_file: ""
   saml_sp_issuer: ""
