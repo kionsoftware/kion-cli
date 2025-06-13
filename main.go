@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -55,7 +54,7 @@ func main() {
 
 	// load configuration file
 	err = helper.LoadConfig(configPath, &config)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err != nil {
 		color.Red(" Error: %v", err)
 		os.Exit(1)
 	}

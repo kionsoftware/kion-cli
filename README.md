@@ -606,6 +606,10 @@ browser:
   firefox_containers: true
 ```
 
+### Custom Builds
+
+The Kion CLI can be customized for distribution within your organization by compiling with custom defaults. For example you can have a custom build with the URL of your Kion instance and SAML configurations pre-defined allowing new users to start using the CLI without any additional required setup. To create a custom build add your desired values to the `lib/defaults/defaults.yml` file then build with `make build`. Note that you should not store any sensitive information in the `lib/defaults/defaults.yml` file as they will be stored in plain text within the binary.
+
 Contributing
 ------------
 

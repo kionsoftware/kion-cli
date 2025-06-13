@@ -20,10 +20,19 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.11.0] - 2025-06-13
+[0.12.0] - 2025.06.13
 ---------------------
 
-Version 0.11 adds a debug mode (`--debug`) to capture additional output, currently supports keyring operations. Additionally, cache handling is improved when utilizing the `--disable-cache` functionality to ensure the keyring is never initialized.
+Version 0.12.0 adds the ability to create custom builds of the Kion CLI with customer specific configurations. This allows for easier team on boarding to the utility. See the __Custom Builds__ section in the repository `README.md` for details on usage.
+
+### Added
+
+- Ability to create custom Kion CLI binaries with user defined defaults [kionsoftware/kion-cli/pull/96]
+
+[0.11.0] - 2025-06-12
+---------------------
+
+Version 0.11.0 adds a debug mode (`--debug`) to capture additional output, currently supports keyring operations. Additionally, cache handling is improved when utilizing the `--disable-cache` functionality to ensure the keyring is never initialized.
 
 ### Added
 
