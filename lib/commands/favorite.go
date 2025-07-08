@@ -61,6 +61,11 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 	// grab the favorite object
 	favorite := fMap[fav]
 
+	// override access type if explicitly set
+	if cCtx.String("access-type") != "" {
+		favorite.AccessType = cCtx.String("access-type")
+	}
+
 	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
 		// handle auth

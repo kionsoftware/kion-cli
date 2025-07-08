@@ -280,6 +280,11 @@ func main() {
 						Aliases: []string{"p"},
 						Usage:   "print stak only",
 					},
+					&cli.StringFlag{
+						Name:    "access-type",
+						Aliases: []string{"t"},
+						Usage:   "account alias, must be passed with car",
+					},
 					&cli.BoolFlag{
 						Name:  "credential-process",
 						Usage: "print stak json as AWS credential process",
