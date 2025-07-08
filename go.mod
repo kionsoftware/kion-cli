@@ -1,8 +1,9 @@
 module github.com/kionsoftware/kion-cli
 
-go 1.22
+go 1.24.4
 
 require (
+	github.com/99designs/keyring v1.2.2
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/fatih/color v1.15.0
 	github.com/hashicorp/go-version v1.6.0
@@ -14,7 +15,6 @@ require (
 
 require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
-	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
