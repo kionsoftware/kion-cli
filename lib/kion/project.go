@@ -39,7 +39,7 @@ func GetProjects(host string, token string) ([]Project, error) {
 	// build our query and get response
 	url := host + "/api/v3/project"
 	query := map[string]string{}
-	var data interface{}
+	var data any
 	resp, _, err := runQuery("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func GetProjectByID(host string, token string, id uint) (Project, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v3/project/%v", host, id)
 	query := map[string]string{}
-	var data interface{}
+	var data any
 	resp, _, err := runQuery("GET", url, token, query, data)
 	if err != nil {
 		return Project{}, err

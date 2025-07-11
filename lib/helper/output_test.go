@@ -121,7 +121,7 @@ func TestPrintCredentialProcess(t *testing.T) {
 			}
 
 			// unmarshal the output into a map
-			var output map[string]interface{}
+			var output map[string]any
 			err = json.Unmarshal(buf.Bytes(), &output)
 			if err != nil {
 				t.Fatalf("Failed to unmarshal the output: %v", err)

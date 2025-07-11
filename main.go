@@ -96,7 +96,7 @@ func main() {
 		EnableBashCompletion: true,
 		Before:               cmd.BeforeCommands,
 		After:                cmd.AfterCommands,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"useUpdatedCloudAccessRoleAPI": false,
 			"useOldSAML":                   false,
 		},
@@ -279,6 +279,16 @@ func main() {
 						Name:    "print",
 						Aliases: []string{"p"},
 						Usage:   "print stak only",
+					},
+					&cli.StringFlag{
+						Name:    "access-type",
+						Aliases: []string{"t"},
+						Usage:   "account alias, must be passed with car",
+					},
+					&cli.BoolFlag{
+						Name:    "web",
+						Aliases: []string{"w"},
+						Usage:   "shortcut for --access-type=web",
 					},
 					&cli.BoolFlag{
 						Name:  "credential-process",

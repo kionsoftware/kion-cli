@@ -20,6 +20,37 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.13.0] - 2025.07.11
+---------------------
+
+Version 0.13.0 adds the ability to pass flags to the `favorite` command to override the stored access-type. This enables users to create a generic favorite and then use it to access both cli and the web console. As an example, the following favorite could be created:
+
+```yaml
+# ~/.kion.yml
+favorites:
+  - name: sandbox
+    account: "121212121212"
+    cloud_access_role: Developer
+```
+
+Then access it:
+
+```bash
+# create a cli subshell authenticated to the favorite
+kion favorite sandbox
+kion fav sandbox
+kion f sandbox
+
+# access the sandbox web console
+kion favorite --access-type web sandbox
+kion fav -w sandbox
+kion f -w sandbox
+```
+
+### Added
+
+- Allow for favorite access-type overrides [kionsoftware/kion-cli/pull/100]
+
 [0.12.0] - 2025.06.13
 ---------------------
 

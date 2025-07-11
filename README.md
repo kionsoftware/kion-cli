@@ -281,6 +281,16 @@ OPTIONS
                                        favorites with an "access_type" of
                                        "web". (default: false)
 
+  --access-type val , -t val           Override the access type of the favorite.
+                                       Defaults to "cli" if not explicitly set
+                                       in the favorite, however this option
+                                       allows it to be overridden on demand.
+                                       Expects "web" or "cli".
+
+  --web, -w                            Shortcut for `--access-type web`. Takes
+                                       precedence over --access-type val, -t val
+                                       flag options.
+
   --credential-process                 For use with AWS credentials profiles to
                                        setup Kion CLI as a credentials process
                                        subsystem. Returns a json object in the
