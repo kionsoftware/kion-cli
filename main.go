@@ -286,6 +286,11 @@ func main() {
 						Usage:   "account alias, must be passed with car",
 					},
 					&cli.BoolFlag{
+						Name:    "web",
+						Aliases: []string{"w"},
+						Usage:   "shortcut for --access-type=web",
+					},
+					&cli.BoolFlag{
 						Name:  "credential-process",
 						Usage: "print stak json as AWS credential process",
 					},

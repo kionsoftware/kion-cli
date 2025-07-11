@@ -66,6 +66,11 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 		favorite.AccessType = cCtx.String("access-type")
 	}
 
+	// have --web flag take precedence over access-type
+	if cCtx.Bool("web") {
+		favorite.AccessType = "web"
+	}
+
 	// determine favorite action, default to cli unless explicitly set to web
 	if favorite.AccessType == "web" {
 		// handle auth

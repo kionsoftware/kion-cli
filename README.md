@@ -287,6 +287,10 @@ OPTIONS
                                        allows it to be overridden on demand.
                                        Expects "web" or "cli".
 
+  --web, -w                            Shortcut for `--access-type web`. Takes
+                                       precedence over --access-type val, -t val
+                                       flag options.
+
   --credential-process                 For use with AWS credentials profiles to
                                        setup Kion CLI as a credentials process
                                        subsystem. Returns a json object in the
