@@ -96,7 +96,7 @@ func main() {
 		EnableBashCompletion: true,
 		Before:               cmd.BeforeCommands,
 		After:                cmd.AfterCommands,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"useUpdatedCloudAccessRoleAPI": false,
 			"useOldSAML":                   false,
 		},

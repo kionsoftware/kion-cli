@@ -60,7 +60,7 @@ func GetCARS(host string, token string, alias string) ([]CAR, error) {
 	query := map[string]string{
 		"account_alias": alias,
 	}
-	var data interface{}
+	var data any
 	resp, _, err := runQuery("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
