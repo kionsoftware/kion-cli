@@ -59,7 +59,7 @@ func runQuery(method string, url string, token string, query map[string]string, 
 	}
 
 	// handle non 200's
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return nil, resp.StatusCode, fmt.Errorf("received %v\n %v", resp.StatusCode, string(respBody))
 	}
 
