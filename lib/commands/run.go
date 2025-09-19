@@ -18,7 +18,7 @@ func (c *Cmd) RunCommand(cCtx *cli.Context) error {
 	accNum := cCtx.String("account")
 	accAlias := cCtx.String("alias")
 	carName := cCtx.String("car")
-	region := helper.SetRegion(cCtx.String("region"), c.config.Kion.DefaultRegion)
+	region := c.config.Kion.DefaultRegion
 
 	// placeholder for our stak
 	var stak kion.STAK
