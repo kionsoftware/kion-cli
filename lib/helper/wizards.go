@@ -2,7 +2,6 @@ package helper
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/urfave/cli/v2"
@@ -14,77 +13,48 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// executeWithRetry executes the provided operation function with retry logic.
-// It retries the operation up to maxRetries times with a delay added between
-// attempts.
-func executeWithRetry[T any](operation func() (T, error), maxRetries int,
-	delay time.Duration) (T, error) {
-
-	var result T
-	var err error
-
-	for attempt := range maxRetries {
-		result, err = operation()
-		if err == nil {
-			return result, nil
-		}
-
-		if attempt == maxRetries-1 {
-			return result, fmt.Errorf("failed after %d retries: %w", maxRetries, err)
-		}
-
-		time.Sleep(delay)
-	}
-
-	return result, err
-}
-
 // getAccountOptions retrieves account options for a given project.
 func getAccountOptions(cCtx *cli.Context, pMap map[string]kion.Project,
 	project string) ([]string, error) {
 
-	return executeWithRetry(func() ([]string, error) {
-		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
-		if err != nil {
-			return nil, fmt.Errorf("failed to get accounts: %w", err)
-		}
+	cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get accounts: %w", err)
+	}
 
-		aNames, _ := MapAccountsFromCARS(cars, pMap[project].ID)
-		if len(aNames) == 0 {
-			return nil, fmt.Errorf("no accounts found")
-		}
+	aNames, _ := MapAccountsFromCARS(cars, pMap[project].ID)
+	if len(aNames) == 0 {
+		return nil, fmt.Errorf("no accounts found")
+	}
 
-		return aNames, nil
-	}, 3, 500*time.Millisecond)
+	return aNames, nil
 }
 
 // getCAROptions retrieves CAR options for a given project and account.
 func getCAROptions(cCtx *cli.Context, pMap map[string]kion.Project,
 	project, account string) ([]string, error) {
 
-	return executeWithRetry(func() ([]string, error) {
-		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
-		if err != nil {
-			return nil, fmt.Errorf("failed to get CARs: %w", err)
+	cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get CARs: %w", err)
+	}
+
+	_, aMap := MapAccountsFromCARS(cars, pMap[project].ID)
+
+	// Filter cars for the selected account
+	var carsFiltered []kion.CAR
+	for _, carObj := range cars {
+		if carObj.AccountNumber == aMap[account] {
+			carsFiltered = append(carsFiltered, carObj)
 		}
+	}
 
-		_, aMap := MapAccountsFromCARS(cars, pMap[project].ID)
+	cNames, _ := MapCAR(carsFiltered)
+	if len(cNames) == 0 {
+		return nil, fmt.Errorf("no cloud access roles found")
+	}
 
-		// Filter cars for the selected account
-		var carsFiltered []kion.CAR
-		for _, carObj := range cars {
-			if carObj.AccountNumber == aMap[account] {
-				carsFiltered = append(carsFiltered, carObj)
-			}
-		}
-
-		cNames, _ := MapCAR(carsFiltered)
-		if len(cNames) == 0 {
-			return nil, fmt.Errorf("no cloud access roles found")
-		}
-
-		return cNames, nil
-	}, 3, 500*time.Millisecond)
+	return cNames, nil
 }
 
 // populateCARFromSelections populates the CAR object based on user selections.

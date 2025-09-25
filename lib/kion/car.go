@@ -61,7 +61,7 @@ func GetCARS(host string, token string, alias string) ([]CAR, error) {
 		"account_alias": alias,
 	}
 	var data any
-	resp, _, err := runQuery("GET", url, token, query, data)
+	resp, _, err := runQueryWithRetry("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
 	}

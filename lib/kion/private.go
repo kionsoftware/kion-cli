@@ -31,7 +31,7 @@ func GetConsoleAccessCARS(host string, token string, projID uint) ([]ConsoleAcce
 	url := fmt.Sprintf("%v/api/v1/project/%v/console-access", host, projID)
 	query := map[string]string{}
 	var data any
-	resp, _, err := runQuery("GET", url, token, query, data)
+	resp, _, err := runQueryWithRetry("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +18,7 @@ import (
 
 // runQuery performs queries against the Kion API.
 func runQuery(method string, url string, token string, query map[string]string, payload any) ([]byte, int, error) {
+	// ...existing code...
 	// prepare the request body
 	reqBody, err := json.Marshal(payload)
 	if err != nil {
@@ -67,6 +69,62 @@ func runQuery(method string, url string, token string, query map[string]string, 
 	return respBody, resp.StatusCode, nil
 }
 
+// runQueryWithRetry wraps runQuery with intelligent retry logic.
+func runQueryWithRetry(method string, url string, token string, query map[string]string, payload any) ([]byte, int, error) {
+	const maxRetries = 3
+	baseDelay := 500 * time.Millisecond
+
+	var lastErr error
+	var lastStatus int
+
+	for attempt := range maxRetries {
+		resp, status, err := runQuery(method, url, token, query, payload)
+
+		// Success case
+		if err == nil {
+			return resp, status, nil
+		}
+
+		lastErr = err
+		lastStatus = status
+
+		// Don't retry on non-retryable errors
+		if !isRetryableError(status) {
+			return resp, status, err
+		}
+
+		// Don't sleep after the last attempt
+		if attempt < maxRetries-1 {
+			// Exponential backoff with jitter
+			delay := time.Duration(attempt+1) * baseDelay
+			time.Sleep(delay)
+		}
+	}
+
+	return nil, lastStatus, fmt.Errorf("failed after %d retries: %w", maxRetries, lastErr)
+}
+
+// isRetryableError determines if an error should be retried based on status
+// code and error type.
+func isRetryableError(statusCode int) bool {
+	// Network-level errors should be retried
+	if statusCode == 0 {
+		return true
+	}
+
+	// Retry on these HTTP status codes
+	switch statusCode {
+	case 408: // Request Timeout
+		return true
+	case 429: // Too Many Requests (rate limiting)
+		return true
+	case 500, 502, 503, 504: // Server errors
+		return true
+	default:
+		return false
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Kion Configurations                                                       //
@@ -78,7 +136,7 @@ func GetVersion(host string) (string, error) {
 	url := fmt.Sprintf("%v/api/version", host)
 	query := map[string]string{}
 	var data any
-	resp, _, err := runQuery("GET", url, "", query, data)
+	resp, _, err := runQueryWithRetry("GET", url, "", query, data)
 	if err != nil {
 		return "", err
 	}
@@ -106,7 +164,7 @@ func GetSessionDuration(host string, token string) (int, error) {
 	url := fmt.Sprintf("%v/api/v3/app-config/aws-access", host)
 	query := map[string]string{}
 	var data any
-	resp, status, err := runQuery("GET", url, token, query, data)
+	resp, status, err := runQueryWithRetry("GET", url, token, query, data)
 	if err != nil {
 		if status == 403 {
 			return 15, nil

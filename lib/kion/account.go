@@ -47,7 +47,7 @@ func GetAccountsOnProject(host string, token string, id uint) ([]Account, int, e
 	url := fmt.Sprintf("%v/api/v3/project/%v/accounts", host, id)
 	query := map[string]string{}
 	var data any
-	resp, statusCode, err := runQuery("GET", url, token, query, data)
+	resp, statusCode, err := runQueryWithRetry("GET", url, token, query, data)
 	if err != nil {
 		return nil, statusCode, err
 	}
@@ -68,7 +68,7 @@ func GetAccount(host string, token string, accountNum string) (*Account, int, er
 	url := fmt.Sprintf("%v/api/v3/account/by-account-number/%v", host, accountNum)
 	query := map[string]string{}
 	var data any
-	resp, statusCode, err := runQuery("GET", url, token, query, data)
+	resp, statusCode, err := runQueryWithRetry("GET", url, token, query, data)
 	if err != nil {
 		return nil, statusCode, err
 	}

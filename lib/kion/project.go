@@ -34,13 +34,14 @@ type Project struct {
 	OuID             uint   `json:"ou_id"`
 }
 
-// GetProject queries the Kion API for a list of all projects within the application.
+// GetProjects queries the Kion API for a list of all projects within the
+// application.
 func GetProjects(host string, token string) ([]Project, error) {
 	// build our query and get response
 	url := host + "/api/v3/project"
 	query := map[string]string{}
 	var data any
-	resp, _, err := runQuery("GET", url, token, query, data)
+	resp, _, err := runQueryWithRetry("GET", url, token, query, data)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func GetProjectByID(host string, token string, id uint) (Project, error) {
 	url := fmt.Sprintf("%v/api/v3/project/%v", host, id)
 	query := map[string]string{}
 	var data any
-	resp, _, err := runQuery("GET", url, token, query, data)
+	resp, _, err := runQueryWithRetry("GET", url, token, query, data)
 	if err != nil {
 		return Project{}, err
 	}
