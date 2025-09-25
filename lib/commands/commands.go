@@ -1,3 +1,8 @@
+// Package commands implements all CLI command handlers and business logic for
+// the Kion CLI application. It provides command implementations for generating
+// STAKs, console federation, managing favorites, running commands with
+// injected credentials, and utility operations, along with input validation,
+// authentication workflows, and integration with the Kion API client.
 package commands
 
 import (

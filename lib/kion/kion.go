@@ -1,3 +1,7 @@
+// Package kion provides a comprehensive Go client library for interacting
+// with the Kion cloud management platform's REST API. This package handles
+// all aspects of Kion API communication including authentication, resource
+// management, and cloud service federation.
 package kion
 
 import (

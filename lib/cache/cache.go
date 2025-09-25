@@ -1,3 +1,9 @@
+// Package cache provides secure storage and retrieval of authentication data
+// and temporary credentials for the Kion CLI using the system keyring. It
+// offers both real and null cache implementations to support caching of SAML
+// sessions, STAK (Short-Term Access Keys), and user passwords with automatic
+// expiration handling and secure storage across macOS Keychain, Windows
+// Credential Manager, and Linux Secret Service.
 package cache
 
 import (

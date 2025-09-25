@@ -1,3 +1,8 @@
+// Package defaults provides embedded default configuration values for the
+// Kion CLI application. It uses Go's embed functionality to include a YAML
+// configuration file in the compiled binary, allowing for custom builds with
+// predefined settings while maintaining the standard precedence of flags,
+// environment variables, config files, and default values.
 package defaults
 
 import (
