@@ -79,7 +79,7 @@ func (c *Cmd) setEndpoint() error {
 // getActionAndBuffer determines the action based on the passed flags and sets
 // a buffer for the associated action used to determine the cache validity.
 func getActionAndBuffer(cCtx *cli.Context) (string, time.Duration) {
-	// grab the command usage [stak, s, setenv, savecreds, etc]
+	// Grab the command usage [stak, s, setenv, savecreds, etc]
 	cmdUsed := cCtx.Lineage()[1].Args().Slice()[0]
 
 	var action string
@@ -104,19 +104,19 @@ func getActionAndBuffer(cCtx *cli.Context) (string, time.Duration) {
 // authStakCache handles the common pattern of authenticating the user,
 // grabbing a STAK, and caching it. Used to dry up code in various commands.
 func (c *Cmd) authStakCache(cCtx *cli.Context, carName string, accNum string, accAlias string) (kion.STAK, error) {
-	// handle auth
+	// Handle auth
 	err := c.setAuthToken(cCtx)
 	if err != nil {
 		return kion.STAK{}, err
 	}
 
-	// generate short term tokens
+	// Generate short term tokens
 	stak, err := kion.GetSTAK(c.config.Kion.Url, c.config.Kion.ApiKey, carName, accNum, accAlias)
 	if err != nil {
 		return kion.STAK{}, err
 	}
 
-	// store the stak in the cache
+	// Store the stak in the cache
 	err = c.cache.SetStak(carName, accNum, accAlias, stak)
 	if err != nil {
 		return kion.STAK{}, err
@@ -129,37 +129,37 @@ func (c *Cmd) authStakCache(cCtx *cli.Context, carName string, accNum string, ac
 // is disabled or the user has requested to flush the cache, a null cache is
 // used. Otherwise, a real cache is initialized using the keyring library.
 func (c *Cmd) initCache(cCtx *cli.Context) error {
-	// if the cache is not disabled, or if the user has requested to flush the
+	// If the cache is not disabled, or if the user has requested to flush the
 	// cache, we initialize the real cache. Otherwise, we use a null cache.
 	if !c.config.Kion.DisableCache || getThirdArgument(cCtx) == "flush-cache" {
 		if c.config.Kion.DebugMode {
 			keyring.Debug = true
 		}
-		// initialize the keyring
+		// Initialize the keyring
 		name := "kion-cli"
 		ring, err := keyring.Open(keyring.Config{
 			ServiceName: name,
 			KeyCtlScope: "session",
 
-			// osx
+			// OSX
 			KeychainName:             "login",
 			KeychainTrustApplication: true,
 			KeychainSynchronizable:   false,
 
-			// kde wallet
+			// KDE wallet
 			KWalletAppID:  name,
 			KWalletFolder: name,
 
-			// gnome wallet (libsecret)
+			// Gnome wallet (libsecret)
 			LibSecretCollectionName: "login",
 
-			// windows
+			// Windows
 			WinCredPrefix: name,
 
-			// password store
+			// Password store
 			PassPrefix: name,
 
-			// encrypted file fallback
+			// Encrypted file fallback
 			FileDir:          "~/.kion",
 			FilePasswordFunc: helper.PromptPassword,
 		})
@@ -180,9 +180,9 @@ func (c *Cmd) initCache(cCtx *cli.Context) error {
 // the profile's values.
 func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 	if profileName != "" {
-		// grab all manually set global flags so we can honor them over the chosen
-		// profiles values
-		// bool values need to be explicitly handled here since we're not iterating
+		// Grab all manually set global flags so we can honor them over the chosen
+		// profiles values. Bool values need to be explicitly handled here since
+		// we're not iterating.
 		setStrings := make(map[string]string)
 
 		var disableCacheFlagged bool
@@ -216,7 +216,7 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 			}
 		}
 
-		// grab the profile and if found and not empty override the default config
+		// Grab the profile and if found and not empty override the default config
 		profile, found := c.config.Profiles[profileName]
 		if found {
 			c.config.Kion = profile.Kion
@@ -225,7 +225,7 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 			return fmt.Errorf("profile not found: %s", profileName)
 		}
 
-		// honor any global flags that were set to maintain precedence
+		// Honor any global flags that were set to maintain precedence
 		for key, value := range setStrings {
 			err := cCtx.Set(key, value)
 			if err != nil {
@@ -233,7 +233,7 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 			}
 		}
 
-		// handle non-string flags
+		// Handle non-string flags
 		if disableCacheFlagged {
 			c.config.Kion.DisableCache = true
 		}
@@ -256,26 +256,26 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 // BeforeCommands run after the context is ready but before any subcommands are
 // executed. Currently used to test feature compatibility with targeted Kion.
 func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
-	// skip before bits if we don't need them (ie we're just printing help)
+	// Skip before bits if we don't need them (ie we're just printing help)
 	args := cCtx.Args().Slice()
 	if len(args) == 0 || args[0] == "help" || args[0] == "h" {
 		return nil
 	}
 
-	// switch profiles if specified
+	// Switch profiles if specified
 	profileName := cCtx.String("profile")
 	err := c.handleProfile(profileName, cCtx)
 	if err != nil {
 		return err
 	}
 
-	// grab the Kion url if not already set
+	// Grab the Kion url if not already set
 	err = c.setEndpoint()
 	if err != nil {
 		return err
 	}
 
-	// gather the targeted Kion version
+	// Gather the targeted Kion version
 	kionVer, err := kion.GetVersion(c.config.Kion.Url)
 	if err != nil {
 		return err
@@ -285,19 +285,17 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		return err
 	}
 
-	// api/v3/me/cloud-access-role fix constraints
-	v3mecarC1, _ := version.NewConstraint(">=3.6.29, < 3.7.0")
-	v3mecarC2, _ := version.NewConstraint(">=3.7.17, < 3.8.0")
-	v3mecarC3, _ := version.NewConstraint(">=3.8.9, < 3.9.0")
-	v3mecarC4, _ := version.NewConstraint(">=3.9.0")
-
-	// check constraints and set bool in metadata
-	if v3mecarC1.Check(curVer) ||
-		v3mecarC2.Check(curVer) ||
-		v3mecarC3.Check(curVer) ||
-		v3mecarC4.Check(curVer) {
-		cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] = true
-	}
+	// Example of a complex version constraint
+	// C1, _ := version.NewConstraint(">=3.6.29, < 3.7.0")
+	// C2, _ := version.NewConstraint(">=3.7.17, < 3.8.0")
+	// C3, _ := version.NewConstraint(">=3.8.9, < 3.9.0")
+	// C4, _ := version.NewConstraint(">=3.9.0")
+	// if C1.Check(curVer) ||
+	// 	C2.Check(curVer) ||
+	// 	C3.Check(curVer) ||
+	// 	C4.Check(curVer) {
+	// 	cCtx.App.Metadata["someMetadataBoolVar"] = true
+	// }
 
 	// SAML metadata file handling
 	newSaml, _ := version.NewConstraint(">=3.8.0")
@@ -305,7 +303,7 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 		cCtx.App.Metadata["useOldSAML"] = true
 	}
 
-	// initialize the cache
+	// Initialize the cache
 	err = c.initCache(cCtx)
 	if err != nil {
 		return err

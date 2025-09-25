@@ -52,9 +52,7 @@ func MapAccounts(accounts []kion.Account) ([]string, map[string]kion.Account) {
 
 // MapAccountsFromCARS transforms a slice of CARs into a slice of account names
 // and a map of account numbers indexed by their names. If a project ID is
-// passed it will only return accounts in the given project. Note that some
-// versions of Kion will not populate account metadata in CAR objects so use
-// carefully (see useUpdatedCloudAccessRoleAPI bool).
+// passed it will only return accounts in the given project.
 func MapAccountsFromCARS(cars []kion.CAR, pid uint) ([]string, map[string]string) {
 	var aNames []string
 	aMap := make(map[string]string)

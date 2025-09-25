@@ -97,8 +97,7 @@ func main() {
 		Before:               cmd.BeforeCommands,
 		After:                cmd.AfterCommands,
 		Metadata: map[string]any{
-			"useUpdatedCloudAccessRoleAPI": false,
-			"useOldSAML":                   false,
+			"useOldSAML": false,
 		},
 
 		////////////////////
