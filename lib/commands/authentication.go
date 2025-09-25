@@ -27,7 +27,7 @@ func (c *Cmd) authUNPW(cCtx *cli.Context) error {
 		}
 		iNames, iMap := helper.MapIDMSs(idmss)
 		if len(iNames) > 1 {
-			idms, err := helper.PromptSelect("Select Login IDMS:", "Use arrow keys to navigate, / to filter, press enter to select", iNames)
+			idms, err := helper.PromptSelect("Select Login IDMS:", "Select your IDMS from the list below.", iNames)
 			if err != nil {
 				return err
 			}
@@ -254,7 +254,7 @@ func (c *Cmd) setAuthToken(cCtx *cli.Context) error {
 			"Password",
 			"SAML",
 		}
-		authMethod, err := helper.PromptSelect("How would you like to authenticate", "Use arrow keys to navigate, / to filter, press enter to select", methods)
+		authMethod, err := helper.PromptSelect("Select auth method: ", "Select your preferred authentication method.", methods)
 		if err != nil {
 			return err
 		}

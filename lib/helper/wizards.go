@@ -121,13 +121,13 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 	steps := []DynamicStep{
 		{
 			Title:         "Choose a project:",
-			Description:   "Select the project you want to work with",
+			Description:   "Select the project you want to work with.",
 			StaticOptions: pNames,
 			Key:           "project",
 		},
 		{
 			Title:       "Choose an Account:",
-			Description: "Select the account for this project",
+			Description: "Select the account for this project.",
 			DynamicOptionsFunc: func(selections map[string]string) ([]string, error) {
 				project := selections["project"]
 				if project == "" {
@@ -141,7 +141,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		},
 		{
 			Title:       "Choose a Cloud Access Role:",
-			Description: "Select your cloud access role",
+			Description: "Select your cloud access role.",
 			DynamicOptionsFunc: func(selections map[string]string) ([]string, error) {
 				project := selections["project"]
 				account := selections["account"]
