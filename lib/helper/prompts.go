@@ -172,83 +172,48 @@ func calculateOptimalHeight() int {
 func kionBrandTheme() *huh.Theme {
 	t := huh.ThemeBase16()
 
-	// Kion brand colors with automatic fallback support
+	// Kion brand colors
 	kionBlack := lipgloss.AdaptiveColor{Light: "#101C21", Dark: "#101C21"}
 	kionGreen := lipgloss.AdaptiveColor{Light: "#61D7AC", Dark: "#61D7AC"}
 	kionMint := lipgloss.AdaptiveColor{Light: "#F3F7F4", Dark: "#F3F7F4"}
+	mutedMint := lipgloss.Color("#A8B2A5")
+	mutedGray := lipgloss.Color("#6B7B70")
+	errorRed := lipgloss.Color("#FF6B6B")
 
-	// Title and headers in brand green
-	t.Focused.Title = lipgloss.NewStyle().
-		Foreground(kionGreen).
-		Bold(true)
+	// Helper functions for common style patterns
+	greenBold := func() lipgloss.Style {
+		return lipgloss.NewStyle().Foreground(kionGreen).Bold(true)
+	}
 
-	t.Focused.NoteTitle = lipgloss.NewStyle().
-		Foreground(kionGreen).
-		Bold(true)
+	mintOnBlack := func() lipgloss.Style {
+		return lipgloss.NewStyle().Foreground(kionBlack).Background(kionMint).Bold(true)
+	}
 
-	// Selector arrow in green for brand consistency
-	t.Focused.SelectSelector = lipgloss.NewStyle().
-		Foreground(kionGreen).
-		Bold(true)
+	muted := func(color lipgloss.TerminalColor) lipgloss.Style {
+		return lipgloss.NewStyle().Foreground(color)
+	}
 
-	// Selected option highlighted in mint with dark text for contrast
-	t.Focused.SelectedOption = lipgloss.NewStyle().
-		Foreground(kionBlack).
-		Background(kionMint).
-		Bold(true)
+	// Apply styles using helpers
+	t.Focused.Title = greenBold()
+	t.Focused.NoteTitle = greenBold()
+	t.Focused.SelectSelector = greenBold()
+	t.Focused.TextInput.Cursor = lipgloss.NewStyle().Foreground(kionGreen)
+	t.Focused.TextInput.Prompt = greenBold()
+	t.Focused.MultiSelectSelector = muted(kionGreen)
+	t.Focused.SelectedPrefix = greenBold()
 
-	// Regular options in mint for readability on dark backgrounds
-	t.Focused.Option = lipgloss.NewStyle().
-		Foreground(kionMint)
+	t.Focused.SelectedOption = mintOnBlack()
+	t.Focused.FocusedButton = mintOnBlack().Padding(0, 2)
 
-	// Description text in muted mint
-	t.Focused.Description = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#A8B2A5")) // Muted mint tone
+	t.Focused.Option = muted(kionMint)
+	t.Focused.UnselectedOption = muted(kionMint)
+	t.Focused.Description = muted(mutedMint)
+	t.Focused.TextInput.Placeholder = muted(mutedGray)
+	t.Focused.BlurredButton = muted(mutedGray).Bold(true).Padding(0, 2)
+	t.Focused.UnselectedPrefix = muted(mutedGray)
 
-	// Error messages in standard red for visibility
-	t.Focused.ErrorMessage = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF6B6B")).
-		Bold(true)
-
-	t.Focused.ErrorIndicator = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF6B6B"))
-
-	// Input field styling
-	t.Focused.TextInput.Cursor = lipgloss.NewStyle().
-		Foreground(kionGreen)
-
-	t.Focused.TextInput.Placeholder = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7B70")) // Muted between black and mint
-
-	t.Focused.TextInput.Prompt = lipgloss.NewStyle().
-		Foreground(kionGreen).
-		Bold(true)
-
-	// Buttons - mint background with black text for brand consistency
-	t.Focused.FocusedButton = lipgloss.NewStyle().
-		Foreground(kionBlack).
-		Background(kionMint).
-		Bold(true).
-		Padding(0, 2)
-
-	t.Focused.BlurredButton = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7B70")).
-		Bold(true).
-		Padding(0, 2)
-
-	// Multi-select styling
-	t.Focused.MultiSelectSelector = lipgloss.NewStyle().
-		Foreground(kionGreen)
-
-	t.Focused.SelectedPrefix = lipgloss.NewStyle().
-		Foreground(kionGreen).
-		Bold(true)
-
-	t.Focused.UnselectedPrefix = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7B70"))
-
-	t.Focused.UnselectedOption = lipgloss.NewStyle().
-		Foreground(kionMint)
+	t.Focused.ErrorMessage = muted(errorRed).Bold(true)
+	t.Focused.ErrorIndicator = muted(errorRed)
 
 	return t
 }
