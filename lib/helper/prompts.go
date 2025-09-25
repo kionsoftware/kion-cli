@@ -145,27 +145,28 @@ func executeWithCache(step DynamicStep, selections map[string]string) ([]string,
 	return result, nil
 }
 
-// calculateOptimalHeight determines an optimal height for selection prompts.
-func calculateOptimalHeight() int {
-	// Get terminal size
-	_, height, err := term.GetSize(int(os.Stdout.Fd()))
+// shouldLimitHeight determines if the selection prompt height should be
+// limited based on the height of the terminal.
+func shouldLimitHeight(optionCount int) (bool, int) {
+	_, termHeight, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
-		// Fallback to conservative height if we can't detect terminal size
-		return 5
+		// Conservative fallback - limit if more than 10 options
+		return optionCount > 10, 10
 	}
 
-	// Reserve space for title, description, and padding
-	availableHeight := height - 5
+	// Reserve space for title, description, padding, and some buffer
+	availableLines := termHeight - 8
 
-	// Use a reasonable range: minimum 3, maximum 15
-	if availableHeight < 3 {
-		return 3
-	}
-	if availableHeight > 30 {
-		return 30
+	if availableLines < 3 {
+		availableLines = 3
 	}
 
-	return availableHeight
+	// Only limit height if options exceed available terminal space
+	if optionCount > availableLines {
+		return true, availableLines
+	}
+
+	return false, 0
 }
 
 // kionBrandTheme creates a custom theme using Kion's brand colors
@@ -243,6 +244,17 @@ func PromptSelectDynamic(steps []DynamicStep) (map[string]string, error) {
 		stepValues[i] = new(string)
 	}
 
+	// Determine height from first step for consistency across all steps
+	var consistentHeight int
+	var useHeight bool
+
+	if len(steps) > 0 && len(steps[0].StaticOptions) > 0 {
+		if shouldLimit, height := shouldLimitHeight(len(steps[0].StaticOptions)); shouldLimit {
+			consistentHeight = height
+			useHeight = true
+		}
+	}
+
 	// Create groups for each step
 	var groups []*huh.Group
 
@@ -260,8 +272,12 @@ func PromptSelectDynamic(steps []DynamicStep) (map[string]string, error) {
 				Title(step.Title).
 				Description(step.Description).
 				Options(huhOptions...).
-				Value(stepValues[i]).
-				Height(calculateOptimalHeight())
+				Value(stepValues[i])
+
+			// Apply height only if we determined it's needed
+			if useHeight {
+				selectField = selectField.Height(consistentHeight)
+			}
 
 		} else if step.DynamicOptionsFunc != nil {
 			// For dynamic options, create bindings for dependencies
@@ -301,8 +317,12 @@ func PromptSelectDynamic(steps []DynamicStep) (map[string]string, error) {
 					}
 					return huhOptions
 				}, bindings).
-				Value(stepValues[i]).
-				Height(calculateOptimalHeight())
+				Value(stepValues[i])
+
+			// Use the same height as first step for consistency
+			if useHeight {
+				selectField = selectField.Height(consistentHeight)
+			}
 		} else {
 			return nil, fmt.Errorf("step %d must have either StaticOptions or DynamicOptionsFunc", i)
 		}
@@ -339,16 +359,20 @@ func PromptSelect(message string, description string, options []string) (string,
 		huhOptions[i] = huh.NewOption(option, option)
 	}
 
+	selectField := huh.NewSelect[string]().
+		Title(message).
+		Description(description).
+		Options(huhOptions...).
+		Value(&selection).
+		Filtering(false)
+
+	// Apply height limiting only if needed
+	if shouldLimit, height := shouldLimitHeight(len(options)); shouldLimit {
+		selectField = selectField.Height(height)
+	}
+
 	form := huh.NewForm(
-		huh.NewGroup(
-			huh.NewSelect[string]().
-				Title(message).
-				Description(description).
-				Options(huhOptions...).
-				Value(&selection).
-				Filtering(false).
-				Height(calculateOptimalHeight()),
-		),
+		huh.NewGroup(selectField),
 	).WithTheme(kionBrandTheme())
 
 	err := form.Run()
