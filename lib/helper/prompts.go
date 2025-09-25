@@ -29,16 +29,24 @@ type DynamicStep struct {
 	CacheKey func(selections map[string]string) string
 }
 
-// Cache for dynamic options to avoid repeated API calls
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Caching                                                                   //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// optionsCache is a simple thread-safe in-memory cache for dynamic options.
 type optionsCache struct {
 	mu    sync.RWMutex
 	items map[string][]string
 }
 
+// globalCache is a package-level cache instance.
 var globalCache = &optionsCache{
 	items: make(map[string][]string),
 }
 
+// get retrieves a cached value if it exists.
 func (c *optionsCache) get(key string) ([]string, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -46,6 +54,7 @@ func (c *optionsCache) get(key string) ([]string, bool) {
 	return val, exists
 }
 
+// set stores a value in the cache.
 func (c *optionsCache) set(key string, value []string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -73,6 +82,12 @@ func generateDefaultCacheKey(stepKey string, selections map[string]string,
 	combined := strings.Join(keyParts, "|")
 	return fmt.Sprintf("%x", md5.Sum([]byte(combined)))
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Helpers                                                                   //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 // buildCurrentSelections creates a map from current step values
 func buildCurrentSelections(stepValues []*string, steps []DynamicStep) map[string]string {
@@ -130,12 +145,7 @@ func executeWithCache(step DynamicStep, selections map[string]string) ([]string,
 	return result, nil
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//  Helpers                                                                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
+// calculateOptimalHeight determines an optimal height for selection prompts.
 func calculateOptimalHeight() int {
 	// Get terminal size
 	_, height, err := term.GetSize(int(os.Stdout.Fd()))
@@ -249,6 +259,10 @@ func kionBrandTheme() *huh.Theme {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+// PromptSelectDynamic presents a series of dynamic selection prompts to the
+// user based on the provided steps. Each step can have static options or
+// dynamic options that depend on previous selections. The function returns a
+// map of step keys to the selected values.
 func PromptSelectDynamic(steps []DynamicStep) (map[string]string, error) {
 	if len(steps) == 0 {
 		return nil, fmt.Errorf("no selection steps provided")
