@@ -157,9 +157,8 @@ func shouldLimitHeight(optionCount int) (bool, int) {
 	// Reserve space for title, description, padding, and some buffer
 	availableLines := termHeight - 8
 
-	if availableLines < 3 {
-		availableLines = 3
-	}
+	// Ensure at least 3 lines are available for options
+	availableLines = max(availableLines, 3)
 
 	// Only limit height if options exceed available terminal space
 	if optionCount > availableLines {
