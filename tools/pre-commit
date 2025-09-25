@@ -60,4 +60,11 @@ if ! make test; then
   exit 1
 fi
 
+# VECTORCODE_HOOK_START
+diff_files=$(git diff --cached --name-only)
+if [ -d ".vectorcode" ] && [ ! -z "$diff_files" ]; then
+  vectorcode vectorise $diff_files
+fi
+# VECTORCODE_HOOK_END
+
 echo

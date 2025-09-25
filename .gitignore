@@ -16,6 +16,8 @@ Thumbs.db
 # Repository Specific #
 #######################
 
+.vectorcode
+
 /kion
 profile.cov
 tools/golangci-lint
