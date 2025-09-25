@@ -2,10 +2,239 @@ package helper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/urfave/cli/v2"
 )
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Helpers                                                                   //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// executeWithRetry executes the provided operation function with retry logic.
+// It retries the operation up to maxRetries times with a delay added between
+// attempts.
+func executeWithRetry[T any](operation func() (T, error), maxRetries int,
+	delay time.Duration) (T, error) {
+
+	var result T
+	var err error
+
+	for attempt := range maxRetries {
+		result, err = operation()
+		if err == nil {
+			return result, nil
+		}
+
+		if attempt == maxRetries-1 {
+			return result, fmt.Errorf("failed after %d retries: %w", maxRetries, err)
+		}
+
+		time.Sleep(delay)
+	}
+
+	return result, err
+}
+
+// getAccountsUpdatedAPI retrieves accounts using the updated API with retry
+// logic.
+func getAccountsUpdatedAPI(cCtx *cli.Context, pMap map[string]kion.Project,
+	project string) ([]string, error) {
+
+	return executeWithRetry(func() ([]string, error) {
+		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get accounts: %w", err)
+		}
+
+		aNames, _ := MapAccountsFromCARS(cars, pMap[project].ID)
+		if len(aNames) == 0 {
+			return nil, fmt.Errorf("no accounts found")
+		}
+
+		return aNames, nil
+	}, 3, 500*time.Millisecond)
+}
+
+// getAccountsLegacyAPI retrieves accounts using the legacy API with retry
+// logic.
+func getAccountsLegacyAPI(cCtx *cli.Context, pMap map[string]kion.Project,
+	project string) ([]string, error) {
+
+	return executeWithRetry(func() ([]string, error) {
+		accounts, statusCode, err := kion.GetAccountsOnProject(
+			cCtx.String("endpoint"),
+			cCtx.String("token"),
+			pMap[project].ID,
+		)
+		if err != nil {
+			if statusCode == 403 {
+				return nil, fmt.Errorf("permission error - will use fallback")
+			}
+			return nil, fmt.Errorf("failed to get accounts: %w", err)
+		}
+
+		aNames, _ := MapAccounts(accounts)
+		if len(aNames) == 0 {
+			return nil, fmt.Errorf("no accounts found")
+		}
+
+		return aNames, nil
+	}, 3, 500*time.Millisecond)
+}
+
+// getCARsUpdatedAPI retrieves cloud access roles using the updated API with
+// retry logic.
+func getCARsUpdatedAPI(cCtx *cli.Context, pMap map[string]kion.Project,
+	project, account string) ([]string, error) {
+
+	return executeWithRetry(func() ([]string, error) {
+		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get CARs: %w", err)
+		}
+
+		_, aMap := MapAccountsFromCARS(cars, pMap[project].ID)
+
+		// Filter cars for the selected account
+		var carsFiltered []kion.CAR
+		for _, carObj := range cars {
+			if carObj.AccountNumber == aMap[account] {
+				carsFiltered = append(carsFiltered, carObj)
+			}
+		}
+
+		cNames, _ := MapCAR(carsFiltered)
+		if len(cNames) == 0 {
+			return nil, fmt.Errorf("no cloud access roles found")
+		}
+
+		return cNames, nil
+	}, 3, 500*time.Millisecond)
+}
+
+// getCARsLegacyAPI retrieves cloud access roles using the legacy API with
+// retry logic.
+func getCARsLegacyAPI(cCtx *cli.Context, pMap map[string]kion.Project,
+	project, account string) ([]string, error) {
+
+	return executeWithRetry(func() ([]string, error) {
+		accounts, _, err := kion.GetAccountsOnProject(
+			cCtx.String("endpoint"),
+			cCtx.String("token"),
+			pMap[project].ID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get accounts: %w", err)
+		}
+
+		_, aMap := MapAccounts(accounts)
+
+		// Find the account ID for the selected account
+		var accountID uint
+		for name, acct := range aMap {
+			if name == account {
+				accountID = acct.ID
+				break
+			}
+		}
+
+		cars, err := kion.GetCARSOnProject(
+			cCtx.String("endpoint"),
+			cCtx.String("token"),
+			pMap[project].ID,
+			accountID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get CARs: %w", err)
+		}
+
+		cNames, _ := MapCAR(cars)
+		if len(cNames) == 0 {
+			return nil, fmt.Errorf("no cloud access roles found")
+		}
+
+		return cNames, nil
+	}, 3, 500*time.Millisecond)
+}
+
+// populateCARFromSelections populates the CAR object based on user selections
+// and the API version being used.
+func populateCARFromSelections(cCtx *cli.Context, car *kion.CAR, pMap map[string]kion.Project,
+	results map[string]string, useUpdatedAPI bool) error {
+
+	project := results["project"]
+	account := results["account"]
+	carName := results["car"]
+
+	if useUpdatedAPI {
+		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
+		if err != nil {
+			return err
+		}
+
+		_, aMap := MapAccountsFromCARS(cars, pMap[project].ID)
+
+		// Filter cars for the selected account
+		var carsFiltered []kion.CAR
+		for _, carObj := range cars {
+			if carObj.AccountNumber == aMap[account] {
+				carsFiltered = append(carsFiltered, carObj)
+			}
+		}
+
+		_, cMap := MapCAR(carsFiltered)
+
+		// Populate the car
+		car.Name = cMap[carName].Name
+		car.AccountName = cMap[carName].AccountName
+		car.AccountNumber = aMap[account]
+		car.AccountTypeID = cMap[carName].AccountTypeID
+		car.AccountID = cMap[carName].AccountID
+		car.AwsIamRoleName = cMap[carName].AwsIamRoleName
+		car.ID = cMap[carName].ID
+		car.CloudAccessRoleType = cMap[carName].CloudAccessRoleType
+
+	} else {
+		accounts, _, err := kion.GetAccountsOnProject(
+			cCtx.String("endpoint"),
+			cCtx.String("token"),
+			pMap[project].ID,
+		)
+		if err != nil {
+			return err
+		}
+
+		_, aMap := MapAccounts(accounts)
+
+		cars, err := kion.GetCARSOnProject(
+			cCtx.String("endpoint"),
+			cCtx.String("token"),
+			pMap[project].ID,
+			aMap[account].ID,
+		)
+		if err != nil {
+			return err
+		}
+
+		_, cMap := MapCAR(cars)
+
+		// Populate the car
+		car.Name = cMap[carName].Name
+		car.AccountName = cMap[carName].AccountName
+		car.AccountNumber = aMap[account].Number
+		car.AccountTypeID = aMap[account].TypeID
+		car.AccountID = aMap[account].ID
+		car.AwsIamRoleName = cMap[carName].AwsIamRoleName
+		car.ID = cMap[carName].ID
+		car.CloudAccessRoleType = cMap[carName].CloudAccessRoleType
+	}
+
+	return nil
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -19,7 +248,7 @@ import (
 // can be passed via an existing car struct, the flow will dynamically ask what
 // is needed to be able to find the full car.
 func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
-	// get list of projects, then build list of names and lookup map
+	// Get list of projects, then build list of names and lookup map
 	projects, err := kion.GetProjects(cCtx.String("endpoint"), cCtx.String("token"))
 	if err != nil {
 		return err
@@ -29,113 +258,76 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		return fmt.Errorf("no projects found")
 	}
 
-	// prompt user to select a project
-	project, err := PromptSelect("Choose a project:", pNames)
+	useUpdatedAPI := cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] == true
+
+	// Define the dynamic selection steps
+	steps := []DynamicStep{
+		{
+			Title:         "Choose a project:",
+			Description:   "Select the project you want to work with",
+			StaticOptions: pNames,
+			Key:           "project",
+		},
+		{
+			Title:       "Choose an Account:",
+			Description: "Select the account for this project",
+			DynamicOptionsFunc: func(selections map[string]string) ([]string, error) {
+				project := selections["project"]
+				if project == "" {
+					return []string{}, nil
+				}
+
+				if useUpdatedAPI {
+					return getAccountsUpdatedAPI(cCtx, pMap, project)
+				} else {
+					return getAccountsLegacyAPI(cCtx, pMap, project)
+				}
+			},
+			Dependencies: []string{"project"},
+			Key:          "account",
+		},
+		{
+			Title:       "Choose a Cloud Access Role:",
+			Description: "Select your cloud access role",
+			DynamicOptionsFunc: func(selections map[string]string) ([]string, error) {
+				project := selections["project"]
+				account := selections["account"]
+				if project == "" || account == "" {
+					return []string{}, nil
+				}
+
+				if useUpdatedAPI {
+					return getCARsUpdatedAPI(cCtx, pMap, project, account)
+				} else {
+					return getCARsLegacyAPI(cCtx, pMap, project, account)
+				}
+			},
+			Dependencies: []string{"project", "account"},
+			Key:          "car",
+		},
+	}
+
+	// Run the dynamic selection
+	results, err := PromptSelectDynamic(steps)
 	if err != nil {
 		return err
 	}
 
-	if cCtx.App.Metadata["useUpdatedCloudAccessRoleAPI"] == true {
-		// TODO: consolidate on this logic when support for 3.9 drops, that will
-		// give us one full support line of buffer
-
-		// get all cars for authed user, works with min permission set
-		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
-		if err != nil {
-			return err
+	// Handle the 403 fallback case for legacy API
+	if !useUpdatedAPI {
+		// Check if we need to use the private API fallback
+		_, statusCode, err := kion.GetAccountsOnProject(
+			cCtx.String("endpoint"),
+			cCtx.String("token"),
+			pMap[results["project"]].ID,
+		)
+		if err != nil && statusCode == 403 {
+			return carSelectorPrivateAPI(cCtx, pMap, results["project"], car)
 		}
-		aNames, aMap := MapAccountsFromCARS(cars, pMap[project].ID)
-		if len(aNames) == 0 {
-			return fmt.Errorf("no accounts found")
-		}
-
-		// prompt user to select an account
-		account, err := PromptSelect("Choose an Account:", aNames)
-		if err != nil {
-			return err
-		}
-
-		// narrow it down to just cars associated with the account
-		var carsFiltered []kion.CAR
-		for _, carObj := range cars {
-			if carObj.AccountNumber == aMap[account] {
-				carsFiltered = append(carsFiltered, carObj)
-			}
-		}
-		cNames, cMap := MapCAR(carsFiltered)
-		if len(cNames) == 0 {
-			return fmt.Errorf("you have no cloud access roles assigned")
-		}
-
-		// prompt user to select a car
-		carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
-		if err != nil {
-			return err
-		}
-
-		// inject the metadata into the car
-		car.Name = cMap[carname].Name
-		car.AccountName = cMap[carname].AccountName
-		car.AccountNumber = aMap[account]
-		car.AccountTypeID = cMap[carname].AccountTypeID
-		car.AccountID = cMap[carname].AccountID
-		car.AwsIamRoleName = cMap[carname].AwsIamRoleName
-		car.ID = cMap[carname].ID
-		car.CloudAccessRoleType = cMap[carname].CloudAccessRoleType
-
-		// return nil
-		return nil
-	} else {
-		// get list of accounts on project, then build a list of names and lookup map
-		accounts, statusCode, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
-		if err != nil {
-			if statusCode == 403 {
-				// if we're getting a 403 work around permissions bug by temp using private api
-				return carSelectorPrivateAPI(cCtx, pMap, project, car)
-			} else {
-				return err
-			}
-		}
-		aNames, aMap := MapAccounts(accounts)
-		if len(aNames) == 0 {
-			return fmt.Errorf("no accounts found")
-		}
-
-		// prompt user to select an account
-		account, err := PromptSelect("Choose an Account:", aNames)
-		if err != nil {
-			return err
-		}
-
-		// get a list of cloud access roles, then build a list of names and lookup map
-		cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
-		if err != nil {
-			return err
-		}
-		cNames, cMap := MapCAR(cars)
-		if len(cNames) == 0 {
-			return fmt.Errorf("no cloud access roles found")
-		}
-
-		// prompt user to select a car
-		carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
-		if err != nil {
-			return err
-		}
-
-		// inject the metadata into the car
-		car.Name = cMap[carname].Name
-		car.AccountName = cMap[carname].AccountName
-		car.AccountNumber = aMap[account].Number
-		car.AccountTypeID = aMap[account].TypeID
-		car.AccountID = aMap[account].ID
-		car.AwsIamRoleName = cMap[carname].AwsIamRoleName
-		car.ID = cMap[carname].ID
-		car.CloudAccessRoleType = cMap[carname].CloudAccessRoleType
-
-		// return nil
-		return nil
 	}
+
+	// Populate the CAR object with the results
+	return populateCARFromSelections(cCtx, car, pMap, results, useUpdatedAPI)
 }
 
 // carSelectorPrivateAPI is a temp shim workaround to address a public API
@@ -177,13 +369,13 @@ func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, proj
 	}
 
 	// prompt user to select an account
-	account, err := PromptSelect("Choose an Account:", aNames)
+	account, err := PromptSelect("Choose an Account:", "Use arrow keys to navigate, / to filter, press enter to select", aNames)
 	if err != nil {
 		return err
 	}
 
 	// prompt user to select car
-	carname, err := PromptSelect("Choose a Cloud Access Role:", aToCMap[account])
+	carname, err := PromptSelect("Choose a Cloud Access Role:", "Use arrow keys to navigate, / to filter, press enter to select", aToCMap[account])
 	if err != nil {
 		return err
 	}
