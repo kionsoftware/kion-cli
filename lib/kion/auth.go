@@ -62,7 +62,7 @@ func GetIDMSs(host string) ([]IDMS, error) {
 	// build our query and get response
 	url := fmt.Sprintf("%v/api/v2/idms", host)
 	query := map[string]string{}
-	var data interface{}
+	var data any
 	resp, _, err := runQuery("GET", url, "", query, data)
 	if err != nil {
 		return nil, err

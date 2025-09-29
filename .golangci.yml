@@ -1,70 +1,86 @@
+version: "2"
 run:
-  timeout: 5m
   issues-exit-code: 1
   tests: true
-output:
-  print-issued-lines: true
-  print-linter-name: true
-linters-settings:
-  dupl:
-    threshold: 150
-  errcheck:
-    check-type-assertions: false
-    check-blank: false
-  goconst:
-    min-len: 3
-    min-occurrences: 10
-  gocyclo:
-    min-complexity: 30
-  gofmt:
-    simplify: true
-  goimports:
-    local-prefixes: github.com/kionsoftware/kion-cli
-  govet:
-    enable:
-      - shadow
-  lll:
-    line-length: 120
-    tab-width: 1
-  misspell:
-    locale: US
-    ignore-words:
-      - cancelled
-  sloglint:
-    attr-only: true
-  unparam:
-    check-exported: false
 linters:
-  disable-all: true
+  default: none
   enable:
     - asciicheck
-    # - dupl
-    - errcheck
     - bodyclose
+    - errcheck
     - goconst
     - gocyclo
-    - gofmt
-    # - goimports
-    - gosimple
     - govet
     - ineffassign
-    # - lll
     - misspell
     - sloglint
     - staticcheck
     - unconvert
     - unparam
     - unused
+  settings:
+    dupl:
+      threshold: 150
+    errcheck:
+      check-type-assertions: false
+      check-blank: false
+    goconst:
+      min-len: 3
+      min-occurrences: 10
+    gocyclo:
+      min-complexity: 30
+    govet:
+      enable:
+        - shadow
+    lll:
+      line-length: 120
+      tab-width: 1
+    misspell:
+      locale: US
+      ignore-rules:
+        - cancelled
+    sloglint:
+      attr-only: true
+    unparam:
+      check-exported: false
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - path: (.+)\.go$
+        text: 'shadow: declaration of .err. shadows declaration'
+      - path: (.+)\.go$
+        text: 'shadow: declaration of &#34;err&#34; shadows declaration'
+    paths:
+      - tools/*
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude:
-    - "shadow: declaration of .err. shadows declaration"
-    - "shadow: declaration of &#34;err&#34; shadows declaration"
   max-same-issues: 0
-  exclude-dirs:
-    - tools/*
 severity:
-  default-severity: error
+  default: error
   rules:
     - linters:
         - gofmt
       severity: info
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - github.com/kionsoftware/kion-cli
+  exclusions:
+    generated: lax
+    paths:
+      - tools/*
+      - third_party$
+      - builtin$
+      - examples$

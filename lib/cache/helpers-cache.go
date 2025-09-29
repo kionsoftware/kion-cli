@@ -51,6 +51,7 @@ func (c *RealCache) FlushCache() error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // FLushCache implements the FlushCache interface for NullCache.
+// This is just to satisfy the interface and should never be called.
 func (c *NullCache) FlushCache() error {
-	return flushCache(c.keyring)
+	return nil
 }

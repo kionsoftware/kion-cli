@@ -16,7 +16,7 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // runQuery performs queries against the Kion API.
-func runQuery(method string, url string, token string, query map[string]string, payload interface{}) ([]byte, int, error) {
+func runQuery(method string, url string, token string, query map[string]string, payload any) ([]byte, int, error) {
 	// prepare the request body
 	reqBody, err := json.Marshal(payload)
 	if err != nil {
@@ -77,7 +77,7 @@ func runQuery(method string, url string, token string, query map[string]string, 
 func GetVersion(host string) (string, error) {
 	url := fmt.Sprintf("%v/api/version", host)
 	query := map[string]string{}
-	var data interface{}
+	var data any
 	resp, _, err := runQuery("GET", url, "", query, data)
 	if err != nil {
 		return "", err
@@ -105,7 +105,7 @@ func GetVersion(host string) (string, error) {
 func GetSessionDuration(host string, token string) (int, error) {
 	url := fmt.Sprintf("%v/api/v3/app-config/aws-access", host)
 	query := map[string]string{}
-	var data interface{}
+	var data any
 	resp, status, err := runQuery("GET", url, token, query, data)
 	if err != nil {
 		if status == 403 {

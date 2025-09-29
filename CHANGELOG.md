@@ -20,10 +20,10 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.11.0] - 2025-06-06
+[0.14.0] - 2025.09.29
 -------------------------
 
-Version 0.11.0 adds support to use the Kion Favorites API endpoints (requires Kion version 3.13.0 or higher). This allows Kion to be the new source of truth for your configured favorites.
+Version 0.14.0 adds support to use the Kion Favorites API endpoints (requires Kion version 3.13.0 or higher). This allows Kion to be the new source of truth for your configured favorites.
 
 ### Added
 
@@ -31,6 +31,60 @@ Version 0.11.0 adds support to use the Kion Favorites API endpoints (requires Ki
 - New utility command to push local favorites up to Kion (`util push-favorites`)
 - Option to delete local favorites once they've been pushed up
 - New `default_region` property to the config file. This can be set on any of the Kion profiles and will be used for any favorites for that profile that do not have `region` set.
+
+[0.13.0] - 2025.07.11
+---------------------
+
+Version 0.13.0 adds the ability to pass flags to the `favorite` command to override the stored access-type. This enables users to create a generic favorite and then use it to access both cli and the web console. As an example, the following favorite could be created:
+
+```yaml
+# ~/.kion.yml
+favorites:
+  - name: sandbox
+    account: "121212121212"
+    cloud_access_role: Developer
+```
+
+Then access it:
+
+```bash
+# create a cli subshell authenticated to the favorite
+kion favorite sandbox
+kion fav sandbox
+kion f sandbox
+
+# access the sandbox web console
+kion favorite --access-type web sandbox
+kion fav -w sandbox
+kion f -w sandbox
+```
+
+### Added
+
+- Allow for favorite access-type overrides [kionsoftware/kion-cli/pull/100]
+
+[0.12.0] - 2025.06.13
+---------------------
+
+Version 0.12.0 adds the ability to create custom builds of the Kion CLI with customer specific configurations. This allows for easier team on boarding to the utility. See the __Custom Builds__ section in the repository `README.md` for details on usage. Additionally version 0.12.0 adds new output to the `stak` and `console` commands guiding users on how to create favorites for future use. The new output will be the default behavior but can be disabled with the new `quiet` option, configurable via the config file, `KION_QUIET` environment variable, or global option flag.
+
+### Added
+
+- Ability to create custom Kion CLI binaries with user defined defaults [kionsoftware/kion-cli/pull/96]
+- Helper output showing users how to store recently accessed accounts as a favorite [kionsoftware/kion-cli/pull/97]
+
+[0.11.0] - 2025-06-12
+---------------------
+
+Version 0.11.0 adds a debug mode (`--debug`) to capture additional output, currently supports keyring operations. Additionally, cache handling is improved when utilizing the `--disable-cache` functionality to ensure the keyring is never initialized.
+
+### Added
+
+- Optional debug mode for increased output. [kionsoftware/kion-cli/pull/95]
+
+### Fixed
+
+- Disabling the cache will now properly prevent keyrings from being accessed. [kionsoftware/kion-cli/pull/94]
 
 [0.10.0] - 2025-04-29
 ---------------------

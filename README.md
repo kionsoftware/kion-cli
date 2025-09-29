@@ -218,6 +218,10 @@ __Global Options:__
 
 --disable-cache                        Disable the use of cache for Kion CLI.
 
+--debug                                Enables debug output for certain functions.
+
+--quiet                                Reduces output for certain functions.
+
 --profile PROFILE                      Use the specified PROFILE from the Kion CLI
                                        configuration file. If no profile is specified
                                        the default will be used.
@@ -277,6 +281,16 @@ OPTIONS
   --print, -p                          Print STAK only. Has no effect on
                                        favorites with an "access_type" of
                                        "web". (default: false)
+
+  --access-type val , -t val           Override the access type of the favorite.
+                                       Defaults to "cli" if not explicitly set
+                                       in the favorite, however this option
+                                       allows it to be overridden on demand.
+                                       Expects "web" or "cli".
+
+  --web, -w                            Shortcut for `--access-type web`. Takes
+                                       precedence over --access-type val, -t val
+                                       flag options.
 
   --credential-process                 For use with AWS credentials profiles to
                                        setup Kion CLI as a credentials process
@@ -388,6 +402,10 @@ KION_SAML_SP_ISSUER      The Kion IDMS issuer value, for example
 KION_SAML_PRINT_URL      "TRUE" to print the authentication url as opposed to
                          automatically opening it in the default browser.
                          Defaults to "FALSE".
+
+KION_DEBUG               "TRUE" to enable verbose debugging of the Kion CLI.
+
+KION_QUIET               "TRUE" to reduce messages for quieter operation.
 
 The following are maintained for compatibility with older Kion utilities:
 
@@ -611,6 +629,10 @@ To configure Kion CLI to use Firefox Containers, add the following to your `~/.k
 browser:
   firefox_containers: true
 ```
+
+### Custom Builds
+
+The Kion CLI can be customized for distribution within your organization by compiling with custom defaults. For example you can have a custom build with the URL of your Kion instance and SAML configurations pre-defined allowing new users to start using the CLI without any additional required setup. To create a custom build add your desired values to the `lib/defaults/defaults.yml` file then build with `make build`. Note that you should not store any sensitive information in the `lib/defaults/defaults.yml` file as they will be stored in plain text within the binary.
 
 Contributing
 ------------

@@ -1,0 +1,35 @@
+################################################################################
+##                                                                            ##
+##  Attention!!                                                               ##
+##                                                                            ##
+##  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv  ##
+##                                                                            ##
+##  DO NOT STORE SENSITIVE CONFIGURATIONS IN THIS FILE. All contents will be  ##
+##  stored as plain text inside the compiled Kion CLI binary & be accessible  ##
+##  to any user with read access.                                             ##
+##                                                                            ##
+##  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ##
+##                                                                            ##
+##  Values stored here are overrides to the Kion CLI defaults (the config     ##
+##  structs null values). This is provided as a convenience to create custom  ##
+##  builds of the CLI for distribution within companies. Precedence will be   ##
+##  as follows:                                                               ##
+##                                                                            ##
+##  Flag > Environment Variables > Config File > Default Values               ##
+##                                               `------------'               ##
+##                                                     |                      ##
+##         .-------------------------------------------'                      ##
+##         V                                                                  ##
+##  Default Values (THIS DEFAULTS.YML > config struct null values)            ##
+##                                                                            ##
+################################################################################
+
+kion:
+  url: ""
+  idms_id: ""
+  saml_metadata_file: ""
+  saml_sp_issuer: ""
+  saml_print_url: false
+  disable_cache: false
+  debug_mode: false
+  quiet_mode: false

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -55,7 +54,7 @@ func main() {
 
 	// load configuration file
 	err = helper.LoadConfig(configPath, &config)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err != nil {
 		color.Red(" Error: %v", err)
 		os.Exit(1)
 	}
@@ -97,7 +96,7 @@ func main() {
 		EnableBashCompletion: true,
 		Before:               cmd.BeforeCommands,
 		After:                cmd.AfterCommands,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"useUpdatedCloudAccessRoleAPI": false,
 			"useOldSAML":                   false,
 			"configPath":                   configPath,
@@ -181,6 +180,20 @@ func main() {
 				Value:       config.Kion.DisableCache,
 				Usage:       "disable the use of caching",
 				Destination: &config.Kion.DisableCache,
+			},
+			&cli.BoolFlag{
+				Name:        "debug",
+				Value:       config.Kion.DebugMode,
+				EnvVars:     []string{"KION_DEBUG"},
+				Usage:       "enable debug mode for verbose logging",
+				Destination: &config.Kion.DebugMode,
+			},
+			&cli.BoolFlag{
+				Name:        "quiet",
+				Value:       config.Kion.QuietMode,
+				EnvVars:     []string{"KION_QUIET"},
+				Usage:       "enable quiet mode to reduce output",
+				Destination: &config.Kion.QuietMode,
 			},
 		},
 
@@ -269,6 +282,16 @@ func main() {
 						Name:    "print",
 						Aliases: []string{"p"},
 						Usage:   "print stak only",
+					},
+					&cli.StringFlag{
+						Name:    "access-type",
+						Aliases: []string{"t"},
+						Usage:   "account alias, must be passed with car",
+					},
+					&cli.BoolFlag{
+						Name:    "web",
+						Aliases: []string{"w"},
+						Usage:   "shortcut for --access-type=web",
 					},
 					&cli.BoolFlag{
 						Name:  "credential-process",

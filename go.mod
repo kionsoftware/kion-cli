@@ -1,6 +1,6 @@
 module github.com/kionsoftware/kion-cli
 
-go 1.22
+go 1.24.4
 
 require (
 	github.com/99designs/keyring v1.2.2
