@@ -32,7 +32,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 		// get the combined list of favorites from the CLI config and the Kion API
 		apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
 		if err != nil {
-			fmt.Printf("Error retrieving favorites from API: %v\n", err)
+			fmt.Printf("Error retrieving favorites from Kion API: %v\n", err)
 			return err
 		}
 		result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
@@ -50,35 +50,41 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 				return c.DeleteLocalFavorites(cCtx)
 			} else {
 				// No changes, but counts don't match exactly — do nothing
-				color.Yellow("No new or conflicting favorites to push, but local and API counts differ. Manual review may be needed.\n")
+				color.Yellow("No new or conflicting favorites to push, but local and Kion API counts differ. Manual review may be needed.\n")
 				return nil
 			}
 		}
 
-		if len(result.LocalOnly) > 0 {
-			fmt.Printf("\nLocal favorites to push to API:\n")
-			for _, f := range result.LocalOnly {
-				fmt.Printf(" - %s\n", f.Name)
+		// format the prompt message
+		pushMessage := fmt.Sprintf("\nThe following local favorites will be pushed to Kion (%v):\n\n", c.config.Kion.Url)
+		for _, f := range result.LocalOnly {
+			listed := false
+			// check if f.Name is in result.Conflicts
+			for _, c := range result.Conflicts {
+				if c.Name == f.Name {
+					pushMessage += fmt.Sprintf(" - %s (%s)\n", f.Name, color.RedString("conflict"))
+					listed = true
+					break
+				}
+			}
+			if !listed {
+				pushMessage += fmt.Sprintf(" - %s\n", f.Name)
 			}
 		}
-
 		if len(result.Conflicts) > 0 {
-			fmt.Printf("\nName conflicts with API favorites:\n")
-			for _, f := range result.Conflicts {
-				fmt.Printf(" - %s\n", f.Name)
-			}
-			color.Red("\nThese are favorites that exist in both the CLI config and the API with the same name, but have different settings.")
-			color.Red("Pushing these will overwrite the API favorites with the local settings.\n")
+			pushMessage += fmt.Sprintf("%s\n", color.RedString("\nPushing local favorites with conflicts will overwrite upstream Kion favorites!"))
 		}
+		pushMessage += "\nDo you want to continue?"
 
-		selection, _ := helper.PromptSelect("\nDo you want to push your local favorites to the Kion API?", []string{"no", "yes"})
+		// confirm the push
+		selection, _ := helper.PromptSelect(pushMessage, []string{"no", "yes"})
 		if selection == "no" {
 			fmt.Println("\nAborting push of favorites.")
 			return nil
 		}
 
 		if len(result.Conflicts) > 0 {
-			confirm, _ := helper.PromptSelect("You have some name conflicts with API favorites. Are you sure you want to continue pushing your local favorites?", []string{"no", "yes"})
+			confirm, _ := helper.PromptSelect("You have some name conflicts with Kion favorites. Are you sure you want to continue pushing your local favorites?", []string{"no", "yes"})
 			if confirm == "no" {
 				fmt.Println("\nAborting push of favorites due to conflicts.")
 				return nil
