@@ -27,7 +27,7 @@ Version 0.14.0 integrates favorites between Kion and the Kion CLI (requires Kion
 
 ### Added
 
-- Ability to list and use favorites (aliases) that are set in Kion
+- Ability to list and use favorites (aliases) that are set upstream in Kion
 - New utility command to push local favorites up to Kion (`util push-favorites`)
 - Option to delete local favorites once they've been pushed up
 - New `default_region` property to the config file. This can be set on any of the Kion profiles and will be used for any favorites for that profile that do not have `region` set.
