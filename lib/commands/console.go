@@ -57,7 +57,7 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 
 	// print out how to store as a favorite
 	if !c.config.Kion.QuietMode {
-		if err := helper.PrintFavoriteConfig(os.Stdout, car, cCtx.String("region"), "web"); err != nil {
+		if err := helper.PrintFavoriteConfig(os.Stdout, car, "", "web"); err != nil {
 			return err
 		}
 	}
@@ -67,7 +67,6 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 		AccountNumber:  car.AccountNumber,
 		AccountTypeID:  car.AccountTypeID,
 		AwsIamRoleName: car.AwsIamRoleName,
-		Region:         cCtx.String("region"),
 	}
 	return helper.OpenBrowserRedirect(url, session, c.config.Browser, redirect, "")
 }
