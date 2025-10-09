@@ -440,6 +440,7 @@ FAVORITES
 ---------
 favorites[N].name                    Favorite name, used when calling `kion fav [name]`
 favorites[N].account                 Account number associated with the favorite.
+favorites[N].region                  Region to use when accessing the favorite.
 favorites[N].cloud_access_role       Cloud Access Role used to authenicate with the favorite.
 favorites[N].access_type             Favorite access type, 'web' or 'cli', defaults 'cli'.
 favorites[N].service                 Service to open by default, for example 'rds', 'ec2', etc.
