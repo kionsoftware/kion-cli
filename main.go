@@ -100,6 +100,7 @@ func main() {
 			"useUpdatedCloudAccessRoleAPI": false,
 			"useOldSAML":                   false,
 			"configPath":                   configPath,
+			"useFavoritesAPI":              false,
 		},
 
 		////////////////////
