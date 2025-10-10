@@ -15,11 +15,11 @@ import (
 
 func (c *Cmd) getFavorites(cCtx *cli.Context) (helper.FavoritesComparison, error) {
 	// get the combined list of favorites from the CLI config and the Kion API (if compatible)
-	useApi := cCtx.App.Metadata["useFavoritesAPI"].(bool)
+	useAPI := cCtx.App.Metadata["useFavoritesAPI"].(bool)
 	var apiFavorites []structs.Favorite
 	var combinedFavorites helper.FavoritesComparison
 	var err error
-	if useApi {
+	if useAPI {
 		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
 		if err != nil {
 			fmt.Printf("Error retrieving favorites from API: %v\n", err)
