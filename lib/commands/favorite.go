@@ -13,20 +13,20 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (c *Cmd) getFavorites(cCtx *cli.Context) (helper.FavoritesComparison, error) {
+func (c *Cmd) getFavorites(cCtx *cli.Context) ([]structs.Favorite, error) {
 	// get the combined list of favorites from the CLI config and the Kion API (if compatible)
-	useApi := cCtx.App.Metadata["useFavoritesAPI"].(bool)
+	useAPI := cCtx.App.Metadata["useFavoritesAPI"].(bool)
 	var apiFavorites []structs.Favorite
-	var combinedFavorites helper.FavoritesComparison
+	var combinedFavorites []structs.Favorite
 	var err error
-	if useApi {
+	if useAPI {
 		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
 		if err != nil {
 			fmt.Printf("Error retrieving favorites from API: %v\n", err)
-			return combinedFavorites, err
+			return apiFavorites, err
 		}
 	}
-	combinedFavorites, err = helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
+	combinedFavorites, _, err = helper.CombineFavorites(c.config.Favorites, apiFavorites)
 	if err != nil {
 		fmt.Printf("Error combining favorites: %v\n", err)
 		return combinedFavorites, err
@@ -44,13 +44,13 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 	}
 
 	// sort favorites by name
-	sort.Slice(favorites.All, func(i, j int) bool {
-		return favorites.All[i].Name < favorites.All[j].Name
+	sort.Slice(favorites, func(i, j int) bool {
+		return favorites[i].Name < favorites[j].Name
 	})
 
 	// print it out
 	if cCtx.Bool("verbose") {
-		for _, f := range favorites.All {
+		for _, f := range favorites {
 			accessType := f.AccessType
 			if accessType == "" {
 				accessType = "cli (Default)"
@@ -62,7 +62,7 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 			fmt.Printf(" %v:\n   account number: %v\n   cloud access role: %v\n   access type: %v\n   region: %v\n", f.Name, f.Account, f.CAR, accessType, region)
 		}
 	} else {
-		for _, f := range favorites.All {
+		for _, f := range favorites {
 			// check if the name starts with "[unaliased]" to handle upstream favorites with no alias
 			if strings.HasPrefix(f.Name, "[unaliased]") {
 				fmt.Printf(" %v\n", f.Name)
@@ -87,7 +87,7 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 	}
 
 	// run favorites through MapFavs
-	fNames, fMap := helper.MapFavs(favorites.All)
+	fNames, fMap := helper.MapFavs(favorites)
 
 	// if arg passed is a valid favorite use it else prompt
 	var fav string
@@ -168,7 +168,7 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 		// credential process output, print, or create sub-shell
 		switch action {
 		case "credential-process":
-			// NOTE: do not use os.Stderr here else credentials can be written to logs
+			// NOTE: Do not use os.Stderr here else credentials can be written to logs
 			return helper.PrintCredentialProcess(os.Stdout, stak)
 		case "print":
 			return helper.PrintSTAK(os.Stdout, stak, favorite.Region)

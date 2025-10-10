@@ -15,17 +15,6 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// FavoritesComparison holds the results of comparing local favorites with API
-// favorites. It includes all favorites, exact matches, non-matches, conflicts,
-// and local-only favorites. It's returned by the CombineFavorites function.
-type FavoritesComparison struct {
-	All       []structs.Favorite // Combined local + API, deduplicated and deconflicted
-	Exact     []structs.Favorite // Exact matches (local + API)
-	APIOnly   []structs.Favorite // API-only favorites
-	Conflicts []structs.Favorite // Name conflicts (same name, different settings)
-	LocalOnly []structs.Favorite // Local-only favorites (not matched in API)
-}
-
 // MapProjects transforms a slice of Projects into a slice of their names and a
 // map indexed by their names.
 func MapProjects(projects []kion.Project) ([]string, map[string]kion.Project) {
@@ -147,9 +136,9 @@ func FindCARByName(cars []kion.CAR, carName string) (*kion.CAR, error) {
 // It returns a slice of Favorites that contains all unique favorites, with local
 // favorites appearing first. If an API favorite has no name, it attempts to
 // generate a name based on the account name, car, access type, and region.
-func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, defaultRegion string) (FavoritesComparison, error) {
+func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite) ([]structs.Favorite, *structs.FavoritesComparison, error) {
 
-	result := FavoritesComparison{}
+	result := structs.FavoritesComparison{}
 
 	// Track all exact matches by a unique composite key
 	exactMap := make(map[string]bool)
@@ -199,5 +188,5 @@ func CombineFavorites(localFavs []structs.Favorite, apiFavs []structs.Favorite, 
 		}
 	}
 
-	return result, nil
+	return result.All, &result, nil
 }
