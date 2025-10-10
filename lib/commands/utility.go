@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -27,7 +28,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 
 		// track errors during the push process
 		// this will be used to determine if we should delete local favorites after the push
-		var errors bool
+		var hasErrors bool
 
 		// get the combined list of favorites from the CLI config and the Kion API
 		apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
@@ -35,7 +36,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			fmt.Printf("Error retrieving favorites from Kion API: %v\n", err)
 			return err
 		}
-		result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites, c.config.Kion.DefaultRegion)
+		_, result, err := helper.CombineFavorites(c.config.Favorites, apiFavorites)
 		if err != nil {
 			fmt.Printf("Error combining favorites: %v\n", err)
 			return err
@@ -102,14 +103,14 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			_, status, err := kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
 			if err != nil {
 				color.Red("Error creating favorite %s: %v\n", f.Name, err)
-				errors = true
+				hasErrors = true
 				continue
 			}
 			if status == 201 || status == 200 {
 				color.Green("Successfully pushed %s favorite to Kion\n", f.Name)
 			} else {
 				color.Red("Failed to push favorite %s, status code: %d\n", f.Name, status)
-				errors = true
+				hasErrors = true
 			}
 		}
 
@@ -120,7 +121,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			_, err := kion.DeleteFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f.Name)
 			if err != nil {
 				color.Red("Error deleting favorite %s: %v\n", f.Name, err)
-				errors = true
+				hasErrors = true
 				continue
 			}
 			color.Green("Successfully deleted conflicting favorite: %s\n", f.Name)
@@ -128,20 +129,23 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			_, _, err = kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
 			if err != nil {
 				color.Red("Error creating favorite %s: %v", f.Name, err)
-				errors = true
+				hasErrors = true
 				continue
 			}
 			color.Green("Successfully created favorite: %s", f.Name)
 		}
 
 		// send to the DeleteLocalFavorites function to remove local favorites after successful push
-		if !errors {
+		if !hasErrors {
 			return c.DeleteLocalFavorites(cCtx)
+		} else {
+			err := errors.New("one or more errors occurred during the push process, local favorites have not been deleted")
+			return err
 		}
 	} else {
-		color.Yellow("Favorites API is not enabled. This requires Kion version 3.13.0 or higher.")
+		err := errors.New("favorites API is not enabled. This requires Kion version 3.13.5, 3.14.1 or higher")
+		return err
 	}
-	return nil
 }
 
 func (c *Cmd) DeleteLocalFavorites(cCtx *cli.Context) error {
