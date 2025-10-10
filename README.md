@@ -63,7 +63,7 @@ Setup
     kion:
       url: https://mykion.example
       api_key: [api key]
-      default_region: us-east-1       # used for any favorites that don't have region set
+      default_region: us-east-1
     favorites:
       - name: sandbox
         account: "111122223333"
@@ -364,7 +364,7 @@ SUB COMMANDS
 
   push-favorites                       Push locally defined favorites up to Kion.
                                        This will overwrite any favorites in Kion
-                                       that have the same name. After pushing, you
+                                       that have the same alias. After pushing, you
                                        are prompted to delete local favorites.
 ```
 
@@ -433,8 +433,8 @@ kion.saml_print_url                  Set 'true' to print the authentication url 
                                      Defaults to 'false'.
 kion.disable_cache                   Prevents Kion CLI from caching STAK if 'true', defaults
                                      to 'false'.
-kion.default_region                  The region to use for any favorites that do not have the
-                                     'region' property set.
+kion.default_region                  The CSP region to use if one is not provided by argument
+                                     flag or environment variable.
 
 FAVORITES
 ---------
