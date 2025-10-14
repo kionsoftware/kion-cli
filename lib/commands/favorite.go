@@ -20,7 +20,7 @@ func (c *Cmd) getFavorites(cCtx *cli.Context) ([]structs.Favorite, error) {
 	var combinedFavorites []structs.Favorite
 	var err error
 	if useAPI {
-		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
+		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.URL, c.config.Kion.APIKey)
 		if err != nil {
 			fmt.Printf("Error retrieving favorites from API: %v\n", err)
 			return apiFavorites, err
@@ -122,16 +122,16 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 		}
 
 		// attempt to find an exact match then fallback to the first match
-		car, err := kion.GetCARByNameAndAccount(c.config.Kion.Url, c.config.Kion.ApiKey, favorite.CAR, favorite.Account)
+		car, err := kion.GetCARByNameAndAccount(c.config.Kion.URL, c.config.Kion.APIKey, favorite.CAR, favorite.Account)
 		if err != nil {
-			car, err = kion.GetCARByName(c.config.Kion.Url, c.config.Kion.ApiKey, favorite.CAR)
+			car, err = kion.GetCARByName(c.config.Kion.URL, c.config.Kion.APIKey, favorite.CAR)
 			if err != nil {
 				return err
 			}
 			car.AccountNumber = favorite.Account
 		}
 
-		url, err := kion.GetFederationURL(c.config.Kion.Url, c.config.Kion.ApiKey, car)
+		url, err := kion.GetFederationURL(c.config.Kion.URL, c.config.Kion.APIKey, car)
 		if err != nil {
 			return err
 		}

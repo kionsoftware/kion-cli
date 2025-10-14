@@ -67,7 +67,7 @@ func main() {
 
 	// prep default text for api key
 	apiKeyDefaultText := ""
-	if config.Kion.ApiKey != "" {
+	if config.Kion.APIKey != "" {
 		apiKeyDefaultText = "*****"
 	}
 
@@ -111,10 +111,10 @@ func main() {
 			&cli.StringFlag{
 				Name:        "endpoint",
 				Aliases:     []string{"url", "e"},
-				Value:       config.Kion.Url,
+				Value:       config.Kion.URL,
 				EnvVars:     []string{"KION_URL"},
 				Usage:       "Kion `URL`",
-				Destination: &config.Kion.Url,
+				Destination: &config.Kion.URL,
 			},
 			&cli.StringFlag{
 				Name:        "user",
@@ -157,18 +157,18 @@ func main() {
 			},
 			&cli.BoolFlag{
 				Name:        "saml-print-url",
-				Value:       config.Kion.SamlPrintUrl,
+				Value:       config.Kion.SamlPrintURL,
 				EnvVars:     []string{"KION_SAML_PRINT_URL"},
 				Usage:       "print SAML URL instead of opening browser",
-				Destination: &config.Kion.SamlPrintUrl,
+				Destination: &config.Kion.SamlPrintURL,
 			},
 			&cli.StringFlag{
 				Name:        "token",
 				Aliases:     []string{"t"},
-				Value:       config.Kion.ApiKey,
+				Value:       config.Kion.APIKey,
 				EnvVars:     []string{"KION_API_KEY", "CTKEY_APPAPIKEY"},
 				Usage:       "`TOKEN` for authentication",
-				Destination: &config.Kion.ApiKey,
+				Destination: &config.Kion.APIKey,
 				DefaultText: apiKeyDefaultText,
 			},
 			&cli.StringFlag{

@@ -31,7 +31,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 		var hasErrors bool
 
 		// get the combined list of favorites from the CLI config and the Kion API
-		apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.Url, c.config.Kion.ApiKey)
+		apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.URL, c.config.Kion.APIKey)
 		if err != nil {
 			fmt.Printf("Error retrieving favorites from Kion API: %v\n", err)
 			return err
@@ -57,7 +57,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 		}
 
 		// format the prompt message
-		pushMessage := fmt.Sprintf("\nThe following local favorites will be pushed to Kion (%v):\n\n", c.config.Kion.Url)
+		pushMessage := fmt.Sprintf("\nThe following local favorites will be pushed to Kion (%v):\n\n", c.config.Kion.URL)
 		for _, f := range result.LocalOnly {
 			listed := false
 			// check if f.Name is in result.Conflicts
@@ -100,7 +100,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 
 			f.AccessType = kion.ConvertAccessType(f.AccessType)
 
-			_, status, err := kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
+			_, status, err := kion.CreateFavorite(c.config.Kion.URL, c.config.Kion.APIKey, f)
 			if err != nil {
 				color.Red("Error creating favorite %s: %v\n", f.Name, err)
 				hasErrors = true
@@ -118,7 +118,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 
 			f.AccessType = kion.ConvertAccessType(f.AccessType)
 
-			_, err := kion.DeleteFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f.Name)
+			_, err := kion.DeleteFavorite(c.config.Kion.URL, c.config.Kion.APIKey, f.Name)
 			if err != nil {
 				color.Red("Error deleting favorite %s: %v\n", f.Name, err)
 				hasErrors = true
@@ -126,7 +126,7 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 			}
 			color.Green("Successfully deleted conflicting favorite: %s\n", f.Name)
 
-			_, _, err = kion.CreateFavorite(c.config.Kion.Url, c.config.Kion.ApiKey, f)
+			_, _, err = kion.CreateFavorite(c.config.Kion.URL, c.config.Kion.APIKey, f)
 			if err != nil {
 				color.Red("Error creating favorite %s: %v", f.Name, err)
 				hasErrors = true

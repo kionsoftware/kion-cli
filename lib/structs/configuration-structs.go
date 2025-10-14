@@ -18,14 +18,14 @@ type Configuration struct {
 // Kion holds information about the instance of Kion with which the application
 // interfaces with as well as the credentials to do so.
 type Kion struct {
-	Url              string `yaml:"url"`
-	ApiKey           string `yaml:"api_key"`
+	URL              string `yaml:"url"`
+	APIKey           string `yaml:"api_key"`
 	Username         string `yaml:"username"`
 	Password         string `yaml:"password"`
 	IDMS             string `yaml:"idms_id"`
 	SamlMetadataFile string `yaml:"saml_metadata_file"`
 	SamlIssuer       string `yaml:"saml_sp_issuer"`
-	SamlPrintUrl     bool   `yaml:"saml_print_url"`
+	SamlPrintURL     bool   `yaml:"saml_print_url"`
 	DisableCache     bool   `yaml:"disable_cache"`
 	DefaultRegion    string `yaml:"default_region"`
 	DebugMode        bool   `yaml:"debug_mode"`
