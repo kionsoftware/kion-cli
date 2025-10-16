@@ -46,6 +46,7 @@ func GetAPIFavorites(host string, token string) ([]structs.Favorite, int, error)
 		// handle upstream favorites with no alias
 		if apiFav.Name == "" {
 			apiFav.Name = fmt.Sprintf("[unaliased] (%s %s %s %s)", apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
+			apiFav.Unaliased = true
 		}
 		apiFavorites = append(apiFavorites, apiFav)
 	}
