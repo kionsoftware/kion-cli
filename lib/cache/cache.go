@@ -1,3 +1,4 @@
+// Package cache provides caching functionality for kion-cli using a keyring.
 package cache
 
 import (

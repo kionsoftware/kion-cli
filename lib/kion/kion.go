@@ -1,3 +1,4 @@
+// Package kion provides functions to interact with the Kion API.
 package kion
 
 import (

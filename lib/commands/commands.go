@@ -1,3 +1,4 @@
+// Package commands provides the command implementations for the Kion CLI tool.
 package commands
 
 import (
