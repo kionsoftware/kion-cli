@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// ConsoleAccessResponse maps to the Kion V1 API response.
+// ConsoleAccessCARResponse maps to the Kion V1 API response.
 type ConsoleAccessCARResponse struct {
 	Status            int                `json:"status"`
 	ConsoleAccessCARs []ConsoleAccessCAR `json:"data"`
