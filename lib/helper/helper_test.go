@@ -84,21 +84,48 @@ var kionTestIDMSsNames = []string{
 }
 
 var kionTestFavorites = []structs.Favorite{
-	{Name: "fav one", Account: "111111111111", CAR: "car one", AccessType: "web"},
-	{Name: "fav two", Account: "121212121212", CAR: "car two", AccessType: "web"},
-	{Name: "fav three", Account: "131313131313", CAR: "car three", AccessType: "web"},
-	{Name: "fav four", Account: "141414141414", CAR: "car four", AccessType: "web"},
-	{Name: "fav five", Account: "151515151515", CAR: "car five", AccessType: "web"},
-	{Name: "fav six", Account: "161616161616", CAR: "car six", AccessType: "web"},
-}
-
-var kionTestFavoritesNames = []string{
-	"fav one",
-	"fav two",
-	"fav three",
-	"fav four",
-	"fav five",
-	"fav six",
+	{
+		Name:            "fav one",
+		Account:         "111111111111",
+		CAR:             "car one",
+		AccessType:      "web",
+		DescriptiveName: "fav one      [local] (111111111111 car one web)",
+	},
+	{
+		Name:            "fav two",
+		Account:         "121212121212",
+		CAR:             "car two",
+		AccessType:      "web",
+		DescriptiveName: "fav two      [local] (121212121212 car two web)",
+	},
+	{
+		Name:            "fav three",
+		Account:         "131313131313",
+		CAR:             "car three",
+		AccessType:      "web",
+		DescriptiveName: "fav three    [local] (131313131313 car three web)",
+	},
+	{
+		Name:            "fav four",
+		Account:         "141414141414",
+		CAR:             "car four",
+		AccessType:      "web",
+		DescriptiveName: "fav four     [local] (141414141414 car four web)",
+	},
+	{
+		Name:            "fav five",
+		Account:         "151515151515",
+		CAR:             "car five",
+		AccessType:      "web",
+		DescriptiveName: "fav five     [local] (151515151515 car five web)",
+	},
+	{
+		Name:            "fav six",
+		Account:         "161616161616",
+		CAR:             "car six",
+		AccessType:      "web",
+		DescriptiveName: "fav six      [local] (161616161616 car six web)",
+	},
 }
 
 ////////////////////////////////////////////////////////////////////////////////

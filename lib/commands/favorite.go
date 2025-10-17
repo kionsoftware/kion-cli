@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/kionsoftware/kion-cli/lib/helper"
@@ -63,12 +62,7 @@ func (c *Cmd) ListFavorites(cCtx *cli.Context) error {
 		}
 	} else {
 		for _, f := range favorites {
-			// check if the name starts with "[unaliased]" to handle upstream favorites with no alias
-			if strings.HasPrefix(f.Name, "[unaliased]") {
-				fmt.Printf(" %v\n", f.Name)
-			} else {
-				fmt.Printf(" %v (%v %v %v %v)\n", f.Name, f.Account, f.CAR, f.AccessType, f.Region)
-			}
+			fmt.Printf(" %v\n", f.DescriptiveName)
 		}
 	}
 

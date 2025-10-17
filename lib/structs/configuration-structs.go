@@ -43,6 +43,7 @@ type Favorite struct {
 	Service              string `yaml:"service,omitempty"`
 	FirefoxContainerName string `yaml:"firefox_container_name,omitempty"`
 	CloudServiceProvider string `json:"cloud_service_provider"`
+	DescriptiveName      string
 	Unaliased            bool
 }
 

@@ -12,12 +12,6 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// STAKResponse maps to the Kion API response.
-type STAKResponse struct {
-	Status int  `json:"status"`
-	STAK   STAK `json:"data"`
-}
-
 // STAK maps to the Kion API response for short term access keys.
 type STAK struct {
 	AccessKey       string `json:"access_key"`
@@ -58,18 +52,18 @@ func GetSTAK(host string, token string, carName string, accNum string, accAlias 
 	}
 
 	// unmarshal response body
-	stakResp := STAKResponse{}
-	err = json.Unmarshal(resp, &stakResp)
+	var stak STAK
+	err = json.Unmarshal(resp.Data, &stak)
 	if err != nil {
 		return STAK{}, err
 	}
 
 	// set the expiration time, buffer by 30 seconds
-	duration := stakResp.STAK.Duration
+	duration := stak.Duration
 	if duration == 0 {
 		duration = 900
 	}
-	stakResp.STAK.Expiration = time.Now().Add(time.Duration(duration-30) * time.Second)
+	stak.Expiration = time.Now().Add(time.Duration(duration-30) * time.Second)
 
-	return stakResp.STAK, nil
+	return stak, nil
 }

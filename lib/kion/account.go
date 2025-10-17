@@ -11,18 +11,6 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// AccountResponse maps to the Kion API response.
-type AccountResponse struct {
-	Status  int     `json:"status"`
-	Account Account `json:"data"`
-}
-
-// AccountsResponse maps to the Kion API response.
-type AccountsResponse struct {
-	Status   int       `json:"status"`
-	Accounts []Account `json:"data"`
-}
-
 // Account maps to the Kion API response for account data.
 type Account struct {
 	Email                     string `json:"account_email"`
@@ -53,13 +41,13 @@ func GetAccountsOnProject(host string, token string, id uint) ([]Account, int, e
 	}
 
 	// unmarshal response body
-	accResp := AccountsResponse{}
-	jsonErr := json.Unmarshal(resp, &accResp)
+	var accounts []Account
+	jsonErr := json.Unmarshal(resp.Data, &accounts)
 	if jsonErr != nil {
 		return nil, 0, err
 	}
 
-	return accResp.Accounts, accResp.Status, nil
+	return accounts, resp.Status, nil
 }
 
 // GetAccount returns an account by the given account number.
@@ -74,11 +62,11 @@ func GetAccount(host string, token string, accountNum string) (*Account, int, er
 	}
 
 	// unmarshal response body
-	accResp := AccountResponse{}
-	jsonErr := json.Unmarshal(resp, &accResp)
+	var account Account
+	jsonErr := json.Unmarshal(resp.Data, &account)
 	if jsonErr != nil {
 		return nil, 0, err
 	}
 
-	return &accResp.Account, accResp.Status, nil
+	return &account, resp.Status, nil
 }

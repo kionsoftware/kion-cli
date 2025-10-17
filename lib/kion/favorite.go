@@ -31,27 +31,27 @@ func GetAPIFavorites(host string, token string) ([]structs.Favorite, int, error)
 	}
 
 	// unmarshal response body
-	favResp := FavoritesResponse{}
-	jsonErr := json.Unmarshal(resp, &favResp)
+	var favorites []structs.Favorite
+	jsonErr := json.Unmarshal(resp.Data, &favorites)
 	if jsonErr != nil {
 		return nil, 0, err
 	}
 
 	var apiFavorites []structs.Favorite
-	for _, apiFav := range favResp.Favorites {
+	for _, apiFav := range favorites {
 
 		// normalize the access type to match what the CLI uses
 		apiFav.AccessType = ConvertAccessType(apiFav.AccessType)
 
 		// handle upstream favorites with no alias
 		if apiFav.Name == "" {
-			apiFav.Name = fmt.Sprintf("[unaliased] (%s %s %s %s)", apiFav.Account, apiFav.CAR, apiFav.AccessType, apiFav.Region)
+			apiFav.Name = "[unaliased]"
 			apiFav.Unaliased = true
 		}
 		apiFavorites = append(apiFavorites, apiFav)
 	}
 
-	return apiFavorites, favResp.Status, nil
+	return apiFavorites, resp.Status, nil
 }
 
 func CreateFavorite(host string, token string, favorite structs.Favorite) (structs.Favorite, int, error) {
@@ -70,14 +70,14 @@ func CreateFavorite(host string, token string, favorite structs.Favorite) (struc
 
 	// unmarshal response body
 	var createdFav structs.Favorite
-	jsonErr := json.Unmarshal(resp, &createdFav)
+	jsonErr := json.Unmarshal(resp.Data, &createdFav)
 	if jsonErr != nil {
 		return structs.Favorite{}, 0, jsonErr
 	}
 
 	// check if the response is successful
 	if statusCode != 201 && statusCode != 200 {
-		return structs.Favorite{}, statusCode, fmt.Errorf("failed to create favorite: %s", string(resp))
+		return structs.Favorite{}, statusCode, fmt.Errorf("failed to create favorite: %s", resp.Message)
 	}
 
 	return createdFav, statusCode, nil
@@ -94,7 +94,7 @@ func DeleteFavorite(host string, token string, favoriteName string) (int, error)
 
 	// check if the response is successful
 	if statusCode != 200 {
-		return statusCode, fmt.Errorf("failed to delete favorite with name %s: %s", favoriteName, string(resp))
+		return statusCode, fmt.Errorf("failed to delete favorite with name %s: %s", favoriteName, resp.Message)
 	}
 
 	return statusCode, nil

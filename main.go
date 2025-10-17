@@ -386,7 +386,7 @@ func main() {
 
 	// run the app
 	if err := app.Run(os.Args); err != nil {
-		color.Red(" Error: %v", err)
+		color.Red("\nError: %v", err)
 		os.Exit(1)
 	}
 }
