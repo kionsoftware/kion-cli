@@ -89,6 +89,12 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 	// we should delete local favorites after the push.
 	var hasErrors bool
 
+	// Authenticate before making API calls
+	err := c.setAuthToken(cCtx)
+	if err != nil {
+		return err
+	}
+
 	// Get the combined list of favorites from the CLI config and the Kion API.
 	apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.URL, c.config.Kion.APIKey)
 	if err != nil {

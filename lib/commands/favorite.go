@@ -19,6 +19,11 @@ func (c *Cmd) getFavorites(cCtx *cli.Context) ([]structs.Favorite, error) {
 	var combinedFavorites []structs.Favorite
 	var err error
 	if useAPI {
+		// Authenticate before making API calls
+		err = c.setAuthToken(cCtx)
+		if err != nil {
+			return apiFavorites, err
+		}
 		apiFavorites, _, err = kion.GetAPIFavorites(c.config.Kion.URL, c.config.Kion.APIKey)
 		if err != nil {
 			fmt.Printf("Error retrieving favorites from API: %v\n", err)
