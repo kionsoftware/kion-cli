@@ -22,3 +22,6 @@ tools/golangci-lint
 .vectorcode
 
 dist/
+
+CLAUDE.md
+.claude/*
