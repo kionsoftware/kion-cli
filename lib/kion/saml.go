@@ -198,6 +198,10 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 		Roots: []*x509.Certificate{},
 	}
 
+	if metadata.IDPSSODescriptor == nil {
+		return nil, fmt.Errorf("SAML metadata is missing IDPSSODescriptor. Please verify your SAML metadata file or URL is correct and contains valid Identity Provider information")
+	}
+
 	for _, kd := range metadata.IDPSSODescriptor.KeyDescriptors {
 		for idx, xcert := range kd.KeyInfo.X509Data.X509Certificates {
 			if xcert.Data == "" {
@@ -341,6 +345,10 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string, printUrl bool) (*AuthData, error) {
 	certStore := dsig.MemoryX509CertificateStore{
 		Roots: []*x509.Certificate{},
+	}
+
+	if metadata.IDPSSODescriptor == nil {
+		return nil, fmt.Errorf("SAML metadata is missing IDPSSODescriptor. Please verify your SAML metadata file or URL is correct and contains valid Identity Provider information")
 	}
 
 	for _, kd := range metadata.IDPSSODescriptor.KeyDescriptors {
