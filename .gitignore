@@ -17,6 +17,12 @@ Thumbs.db
 #######################
 
 /kion
+/kion-darwin-arm
+/kion-darwin
+/kion-linux-arm
+/kion-linux
+/kion-arm.exe
+/kion.exe
 profile.cov
 tools/golangci-lint
 
