@@ -364,6 +364,11 @@ func main() {
 						Usage:  "Flush the Kion CLI cache",
 						Action: cmd.FlushCache,
 					},
+					{
+						Name:   "validate-saml",
+						Usage:  "Validate SAML configuration and connectivity",
+						Action: cmd.ValidateSAML,
+					},
 					// {
 					// 	Name:   "push-favorites",
 					// 	Usage:  "Push configured favorites to Kion",

@@ -94,13 +94,13 @@ type SamlCallbackResult struct {
 	Err  error
 }
 
-func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallbackResult, printUrl bool) (*AuthData, error) {
+func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallbackResult, printURL bool) (*AuthData, error) {
 	authURL, err := sp.BuildAuthURL("")
 	if err != nil {
 		log.Fatalf("The login info is invalid.\n %v", err)
 	}
 
-	if printUrl {
+	if printURL {
 		// print the authentication URL for the user to copy
 		color.Cyan("Please copy the following URL into your browser to authenticate:")
 		fmt.Printf("\n%s\n\n", authURL)
@@ -136,7 +136,7 @@ func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallback
 
 	// create a timer for the callback
 	var timer *time.Timer
-	if printUrl {
+	if printURL {
 		timer = time.NewTimer(180 * time.Second)
 	} else {
 		timer = time.NewTimer(60 * time.Second)
@@ -193,7 +193,74 @@ func callExternalAuth(sp *saml2.SAMLServiceProvider, tokenChan chan SamlCallback
 	return samlResult.Data, nil
 }
 
-func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string, printUrl bool) (*AuthData, error) {
+// validateSAMLMetadata performs comprehensive validation of SAML metadata
+// and returns detailed error messages to help users diagnose configuration issues.
+func validateSAMLMetadata(metadata *samlTypes.EntityDescriptor) error {
+	if metadata == nil {
+		return fmt.Errorf("SAML metadata is nil - the metadata file may be empty or failed to parse")
+	}
+
+	if metadata.EntityID == "" {
+		return fmt.Errorf("SAML metadata is missing EntityID. The metadata file may be malformed or from an incorrect source")
+	}
+
+	if metadata.IDPSSODescriptor == nil {
+		return fmt.Errorf("SAML metadata is missing IDPSSODescriptor. This usually means:\n" +
+			"  1. You may have downloaded Service Provider (SP) metadata instead of Identity Provider (IDP) metadata\n" +
+			"  2. The metadata file is incomplete or malformed\n" +
+			"  3. The URL points to the wrong endpoint\n" +
+			"Please verify you're using the IDP metadata URL from your SAML identity provider (Okta, Azure AD, etc.)")
+	}
+
+	if len(metadata.IDPSSODescriptor.SingleSignOnServices) == 0 {
+		return fmt.Errorf("SAML metadata IDPSSODescriptor has no SingleSignOnServices defined. The metadata may be incomplete")
+	}
+
+	if metadata.IDPSSODescriptor.SingleSignOnServices[0].Location == "" {
+		return fmt.Errorf("SAML metadata SingleSignOnService Location is empty. The metadata may be malformed")
+	}
+
+	if len(metadata.IDPSSODescriptor.KeyDescriptors) == 0 {
+		return fmt.Errorf("SAML metadata has no KeyDescriptors (signing certificates). The IDP metadata may be incomplete")
+	}
+
+	// Validate that at least one key descriptor has valid certificate data
+	hasValidCert := false
+	for _, kd := range metadata.IDPSSODescriptor.KeyDescriptors {
+		if len(kd.KeyInfo.X509Data.X509Certificates) > 0 {
+			for _, cert := range kd.KeyInfo.X509Data.X509Certificates {
+				if cert.Data != "" {
+					hasValidCert = true
+					break
+				}
+			}
+		}
+		if hasValidCert {
+			break
+		}
+	}
+
+	if !hasValidCert {
+		return fmt.Errorf("SAML metadata KeyDescriptors contain no valid X509 certificates. The metadata may be malformed")
+	}
+
+	return nil
+}
+
+func AuthenticateSAML(appURL string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string, printURL bool) (*AuthData, error) {
+	// Validate parameters
+	if appURL == "" {
+		return nil, fmt.Errorf("appUrl (Kion URL) is required but was empty")
+	}
+	if serviceProviderIssuer == "" {
+		return nil, fmt.Errorf("serviceProviderIssuer (SAML SP Issuer) is required but was empty. This should be configured in your Kion settings")
+	}
+
+	// Validate metadata structure
+	if err := validateSAMLMetadata(metadata); err != nil {
+		return nil, fmt.Errorf("SAML metadata validation failed: %w", err)
+	}
+
 	certStore := dsig.MemoryX509CertificateStore{
 		Roots: []*x509.Certificate{},
 	}
@@ -258,7 +325,7 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 		}
 
 		// get csrf token
-		csrfToken, csrfCookie, err := getCSRFToken(appUrl, client)
+		csrfToken, csrfCookie, err := getCSRFToken(appURL, client)
 		if err != nil {
 			fmt.Println("error getting csrf token: ", csrfToken)
 			tokenChan <- SamlCallbackResult{Data: nil, Err: fmt.Errorf("error getting CSRF token: %s", csrfToken)}
@@ -271,7 +338,7 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 			tokenChan <- SamlCallbackResult{Data: nil, Err: fmt.Errorf("failed to create an empty cookie jar: %w", err)}
 			return
 		}
-		url, err := url.Parse(appUrl)
+		url, err := url.Parse(appURL)
 		if err != nil {
 			tokenChan <- SamlCallbackResult{Data: nil, Err: fmt.Errorf("failed to parse ssl url: %w", err)}
 			return
@@ -279,7 +346,7 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 		jar.SetCookies(url, csrfCookie)
 		client.Jar = jar
 
-		r, err := http.NewRequest("POST", appUrl+"/api/v1/saml/callback", bytes.NewReader(b))
+		r, err := http.NewRequest("POST", appURL+"/api/v1/saml/callback", bytes.NewReader(b))
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			tokenChan <- SamlCallbackResult{Data: nil, Err: fmt.Errorf("error creating SAML request: %w", err)}
@@ -314,7 +381,7 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 		ssoCode := groups[1]
 
 		// get auth and refresh token
-		authToken, refreshCookie, err := getAuthToken(appUrl, ssoCode, csrfToken, client)
+		authToken, refreshCookie, err := getAuthToken(appURL, ssoCode, csrfToken, client)
 		if err != nil {
 			tokenChan <- SamlCallbackResult{Data: nil, Err: fmt.Errorf("failed to get auth token: %w", err)}
 			return
@@ -334,11 +401,24 @@ func AuthenticateSAML(appUrl string, metadata *samlTypes.EntityDescriptor, servi
 		}, Err: nil}
 	})
 
-	return callExternalAuth(sp, tokenChan, printUrl)
+	return callExternalAuth(sp, tokenChan, printURL)
 }
 
 // AuthenticateSAMLOld is the old version of AuthenticateSAML that does not use a cookie-based exchange.
-func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string, printUrl bool) (*AuthData, error) {
+func AuthenticateSAMLOld(appURL string, metadata *samlTypes.EntityDescriptor, serviceProviderIssuer string, printURL bool) (*AuthData, error) {
+	// Validate parameters
+	if appURL == "" {
+		return nil, fmt.Errorf("appUrl (Kion URL) is required but was empty")
+	}
+	if serviceProviderIssuer == "" {
+		return nil, fmt.Errorf("serviceProviderIssuer (SAML SP Issuer) is required but was empty. This should be configured in your Kion settings")
+	}
+
+	// Validate metadata structure
+	if err := validateSAMLMetadata(metadata); err != nil {
+		return nil, fmt.Errorf("SAML metadata validation failed: %w", err)
+	}
+
 	certStore := dsig.MemoryX509CertificateStore{
 		Roots: []*x509.Certificate{},
 	}
@@ -402,7 +482,7 @@ func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, se
 			},
 		}
 
-		r, err := http.NewRequest("POST", appUrl+"/api/v1/saml/callback", bytes.NewReader(b))
+		r, err := http.NewRequest("POST", appURL+"/api/v1/saml/callback", bytes.NewReader(b))
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			tokenChan <- SamlCallbackResult{Data: nil, Err: fmt.Errorf("error creating SAML request: %w", err)}
@@ -448,88 +528,139 @@ func AuthenticateSAMLOld(appUrl string, metadata *samlTypes.EntityDescriptor, se
 		}, Err: nil}
 	})
 
-	return callExternalAuth(sp, tokenChan, printUrl)
+	return callExternalAuth(sp, tokenChan, printURL)
 }
 
-func DownloadSAMLMetadata(metadataUrl string) (*samlTypes.EntityDescriptor, error) {
-	res, err := http.Get(metadataUrl)
+func DownloadSAMLMetadata(metadataURL string) (*samlTypes.EntityDescriptor, error) {
+	if metadataURL == "" {
+		return nil, fmt.Errorf("SAML metadata URL is empty. Please provide a valid URL to your Identity Provider's metadata")
+	}
+
+	res, err := http.Get(metadataURL)
 	if err != nil {
-		return nil, fmt.Errorf("error downloading SAML metadata file from %v: %w", metadataUrl, err)
+		return nil, fmt.Errorf("failed to download SAML metadata from %q: %w\nPlease verify:\n  1. The URL is correct\n  2. The URL is accessible from your network\n  3. The Identity Provider is online", metadataURL, err)
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to download SAML metadata from %q: received HTTP status %d (%s)\nPlease verify the URL is correct and points to valid IDP metadata", metadataURL, res.StatusCode, res.Status)
+	}
+
 	rawMetadata, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error downloading SAML metadata file from %v: %w", metadataUrl, err)
+		return nil, fmt.Errorf("error reading SAML metadata response from %q: %w", metadataURL, err)
+	}
+
+	if len(rawMetadata) == 0 {
+		return nil, fmt.Errorf("SAML metadata from %q is empty. The URL may be incorrect or the server returned no data", metadataURL)
 	}
 
 	metadata := &samlTypes.EntityDescriptor{}
 	err = xml.Unmarshal(rawMetadata, metadata)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing SAML metadata file from %v: %w", metadataUrl, err)
+		return nil, fmt.Errorf("error parsing SAML metadata XML from %q: %w\nThe response may not be valid XML or may not be SAML metadata. First 200 chars of response:\n%s", metadataURL, err, truncateString(string(rawMetadata), 200))
 	}
 
 	return metadata, nil
 }
 
 func ReadSAMLMetadataFile(metadataFile string) (*samlTypes.EntityDescriptor, error) {
+	if metadataFile == "" {
+		return nil, fmt.Errorf("SAML metadata file path is empty. Please provide a valid file path to your Identity Provider's metadata")
+	}
+
 	rawMetadata, err := os.ReadFile(metadataFile)
 	if err != nil {
-		return nil, fmt.Errorf("error reading SAML metadata file %v: %w", metadataFile, err)
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("SAML metadata file %q does not exist. Please verify the file path is correct", metadataFile)
+		}
+		return nil, fmt.Errorf("error reading SAML metadata file %q: %w", metadataFile, err)
+	}
+
+	if len(rawMetadata) == 0 {
+		return nil, fmt.Errorf("SAML metadata file %q is empty. Please ensure the file contains valid IDP metadata", metadataFile)
 	}
 
 	metadata := &samlTypes.EntityDescriptor{}
 	err = xml.Unmarshal(rawMetadata, metadata)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing SAML metadata file %v: %w", metadataFile, err)
+		return nil, fmt.Errorf("error parsing SAML metadata XML from file %q: %w\nThe file may not contain valid XML or may not be SAML metadata. First 200 chars of file:\n%s", metadataFile, err, truncateString(string(rawMetadata), 200))
 	}
 
 	return metadata, nil
 }
 
-func getCSRFToken(appUrl string, client *http.Client) (string, []*http.Cookie, error) {
-	csrfReq, err := http.NewRequest("GET", appUrl+"/api/v2/csrf-token", nil)
+// truncateString truncates a string to the specified length and adds "..." if truncated
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+func getCSRFToken(appURL string, client *http.Client) (string, []*http.Cookie, error) {
+	csrfReq, err := http.NewRequest("GET", appURL+"/api/v2/csrf-token", nil)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to create CSRF token request: %w", err)
 	}
 	csrfResp, err := client.Do(csrfReq)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to request CSRF token from %s/api/v2/csrf-token: %w\nPlease verify the Kion URL is correct and accessible", appURL, err)
 	}
 	defer csrfResp.Body.Close()
+
+	if csrfResp.StatusCode != http.StatusOK {
+		return "", nil, fmt.Errorf("CSRF token request failed with HTTP status %d (%s). The Kion server may be unreachable or misconfigured", csrfResp.StatusCode, csrfResp.Status)
+	}
+
 	csrfBody, err := io.ReadAll(csrfResp.Body)
 	csrfCookie := csrfResp.Cookies()
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to read CSRF token response: %w", err)
 	}
 	var csrfData CSRFResponse
 	err = json.Unmarshal(csrfBody, &csrfData)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to parse CSRF token response as JSON: %w\nResponse: %s", err, truncateString(string(csrfBody), 200))
+	}
+	if csrfData.Data == "" {
+		return "", nil, fmt.Errorf("CSRF token response contained empty token. Response: %s", truncateString(string(csrfBody), 200))
 	}
 	return csrfData.Data, csrfCookie, nil
 }
 
-func getAuthToken(appUrl string, ssoCode string, csrfToken string, client *http.Client) (string, []*http.Cookie, error) {
-	authReq, err := http.NewRequest("GET", appUrl+"/api/v2/login/sso-provider?code="+ssoCode, nil)
-	authReq.Header.Set("X-Csrf-Token", csrfToken)
+func getAuthToken(appURL string, ssoCode string, csrfToken string, client *http.Client) (string, []*http.Cookie, error) {
+	authReq, err := http.NewRequest("GET", appURL+"/api/v2/login/sso-provider?code="+ssoCode, nil)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to create auth token request: %w", err)
 	}
+	authReq.Header.Set("X-Csrf-Token", csrfToken)
+
 	authResp, err := client.Do(authReq)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to exchange SSO code for auth token: %w\nThis may indicate:\n  1. Network connectivity issues to Kion\n  2. Invalid SSO code from SAML response\n  3. Kion server issues", err)
 	}
 	defer authResp.Body.Close()
+
 	authBody, err := io.ReadAll(authResp.Body)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to read auth token response: %w", err)
+	}
+
+	if authResp.StatusCode != http.StatusOK {
+		return "", nil, fmt.Errorf("auth token request failed with HTTP status %d (%s)\nResponse: %s\nThis may indicate:\n  1. The SAML Service Provider Issuer doesn't match Kion's configuration\n  2. The SAML SSO integration is not properly configured in Kion\n  3. The SSO code has expired or is invalid",
+			authResp.StatusCode, authResp.Status, truncateString(string(authBody), 300))
 	}
 
 	var authData SSOAuthResponse
 	err = json.Unmarshal(authBody, &authData)
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to parse auth token response as JSON: %w\nResponse: %s", err, truncateString(string(authBody), 200))
 	}
+
+	if authData.Data.Access.Token == "" {
+		return "", nil, fmt.Errorf("auth token response contained empty token. Response: %s", truncateString(string(authBody), 200))
+	}
+
 	return authData.Data.Access.Token, authResp.Cookies(), nil
 }

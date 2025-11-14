@@ -27,3 +27,7 @@ profile.cov
 tools/golangci-lint
 
 dist/
+
+.vectorcode/
+.claude/
+CLAUDE.md
