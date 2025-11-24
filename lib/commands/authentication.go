@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -106,11 +107,19 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 	samlMetadataFile := c.config.Kion.SamlMetadataFile
 	samlServiceProviderIssuer := c.config.Kion.SamlIssuer
 
+	// Validate Kion URL is configured
+	if c.config.Kion.URL == "" {
+		return fmt.Errorf("the Kion URL is not configured; please set 'url' in your configuration file or use the --url flag")
+	}
+
 	// prompt metadata url if needed
 	if samlMetadataFile == "" {
-		samlMetadataFile, err = helper.PromptInput("SAML Metadata URL:")
+		samlMetadataFile, err = helper.PromptInput("SAML Metadata URL or File Path:")
 		if err != nil {
 			return err
+		}
+		if samlMetadataFile == "" {
+			return fmt.Errorf("SAML Metadata URL/File is required for SAML authentication")
 		}
 	}
 
@@ -120,20 +129,24 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		if samlServiceProviderIssuer == "" {
+			return fmt.Errorf("SAML Service Provider Issuer is required for SAML authentication")
+		}
 	}
 
 	var samlMetadata *samlTypes.EntityDescriptor
 	if strings.HasPrefix(samlMetadataFile, "http") {
 		samlMetadata, err = kion.DownloadSAMLMetadata(samlMetadataFile)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to download SAML metadata: %w", err)
 		}
 	} else {
 		samlMetadata, err = kion.ReadSAMLMetadataFile(samlMetadataFile)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to read SAML metadata file: %w", err)
 		}
 	}
+
 	var authData *kion.AuthData
 
 	// we only need to check for existence - the value is irrelevant

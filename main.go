@@ -377,6 +377,11 @@ func main() {
 						Usage:  "Push configured favorites to Kion",
 						Action: cmd.PushFavorites,
 					},
+					{
+						Name:   "validate-saml",
+						Usage:  "Validate SAML configuration and connectivity",
+						Action: cmd.ValidateSAML,
+					},
 				},
 			},
 		},

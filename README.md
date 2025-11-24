@@ -366,6 +366,8 @@ SUB COMMANDS
                                        This will overwrite any favorites in Kion
                                        that have the same alias. After pushing, you
                                        are prompted to delete local favorites.
+
+  validate-saml                        Validate the current SAML configuration.
 ```
 
 __Environment:__
@@ -617,6 +619,95 @@ redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/quicksta
 5. Under the `Redirect URIs` section, click the `Add URI` link to add the Kion
    CLI URL: `http://localhost:8400/callback`
 6. Save your changes
+
+</details>
+
+<details>
+<summary>Validating Your Configuration</summary>
+
+After configuring SAML, you can validate your setup using the built-in validation utility:
+
+```bash
+kion util validate-saml
+```
+
+This command performs comprehensive validation checks on your SAML configuration:
+
+**Configuration Checks:**
+- Verifies Kion URL is configured and accessible
+- Confirms SAML metadata file/URL is configured and reachable
+- Validates SAML Service Provider Issuer is properly formatted (URL or URN)
+- Checks that port 8400 is available for the callback server
+
+**Connectivity Checks:**
+- Tests connection to your Kion instance
+- Validates SAML metadata can be downloaded/read
+- Verifies metadata structure contains required IDP components
+- Checks IDP certificates for validity and expiration
+- Tests reachability of the IDP SSO endpoint
+- Confirms Kion CSRF endpoint is accessible
+
+**Output:**
+
+The validation utility provides color-coded, easy-to-read output with:
+- ✓ Green checkmarks for passed validations
+- ✗ Red marks for failed checks
+- Detailed error messages with suggested fixes
+- SAML metadata details (Entity ID, SSO URL, certificates)
+
+**Example:**
+
+```text
+ SAML Configuration Validation
+──────────────────────────────────────────────────────────────────
+
+Kion URL configured                                              ✓
+  URL: https://mykion.example
+
+SAML Metadata configured                                         ✓
+  Source: https://idp.example.com/metadata.xml
+
+SAML SP Issuer configured                                        ✓
+  Issuer: https://mykion.example/api/v1/saml/auth/2
+
+Port 8400 is available for callback                              ✓
+  Port is available for SAML callback
+
+Kion server is accessible                                        ✓
+  Status: HTTP 200
+
+SAML Metadata is accessible                                      ✓
+
+SAML Metadata structure is valid                                 ✓
+
+IDP certificates are valid                                       ✓
+  All 1 certificate(s) are valid and not expiring soon
+
+IDP SSO URL is reachable                                         ✓
+  Status: HTTP 200 (IDP is responding)
+
+Kion CSRF endpoint is accessible                                 ✓
+  Status: HTTP 200
+
+──────────────────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════════════╗
+║ ✓ All validation checks passed!                              ║
+║                                                              ║
+║ Your SAML configuration appears to be correct.               ║
+║ Try running SAML authentication to complete the flow.        ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+**Common Issues:**
+
+If validation fails, the utility will provide specific guidance:
+- Missing configuration parameters with instructions on how to set them
+- Network connectivity issues with error details
+- Certificate expiration warnings
+- Metadata format problems
+
+Run this command after initial SAML setup or when troubleshooting authentication issues.
 
 </details>
 
