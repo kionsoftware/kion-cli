@@ -302,8 +302,8 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	}
 
 	// favorites API check
-	favoritesAPI1, _ := version.NewConstraint(">=3.13.5, < 3.14.0")
-	favoritesAPI2, _ := version.NewConstraint(">=3.14.1")
+	favoritesAPI1, _ := version.NewConstraint(">=3.13.9, < 3.14.0")
+	favoritesAPI2, _ := version.NewConstraint(">=3.14.3")
 	if favoritesAPI1.Check(curVer) || favoritesAPI2.Check(curVer) {
 		cCtx.App.Metadata["useFavoritesAPI"] = true
 	}
