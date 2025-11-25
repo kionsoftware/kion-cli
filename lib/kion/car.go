@@ -13,12 +13,6 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// CARResponse maps to the Kion API response.
-type CARResponse struct {
-	Status int   `json:"status"`
-	CARS   []CAR `json:"data"`
-}
-
 // CAR maps to the Kion API response for cloud access roles.
 type CAR struct {
 	AccountID           uint   `json:"account_id"`
@@ -67,14 +61,14 @@ func GetCARS(host string, token string, alias string) ([]CAR, error) {
 	}
 
 	// unmarshal response body
-	carResp := CARResponse{}
-	err = json.Unmarshal(resp, &carResp)
+	var allcars []CAR
+	err = json.Unmarshal(resp.Data, &allcars)
 	if err != nil {
 		return nil, err
 	}
 
 	var cars []CAR
-	for _, car := range carResp.CARS {
+	for _, car := range allcars {
 		if car.DeletedAt.Time.IsZero() {
 			cars = append(cars, car)
 		}

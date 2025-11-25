@@ -22,7 +22,7 @@ func (c *Cmd) authUNPW(cCtx *cli.Context) error {
 
 	// prompt idms if needed
 	if idmsID == 0 {
-		idmss, err := kion.GetIDMSs(c.config.Kion.Url)
+		idmss, err := kion.GetIDMSs(c.config.Kion.URL)
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ func (c *Cmd) authUNPW(cCtx *cli.Context) error {
 	pwFoundInCache := false
 	if pw == "" {
 		// Check password cache
-		pw, pwFoundInCache, err = c.cache.GetPassword(c.config.Kion.Url, idmsID, un)
+		pw, pwFoundInCache, err = c.cache.GetPassword(c.config.Kion.URL, idmsID, un)
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func (c *Cmd) authUNPW(cCtx *cli.Context) error {
 	}
 
 	// auth and capture our session
-	session, err := kion.Authenticate(c.config.Kion.Url, idmsID, un, pw)
+	session, err := kion.Authenticate(c.config.Kion.URL, idmsID, un, pw)
 	if err != nil {
 		// Unfortunately, the remote auth endpoint doesn't provide an easy way
 		// of determining if an auth error was the cause of failure (it returns
@@ -72,7 +72,7 @@ func (c *Cmd) authUNPW(cCtx *cli.Context) error {
 		// failues). Conservatively clear out any cached password when
 		// Authenticate() fails
 		if pwFoundInCache {
-			err := c.cache.SetPassword(c.config.Kion.Url, idmsID, un, "")
+			err := c.cache.SetPassword(c.config.Kion.URL, idmsID, un, "")
 			if err != nil {
 				// We're already handling another error, logging
 				// is the best we can do
@@ -89,13 +89,13 @@ func (c *Cmd) authUNPW(cCtx *cli.Context) error {
 	}
 
 	// if auth succeeded, cache the password
-	err = c.cache.SetPassword(c.config.Kion.Url, idmsID, un, pw)
+	err = c.cache.SetPassword(c.config.Kion.URL, idmsID, un, pw)
 	if err != nil {
 		return err
 	}
 
 	// set our token in the config
-	c.config.Kion.ApiKey = session.Access.Token
+	c.config.Kion.APIKey = session.Access.Token
 	return nil
 }
 
@@ -108,7 +108,7 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 	samlServiceProviderIssuer := c.config.Kion.SamlIssuer
 
 	// Validate Kion URL is configured
-	if c.config.Kion.Url == "" {
+	if c.config.Kion.URL == "" {
 		return fmt.Errorf("the Kion URL is not configured; please set 'url' in your configuration file or use the --url flag")
 	}
 
@@ -152,20 +152,20 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 	// we only need to check for existence - the value is irrelevant
 	if cCtx.App.Metadata["useOldSAML"] == true {
 		authData, err = kion.AuthenticateSAMLOld(
-			c.config.Kion.Url,
+			c.config.Kion.URL,
 			samlMetadata,
 			samlServiceProviderIssuer,
-			c.config.Kion.SamlPrintUrl,
+			c.config.Kion.SamlPrintURL,
 		)
 		if err != nil {
 			return err
 		}
 	} else {
 		authData, err = kion.AuthenticateSAML(
-			c.config.Kion.Url,
+			c.config.Kion.URL,
 			samlMetadata,
 			samlServiceProviderIssuer,
-			c.config.Kion.SamlPrintUrl,
+			c.config.Kion.SamlPrintURL,
 		)
 		if err != nil {
 			return err
@@ -189,7 +189,7 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 	}
 
 	// set our token in the config
-	c.config.Kion.ApiKey = authData.AuthToken
+	c.config.Kion.APIKey = authData.AuthToken
 	return nil
 }
 
@@ -200,7 +200,7 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 // If flags are set for multiple methods the highest priority method will be
 // used.
 func (c *Cmd) setAuthToken(cCtx *cli.Context) error {
-	if c.config.Kion.ApiKey == "" {
+	if c.config.Kion.APIKey == "" {
 		// if we still have an active session use it
 		session, found, err := c.cache.GetSession()
 		if err != nil {
@@ -218,7 +218,7 @@ func (c *Cmd) setAuthToken(cCtx *cli.Context) error {
 				// user permission levels, if you get a 401 then assume token is bad
 				// due to caching a cred when a users password expired, and flush the
 				// cache instead...
-				c.config.Kion.ApiKey = session.Access.Token
+				c.config.Kion.APIKey = session.Access.Token
 				return nil
 			}
 
@@ -279,7 +279,7 @@ func (c *Cmd) setAuthToken(cCtx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-			c.config.Kion.ApiKey = apiKey
+			c.config.Kion.APIKey = apiKey
 		case "Password":
 			err := c.authUNPW(cCtx)
 			if err != nil {

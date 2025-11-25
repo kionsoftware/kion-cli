@@ -63,6 +63,7 @@ Setup
     kion:
       url: https://mykion.example
       api_key: [api key]
+      default_region: us-east-1
     favorites:
       - name: sandbox
         account: "111122223333"
@@ -361,6 +362,11 @@ SUB COMMANDS
 
   flush-cache                          Clear out all cache entries for the Kion CLI.
 
+  push-favorites                       Push locally defined favorites up to Kion.
+                                       This will overwrite any favorites in Kion
+                                       that have the same alias. After pushing, you
+                                       are prompted to delete local favorites.
+
   validate-saml                        Validate the current SAML configuration.
 ```
 
@@ -419,7 +425,7 @@ KION
 ----
 kion.url                             URL to the target Kion instance.
 kion.api_key                         API key used to authenticate.
-kion.username                        Username for authentication, to be paried with password.
+kion.username                        Username for authentication, to be paired with password.
 kion.password                        Password for authentication, to be paired with username.
 kion.idms_id                         IDMS ID, if using a custom IDMS in Kion.
 kion.saml_metadata_file              SAML metadata file location, URL or path.
@@ -429,11 +435,14 @@ kion.saml_print_url                  Set 'true' to print the authentication url 
                                      Defaults to 'false'.
 kion.disable_cache                   Prevents Kion CLI from caching STAK if 'true', defaults
                                      to 'false'.
+kion.default_region                  The CSP region to use if one is not provided by argument
+                                     flag or environment variable.
 
 FAVORITES
 ---------
 favorites[N].name                    Favorite name, used when calling `kion fav [name]`
 favorites[N].account                 Account number associated with the favorite.
+favorites[N].region                  Region to use when accessing the favorite.
 favorites[N].cloud_access_role       Cloud Access Role used to authenicate with the favorite.
 favorites[N].access_type             Favorite access type, 'web' or 'cli', defaults 'cli'.
 favorites[N].service                 Service to open by default, for example 'rds', 'ec2', etc.

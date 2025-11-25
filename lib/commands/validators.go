@@ -12,8 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
+	"github.com/kionsoftware/kion-cli/lib/helper"
 	"github.com/kionsoftware/kion-cli/lib/kion"
+	"github.com/kionsoftware/kion-cli/lib/structs"
+
+	"github.com/charmbracelet/lipgloss"
 	samlTypes "github.com/russellhaering/gosaml2/types"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/term"
@@ -211,14 +214,14 @@ func newValidationContext() *validationContext {
 // checkBasicConfig validates basic SAML configuration parameters
 func (c *Cmd) checkBasicConfig(ctx *validationContext) error {
 	// Check 1: Kion URL is configured
-	if c.config.Kion.Url == "" {
+	if c.config.Kion.URL == "" {
 		fmt.Println(ctx.styles.renderCheck("Kion URL configured", false))
 		fmt.Println(ctx.styles.renderError("Kion URL is not configured"))
 		fmt.Println(ctx.styles.renderFix("Set 'url' in ~/.kion.yml or use --url flag"))
 		ctx.allPassed = false
 	} else {
 		fmt.Println(ctx.styles.renderCheck("Kion URL configured", true))
-		fmt.Println(ctx.styles.renderDetail("URL: " + c.config.Kion.Url))
+		fmt.Println(ctx.styles.renderDetail("URL: " + c.config.Kion.URL))
 	}
 	fmt.Println()
 
@@ -298,7 +301,7 @@ func (c *Cmd) checkPortAvailability(ctx *validationContext) {
 // checkKionConnectivity verifies Kion server and CSRF endpoint are accessible
 func (c *Cmd) checkKionConnectivity(ctx *validationContext) bool {
 	kionAccessible := false
-	resp, err := ctx.httpClient.Get(c.config.Kion.Url)
+	resp, err := ctx.httpClient.Get(c.config.Kion.URL)
 	if err != nil {
 		fmt.Println(ctx.styles.renderCheck("Kion server is accessible", false))
 		fmt.Println(ctx.styles.renderError(err.Error()))
@@ -322,7 +325,7 @@ func (c *Cmd) checkKionConnectivity(ctx *validationContext) bool {
 
 // checkCSRFEndpoint verifies Kion CSRF endpoint is accessible
 func (c *Cmd) checkCSRFEndpoint(ctx *validationContext) {
-	csrfResp, err := ctx.httpClient.Get(c.config.Kion.Url + "/api/v2/csrf-token")
+	csrfResp, err := ctx.httpClient.Get(c.config.Kion.URL + "/api/v2/csrf-token")
 	if err != nil {
 		fmt.Println(ctx.styles.renderCheck("Kion CSRF endpoint is accessible", false))
 		fmt.Println(ctx.styles.renderError(err.Error()))
@@ -520,7 +523,7 @@ func (c *Cmd) checkSSOURLReachability(ctx *validationContext, metadata *samlType
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// validateCmdStak validates the flags passed to the stak command.
+// ValidateCmdStak validates the flags passed to the stak command.
 func (c *Cmd) ValidateCmdStak(cCtx *cli.Context) error {
 	if (cCtx.String("account") != "" || cCtx.String("alias") != "") && cCtx.String("car") == "" {
 		return errors.New("must specify --car parameter when using --account or --alias")
@@ -530,7 +533,7 @@ func (c *Cmd) ValidateCmdStak(cCtx *cli.Context) error {
 	return nil
 }
 
-// validateCmdConsole validates the flags passed to the console command.
+// ValidateCmdConsole validates the flags passed to the console command.
 func (c *Cmd) ValidateCmdConsole(cCtx *cli.Context) error {
 	if cCtx.String("car") != "" {
 		if cCtx.String("account") == "" && cCtx.String("alias") == "" {
@@ -542,10 +545,27 @@ func (c *Cmd) ValidateCmdConsole(cCtx *cli.Context) error {
 	return nil
 }
 
-// validateCmdRun validates the flags passed to the run command.
+// ValidateCmdRun validates the flags passed to the run command and sets the
+// favorites region as the default region if needed to ensure precedence.
 func (c *Cmd) ValidateCmdRun(cCtx *cli.Context) error {
+	// Validate that either a favorite is used or both account/alias and car are provided
 	if cCtx.String("favorite") == "" && ((cCtx.String("account") == "" && cCtx.String("alias") == "") || cCtx.String("car") == "") {
 		return errors.New("must specify either --fav OR --account and --car  OR --alias and --car parameters")
 	}
+
+	// Set the favorite region as the default region if a favorite is used
+	favName := cCtx.String("favorite")
+	_, fMap := helper.MapFavs(c.config.Favorites)
+	var fav string
+	if fMap[favName] != (structs.Favorite{}) {
+		fav = favName
+	} else {
+		return errors.New("can't find favorite")
+	}
+	favorite := fMap[fav]
+	if favorite.Region != "" {
+		c.config.Kion.DefaultRegion = favorite.Region
+	}
+
 	return nil
 }

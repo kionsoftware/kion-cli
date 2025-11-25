@@ -28,12 +28,12 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 	if carName != "" && (accNum != "" || accountAlias != "") {
 		// fetch the car directly using account number or alias and car name
 		if accNum != "" {
-			car, err = kion.GetCARByNameAndAccount(c.config.Kion.Url, c.config.Kion.ApiKey, carName, accNum)
+			car, err = kion.GetCARByNameAndAccount(c.config.Kion.URL, c.config.Kion.APIKey, carName, accNum)
 			if err != nil {
 				return fmt.Errorf("failed to get CAR for account %s and CAR %s: %v", accNum, carName, err)
 			}
 		} else {
-			car, err = kion.GetCARByNameAndAlias(c.config.Kion.Url, c.config.Kion.ApiKey, carName, accountAlias)
+			car, err = kion.GetCARByNameAndAlias(c.config.Kion.URL, c.config.Kion.APIKey, carName, accountAlias)
 			if err != nil {
 				return fmt.Errorf("failed to get CAR for alias %s and CAR %s: %v", accountAlias, carName, err)
 			}
@@ -47,7 +47,7 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 	}
 
 	// grab the csp federation url
-	url, err := kion.GetFederationURL(c.config.Kion.Url, c.config.Kion.ApiKey, car)
+	url, err := kion.GetFederationURL(c.config.Kion.URL, c.config.Kion.APIKey, car)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 
 	// print out how to store as a favorite
 	if !c.config.Kion.QuietMode {
-		if err := helper.PrintFavoriteConfig(os.Stdout, car, cCtx.String("region"), "web"); err != nil {
+		if err := helper.PrintFavoriteConfig(os.Stdout, car, "", "web"); err != nil {
 			return err
 		}
 	}
@@ -67,7 +67,6 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 		AccountNumber:  car.AccountNumber,
 		AccountTypeID:  car.AccountTypeID,
 		AwsIamRoleName: car.AwsIamRoleName,
-		Region:         cCtx.String("region"),
 	}
 	return helper.OpenBrowserRedirect(url, session, c.config.Browser, redirect, "")
 }

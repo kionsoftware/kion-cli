@@ -5,12 +5,6 @@ import (
 	"fmt"
 )
 
-// ConsoleAccessResponse maps to the Kion V1 API response.
-type ConsoleAccessCARResponse struct {
-	Status            int                `json:"status"`
-	ConsoleAccessCARs []ConsoleAccessCAR `json:"data"`
-}
-
 // ConsoleAccessCAR maps to the Kion API response for CAR data.
 type ConsoleAccessCAR struct {
 	CARName        string    `json:"name"`
@@ -37,11 +31,11 @@ func GetConsoleAccessCARS(host string, token string, projID uint) ([]ConsoleAcce
 	}
 
 	// unmarshal response body
-	consoleAccessCarResp := ConsoleAccessCARResponse{}
-	err = json.Unmarshal(resp, &consoleAccessCarResp)
+	var consoleAccessCars []ConsoleAccessCAR
+	err = json.Unmarshal(resp.Data, &consoleAccessCars)
 	if err != nil {
 		return nil, err
 	}
 
-	return consoleAccessCarResp.ConsoleAccessCARs, nil
+	return consoleAccessCars, nil
 }

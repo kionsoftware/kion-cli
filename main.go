@@ -67,7 +67,7 @@ func main() {
 
 	// prep default text for api key
 	apiKeyDefaultText := ""
-	if config.Kion.ApiKey != "" {
+	if config.Kion.APIKey != "" {
 		apiKeyDefaultText = "*****"
 	}
 
@@ -99,6 +99,8 @@ func main() {
 		Metadata: map[string]any{
 			"useUpdatedCloudAccessRoleAPI": false,
 			"useOldSAML":                   false,
+			"configPath":                   configPath,
+			"useFavoritesAPI":              false,
 		},
 
 		////////////////////
@@ -109,10 +111,10 @@ func main() {
 			&cli.StringFlag{
 				Name:        "endpoint",
 				Aliases:     []string{"url", "e"},
-				Value:       config.Kion.Url,
+				Value:       config.Kion.URL,
 				EnvVars:     []string{"KION_URL"},
 				Usage:       "Kion `URL`",
-				Destination: &config.Kion.Url,
+				Destination: &config.Kion.URL,
 			},
 			&cli.StringFlag{
 				Name:        "user",
@@ -155,18 +157,18 @@ func main() {
 			},
 			&cli.BoolFlag{
 				Name:        "saml-print-url",
-				Value:       config.Kion.SamlPrintUrl,
+				Value:       config.Kion.SamlPrintURL,
 				EnvVars:     []string{"KION_SAML_PRINT_URL"},
 				Usage:       "print SAML URL instead of opening browser",
-				Destination: &config.Kion.SamlPrintUrl,
+				Destination: &config.Kion.SamlPrintURL,
 			},
 			&cli.StringFlag{
 				Name:        "token",
 				Aliases:     []string{"t"},
-				Value:       config.Kion.ApiKey,
+				Value:       config.Kion.APIKey,
 				EnvVars:     []string{"KION_API_KEY", "CTKEY_APPAPIKEY"},
 				Usage:       "`TOKEN` for authentication",
-				Destination: &config.Kion.ApiKey,
+				Destination: &config.Kion.APIKey,
 				DefaultText: apiKeyDefaultText,
 			},
 			&cli.StringFlag{
@@ -229,9 +231,12 @@ func main() {
 						Usage:   "target cloud access role, must be passed with account or alias",
 					},
 					&cli.StringFlag{
-						Name:    "region",
-						Aliases: []string{"r"},
-						Usage:   "target region",
+						Name:        "region",
+						Aliases:     []string{"r"},
+						Value:       config.Kion.DefaultRegion,
+						EnvVars:     []string{"AWS_REGION", "AWS_DEFAULT_REGION"},
+						Usage:       "target region",
+						Destination: &config.Kion.DefaultRegion,
 					},
 					&cli.BoolFlag{
 						Name:    "save",
@@ -349,9 +354,12 @@ func main() {
 						Usage:   "CAR name",
 					},
 					&cli.StringFlag{
-						Name:    "region",
-						Aliases: []string{"r"},
-						Usage:   "target region",
+						Name:        "region",
+						Aliases:     []string{"r"},
+						Value:       config.Kion.DefaultRegion,
+						EnvVars:     []string{"AWS_REGION", "AWS_DEFAULT_REGION"},
+						Usage:       "target region",
+						Destination: &config.Kion.DefaultRegion,
 					},
 				},
 			},
@@ -365,15 +373,15 @@ func main() {
 						Action: cmd.FlushCache,
 					},
 					{
+						Name:   "push-favorites",
+						Usage:  "Push configured favorites to Kion",
+						Action: cmd.PushFavorites,
+					},
+					{
 						Name:   "validate-saml",
 						Usage:  "Validate SAML configuration and connectivity",
 						Action: cmd.ValidateSAML,
 					},
-					// {
-					// 	Name:   "push-favorites",
-					// 	Usage:  "Push configured favorites to Kion",
-					// 	Action: cmd.PushFavorites,
-					// },
 				},
 			},
 		},
@@ -383,7 +391,7 @@ func main() {
 
 	// run the app
 	if err := app.Run(os.Args); err != nil {
-		color.Red(" Error: %v", err)
+		color.Red("\nError: %v", err)
 		os.Exit(1)
 	}
 }

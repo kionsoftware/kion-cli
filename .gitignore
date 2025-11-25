@@ -25,6 +25,7 @@ Thumbs.db
 /kion.exe
 profile.cov
 tools/golangci-lint
+.vectorcode
 
 dist/
 

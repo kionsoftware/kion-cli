@@ -18,11 +18,11 @@ func (c *Cmd) GenStaks(cCtx *cli.Context) error {
 	var stak kion.STAK
 
 	// set vars for easier access
-	endpoint := c.config.Kion.Url
+	endpoint := c.config.Kion.URL
 	carName := cCtx.String("car")
 	accNum := cCtx.String("account")
 	accAlias := cCtx.String("alias")
-	region := cCtx.String("region")
+	region := c.config.Kion.DefaultRegion
 
 	// get command used and set cache validity buffer
 	action, buffer := getActionAndBuffer(cCtx)
@@ -53,12 +53,12 @@ func (c *Cmd) GenStaks(cCtx *cli.Context) error {
 			}
 
 			if accNum != "" {
-				car, err = kion.GetCARByNameAndAccount(endpoint, c.config.Kion.ApiKey, carName, accNum)
+				car, err = kion.GetCARByNameAndAccount(endpoint, c.config.Kion.APIKey, carName, accNum)
 				if err != nil {
 					return err
 				}
 			} else {
-				car, err = kion.GetCARByNameAndAlias(endpoint, c.config.Kion.ApiKey, carName, accAlias)
+				car, err = kion.GetCARByNameAndAlias(endpoint, c.config.Kion.APIKey, carName, accAlias)
 				if err != nil {
 					return err
 				}

@@ -11,12 +11,6 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// URLResponse maps to the Kion API response.
-type URLResponse struct {
-	Status int    `json:"status"`
-	URL    string `json:"data"`
-}
-
 // URLRequest maps to the required post body when interfacing with the Kion
 // API.
 type URLRequest struct {
@@ -57,12 +51,11 @@ func GetFederationURL(host string, token string, car CAR) (string, error) {
 		return "", err
 	}
 
-	// unmarshal response body
-	urlResp := URLResponse{}
-	err = json.Unmarshal(resp, &urlResp)
+	var fedurl string
+	err = json.Unmarshal(resp.Data, &fedurl)
 	if err != nil {
 		return "", err
 	}
 
-	return urlResp.URL, nil
+	return fedurl, nil
 }

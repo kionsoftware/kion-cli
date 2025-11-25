@@ -11,18 +11,6 @@ import (
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// ProjectResponse maps to the Kion API response.
-type ProjectResponse struct {
-	Status  int     `json:"status"`
-	Project Project `json:"data"`
-}
-
-// ProjectsResponse maps to the Kion API response.
-type ProjectsResponse struct {
-	Status   int       `json:"status"`
-	Projects []Project `json:"data"`
-}
-
 // Project maps to the Kion API response for projects.
 type Project struct {
 	Archived         bool   `json:"archived"`
@@ -46,13 +34,13 @@ func GetProjects(host string, token string) ([]Project, error) {
 	}
 
 	// unmarshal response body
-	projResp := ProjectsResponse{}
-	err = json.Unmarshal(resp, &projResp)
+	var projects []Project
+	err = json.Unmarshal(resp.Data, &projects)
 	if err != nil {
 		return nil, err
 	}
 
-	return projResp.Projects, nil
+	return projects, nil
 }
 
 // GetProjectByID returns the project for a given project ID. Note that if a
@@ -70,11 +58,11 @@ func GetProjectByID(host string, token string, id uint) (Project, error) {
 	}
 
 	// unmarshal response body
-	projResp := ProjectResponse{}
-	err = json.Unmarshal(resp, &projResp)
+	var project Project
+	err = json.Unmarshal(resp.Data, &project)
 	if err != nil {
 		return Project{}, err
 	}
 
-	return projResp.Project, nil
+	return project, nil
 }

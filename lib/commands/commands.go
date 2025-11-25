@@ -1,3 +1,4 @@
+// Package commands provides the command implementations for the Kion CLI tool.
 package commands
 
 import (
@@ -61,12 +62,12 @@ func getThirdArgument(cCtx *cli.Context) string {
 // passed to the tool as an argument, set in the env, or present in the
 // configuration dotfile it will prompt the user to provide it.
 func (c *Cmd) setEndpoint() error {
-	if c.config.Kion.Url == "" {
+	if c.config.Kion.URL == "" {
 		kionURL, err := helper.PromptInput("Kion URL:")
 		if err != nil {
 			return err
 		}
-		c.config.Kion.Url = kionURL
+		c.config.Kion.URL = kionURL
 	}
 	return nil
 }
@@ -106,7 +107,7 @@ func (c *Cmd) authStakCache(cCtx *cli.Context, carName string, accNum string, ac
 	}
 
 	// generate short term tokens
-	stak, err := kion.GetSTAK(c.config.Kion.Url, c.config.Kion.ApiKey, carName, accNum, accAlias)
+	stak, err := kion.GetSTAK(c.config.Kion.URL, c.config.Kion.APIKey, carName, accNum, accAlias)
 	if err != nil {
 		return kion.STAK{}, err
 	}
@@ -188,7 +189,7 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 		for _, flag := range setGlobalFlags {
 			switch flag {
 			case "endpoint":
-				setStrings["endpoint"] = c.config.Kion.Url
+				setStrings["endpoint"] = c.config.Kion.URL
 			case "user":
 				setStrings["user"] = c.config.Kion.Username
 			case "password":
@@ -200,7 +201,7 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 			case "saml-sp-issuer":
 				setStrings["saml-sp-issuer"] = c.config.Kion.SamlIssuer
 			case "token":
-				setStrings["token"] = c.config.Kion.ApiKey
+				setStrings["token"] = c.config.Kion.APIKey
 			// non-string flags
 			case "disable-cache":
 				disableCacheFlagged = true
@@ -271,7 +272,7 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	}
 
 	// gather the targeted Kion version
-	kionVer, err := kion.GetVersion(c.config.Kion.Url)
+	kionVer, err := kion.GetVersion(c.config.Kion.URL)
 	if err != nil {
 		return err
 	}
@@ -298,6 +299,13 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	newSaml, _ := version.NewConstraint(">=3.8.0")
 	if !newSaml.Check(curVer) {
 		cCtx.App.Metadata["useOldSAML"] = true
+	}
+
+	// favorites API check
+	favoritesAPI1, _ := version.NewConstraint(">=3.13.9, < 3.14.0")
+	favoritesAPI2, _ := version.NewConstraint(">=3.14.3")
+	if favoritesAPI1.Check(curVer) || favoritesAPI2.Check(curVer) {
+		cCtx.App.Metadata["useFavoritesAPI"] = true
 	}
 
 	// initialize the cache

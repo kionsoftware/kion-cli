@@ -176,20 +176,20 @@ func TestMapFavs(t *testing.T) {
 			"Basic",
 			kionTestFavorites,
 			[]string{
-				kionTestFavoritesNames[4],
-				kionTestFavoritesNames[3],
-				kionTestFavoritesNames[0],
-				kionTestFavoritesNames[5],
-				kionTestFavoritesNames[2],
-				kionTestFavoritesNames[1],
+				"fav five     [local] (151515151515 car five web)",
+				"fav four     [local] (141414141414 car four web)",
+				"fav one      [local] (111111111111 car one web)",
+				"fav six      [local] (161616161616 car six web)",
+				"fav three    [local] (131313131313 car three web)",
+				"fav two      [local] (121212121212 car two web)",
 			},
 			map[string]structs.Favorite{
-				kionTestFavoritesNames[0]: kionTestFavorites[0],
-				kionTestFavoritesNames[1]: kionTestFavorites[1],
-				kionTestFavoritesNames[2]: kionTestFavorites[2],
-				kionTestFavoritesNames[3]: kionTestFavorites[3],
-				kionTestFavoritesNames[4]: kionTestFavorites[4],
-				kionTestFavoritesNames[5]: kionTestFavorites[5],
+				"fav one      [local] (111111111111 car one web)":   kionTestFavorites[0],
+				"fav two      [local] (121212121212 car two web)":   kionTestFavorites[1],
+				"fav three    [local] (131313131313 car three web)": kionTestFavorites[2],
+				"fav four     [local] (141414141414 car four web)":  kionTestFavorites[3],
+				"fav five     [local] (151515151515 car five web)":  kionTestFavorites[4],
+				"fav six      [local] (161616161616 car six web)":   kionTestFavorites[5],
 			},
 		},
 	}
@@ -197,7 +197,6 @@ func TestMapFavs(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			one, two := MapFavs(test.favorites)
-			// if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 			if !reflect.DeepEqual(test.wantOne, one) || !reflect.DeepEqual(test.wantTwo, two) {
 				t.Errorf("\ngot:\n  %v\n  %v\nwanted:\n  %v\n  %v", one, two, test.wantOne, test.wantTwo)
 			}

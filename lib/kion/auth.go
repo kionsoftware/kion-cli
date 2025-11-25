@@ -29,12 +29,6 @@ type Session struct {
 	} `json:"refresh"`
 }
 
-// IDMSResponse maps to the Kion API response.
-type IDMSResponse struct {
-	Status int    `json:"status"`
-	IDMSs  []IDMS `json:"data"`
-}
-
 // IDMS maps to the Kion API response for configured IDMSs.
 type IDMS struct {
 	ID         uint   `json:"id"`
@@ -50,12 +44,6 @@ type AuthRequest struct {
 	Password string `json:"password"`
 }
 
-// AuthResponse maps to the Kion API response.
-type AuthResponse struct {
-	Status  int     `json:"status"`
-	Session Session `json:"data"`
-}
-
 // GetIDMSs queries the Kion API for all configured IDMS systems with which a
 // user can authenticate via username and password.
 func GetIDMSs(host string) ([]IDMS, error) {
@@ -69,21 +57,21 @@ func GetIDMSs(host string) ([]IDMS, error) {
 	}
 
 	// unmarshal response body
-	idmsResp := IDMSResponse{}
-	err = json.Unmarshal(resp, &idmsResp)
+	var idmss []IDMS
+	err = json.Unmarshal(resp.Data, &idmss)
 	if err != nil {
 		return nil, err
 	}
 
 	// only pass along idms's that can accept username and password via kion
-	idmss := []IDMS{}
-	for _, idms := range idmsResp.IDMSs {
+	unpwIdmss := []IDMS{}
+	for _, idms := range idmss {
 		if idms.IdmsTypeID == 1 || idms.IdmsTypeID == 2 {
-			idmss = append(idmss, idms)
+			unpwIdmss = append(unpwIdmss, idms)
 		}
 	}
 
-	return idmss, nil
+	return unpwIdmss, nil
 }
 
 // Authenticate queries the Kion API to authenticate a user via username and
@@ -103,11 +91,11 @@ func Authenticate(host string, idmsID uint, un string, pw string) (Session, erro
 	}
 
 	// unmarshal response body
-	authResp := AuthResponse{}
-	err = json.Unmarshal(resp, &authResp)
+	var session Session
+	err = json.Unmarshal(resp.Data, &session)
 	if err != nil {
 		return Session{}, err
 	}
 
-	return authResp.Session, nil
+	return session, nil
 }
