@@ -37,15 +37,6 @@ func shouldLimitHeight(optionCount int) (bool, int) {
 	return false, 0
 }
 
-// toHuhOptions converts a string slice to huh options.
-func toHuhOptions(options []string) []huh.Option[string] {
-	huhOptions := make([]huh.Option[string], len(options))
-	for i, option := range options {
-		huhOptions[i] = huh.NewOption(option, option)
-	}
-	return huhOptions
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Prompts                                                                   //
@@ -57,12 +48,17 @@ func toHuhOptions(options []string) []huh.Option[string] {
 func PromptSelect(message string, description string, options []string) (string, error) {
 	var selection string
 
+	// Convert to huh options
+	huhOptions := make([]huh.Option[string], len(options))
+	for i, option := range options {
+		huhOptions[i] = huh.NewOption(option, option)
+	}
+
 	selectField := huh.NewSelect[string]().
 		Title(message).
 		Description(description).
-		Options(toHuhOptions(options)...).
-		Value(&selection).
-		Filtering(false)
+		Options(huhOptions...).
+		Value(&selection)
 
 	// Apply height limiting only if needed
 	if shouldLimit, height := shouldLimitHeight(len(options)); shouldLimit {
@@ -82,23 +78,33 @@ func PromptSelect(message string, description string, options []string) (string,
 
 // PromptInput prompts the user to provide dynamic input.
 func PromptInput(message string) (string, error) {
-	return promptInput(message, huh.EchoModeNormal)
-}
-
-// PromptPassword prompts the user to provide sensitive dynamic input.
-func PromptPassword(message string) (string, error) {
-	return promptInput(message, huh.EchoModePassword)
-}
-
-// promptInput is the shared implementation for text input prompts.
-func promptInput(message string, echoMode huh.EchoMode) (string, error) {
 	var input string
 
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title(message).
-				EchoMode(echoMode).
+				Value(&input).
+				Validate(styles.RequiredValidator),
+		),
+	).WithTheme(styles.FormTheme)
+
+	if err := form.Run(); err != nil {
+		return "", err
+	}
+
+	return input, nil
+}
+
+// PromptPassword prompts the user to provide sensitive dynamic input.
+func PromptPassword(message string) (string, error) {
+	var input string
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title(message).
+				EchoMode(huh.EchoModePassword).
 				Value(&input).
 				Validate(styles.RequiredValidator),
 		),
