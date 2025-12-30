@@ -93,7 +93,7 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 	if fMap[cCtx.Args().First()] != (structs.Favorite{}) {
 		fav = cCtx.Args().First()
 	} else {
-		fav, err = helper.PromptSelect("Choose a Favorite:", fNames)
+		fav, err = helper.PromptSelect("Choose a Favorite:", "Select your favorite from the list below.", fNames)
 		if err != nil {
 			return err
 		}

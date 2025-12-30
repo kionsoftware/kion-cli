@@ -30,7 +30,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 	}
 
 	// prompt user to select a project
-	project, err := PromptSelect("Choose a project:", pNames)
+	project, err := PromptSelect("Choose a project:", "Select the project you want to work with.", pNames)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		}
 
 		// prompt user to select an account
-		account, err := PromptSelect("Choose an Account:", aNames)
+		account, err := PromptSelect("Choose an Account:", "Select the account for this project.", aNames)
 		if err != nil {
 			return err
 		}
@@ -68,7 +68,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		}
 
 		// prompt user to select a car
-		carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
+		carname, err := PromptSelect("Choose a Cloud Access Role:", "Select your cloud access role.", cNames)
 		if err != nil {
 			return err
 		}
@@ -102,7 +102,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		}
 
 		// prompt user to select an account
-		account, err := PromptSelect("Choose an Account:", aNames)
+		account, err := PromptSelect("Choose an Account:", "Select the account for this project.", aNames)
 		if err != nil {
 			return err
 		}
@@ -118,7 +118,7 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		}
 
 		// prompt user to select a car
-		carname, err := PromptSelect("Choose a Cloud Access Role:", cNames)
+		carname, err := PromptSelect("Choose a Cloud Access Role:", "Select your cloud access role.", cNames)
 		if err != nil {
 			return err
 		}
@@ -177,13 +177,13 @@ func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, proj
 	}
 
 	// prompt user to select an account
-	account, err := PromptSelect("Choose an Account:", aNames)
+	account, err := PromptSelect("Choose an Account:", "Select the account for this project.", aNames)
 	if err != nil {
 		return err
 	}
 
 	// prompt user to select car
-	carname, err := PromptSelect("Choose a Cloud Access Role:", aToCMap[account])
+	carname, err := PromptSelect("Choose a Cloud Access Role:", "Select your cloud access role.", aToCMap[account])
 	if err != nil {
 		return err
 	}

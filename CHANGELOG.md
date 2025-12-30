@@ -20,8 +20,26 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.15.0] - 2025.12.30
+---------------------
+
+Version 0.15.0 migrates interactive prompts from the archived survey library to Charm (bubbletea/huh). This release also adds a new `util validate-saml` command to help troubleshoot SAML authentication configurations.
+
+### Added
+
+- New `util validate-saml` command to help verify SAML configurations [kionsoftware/kion-cli/pull/104]
+
+### Changed
+
+- Replaced survey library with Charm (bubbletea/huh) as survey has been archived [kionsoftware/kion-cli/pull/106]
+- Improved SAML authentication error handling with more descriptive messages for misconfigurations [kionsoftware/kion-cli/pull/104]
+
+### Fixed
+
+- Patched `github.com/dvsekhvalnov/jose2go` to version 1.8.0 to address CVE-2025-63811 [kionsoftware/kion-cli/pull/106]
+
 [0.14.0] - 2025.09.29
--------------------------
+---------------------
 
 Version 0.14.0 integrates favorites between Kion and the Kion CLI (requires Kion version 3.13.5, 3.14.1 or greater). This allows Kion to be the new source of truth for your configured favorites and simplifies maintenance of the Kion CLI configuration file. If you already have favorites defined in your Kion CLI configuration file it is recommended you run `kion util push-favorites` once to sync them with your instance of Kion.
 
