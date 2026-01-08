@@ -184,12 +184,20 @@ func TestMapFavs(t *testing.T) {
 				"fav two      [local] (121212121212 car two web)",
 			},
 			map[string]structs.Favorite{
+				// Indexed by DescriptiveName
 				"fav one      [local] (111111111111 car one web)":   kionTestFavorites[0],
 				"fav two      [local] (121212121212 car two web)":   kionTestFavorites[1],
 				"fav three    [local] (131313131313 car three web)": kionTestFavorites[2],
 				"fav four     [local] (141414141414 car four web)":  kionTestFavorites[3],
 				"fav five     [local] (151515151515 car five web)":  kionTestFavorites[4],
 				"fav six      [local] (161616161616 car six web)":   kionTestFavorites[5],
+				// Also indexed by plain Name for CLI argument lookup
+				"fav one":   kionTestFavorites[0],
+				"fav two":   kionTestFavorites[1],
+				"fav three": kionTestFavorites[2],
+				"fav four":  kionTestFavorites[3],
+				"fav five":  kionTestFavorites[4],
+				"fav six":   kionTestFavorites[5],
 			},
 		},
 	}
