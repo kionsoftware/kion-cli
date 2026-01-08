@@ -45,7 +45,11 @@ default:
 	\
 	    $(B)$(GRN)install$(NRM)              $(GRN)Build and install the kion binary to /usr/local/bin$(NRM)\n\
 	    $(B)$(YLW)install-symlink$(NRM)      $(GRN)Build and $(B)symlink$(NRM)$(GRN) the kion binary to /usr/local/bin$(NRM)\n\
-	    $(B)$(RED)clean$(NRM)                $(RED)Delete generated assets and helpers$(NRM)\n\n"
+	    $(B)$(RED)clean$(NRM)                $(RED)Delete generated assets and helpers$(NRM)\n\n\
+	\
+	    $(B)$(BLU)$(UN)Release:$(NRM)\n\n\
+	\
+	    $(B)$(MGT)release$(NRM)              $(GRN)Validate and create a release tag$(NRM)\n\n"
 
 init:
 	@printf "${B}${UN}${BLU}Initializing the repo:${NRM}\n"
@@ -117,3 +121,6 @@ clean:
 	rm -f kion.exe
 	rm -f profile.cov
 	rm -f tools/golangci-lint
+
+release:
+	@./tools/release.sh
