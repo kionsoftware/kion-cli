@@ -123,6 +123,13 @@ func MapFavs(favs []structs.Favorite) ([]string, map[string]structs.Favorite) {
 	for _, fav := range favs {
 		fNames = append(fNames, fav.DescriptiveName)
 		fMap[fav.DescriptiveName] = fav
+		// Also index by plain name to support command-line argument lookups
+		if fav.Name != "" {
+			// Only set if not already present (first match wins for name conflicts)
+			if _, exists := fMap[fav.Name]; !exists {
+				fMap[fav.Name] = fav
+			}
+		}
 	}
 	sort.Strings(fNames)
 

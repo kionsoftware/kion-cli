@@ -20,6 +20,13 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.15.1] - 2025.01.08
+---------------------
+
+### Fixed
+
+- Fixed favorite lookup by name when passed as a command-line argument (e.g., `kion f myfavorite`) [kionsoftware/kion-cli/pull/109]
+
 [0.15.0] - 2025.12.30
 ---------------------
 
