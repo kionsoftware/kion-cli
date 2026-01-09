@@ -246,3 +246,245 @@ func TestFindCARByName(t *testing.T) {
 		})
 	}
 }
+
+func TestCombineFavorites_EmptyInputs(t *testing.T) {
+	all, comparison, err := CombineFavorites(nil, nil)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 0 {
+		t.Errorf("expected empty All, got %d items", len(all))
+	}
+	if len(comparison.LocalOnly) != 0 {
+		t.Errorf("expected empty LocalOnly, got %d items", len(comparison.LocalOnly))
+	}
+	if len(comparison.ConflictsLocal) != 0 {
+		t.Errorf("expected empty ConflictsLocal, got %d items", len(comparison.ConflictsLocal))
+	}
+}
+
+func TestCombineFavorites_OnlyUpstream(t *testing.T) {
+	upstream := []structs.Favorite{
+		{Name: "upstream1", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+		{Name: "upstream2", Account: "222222222222", CAR: "Role2", AccessType: "web"},
+	}
+
+	all, comparison, err := CombineFavorites(nil, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 2 {
+		t.Errorf("expected 2 in All, got %d", len(all))
+	}
+	if len(comparison.LocalOnly) != 0 {
+		t.Errorf("expected empty LocalOnly, got %d items", len(comparison.LocalOnly))
+	}
+	for _, fav := range all {
+		if fav.DescriptiveName == "" {
+			t.Errorf("expected DescriptiveName to be set for %s", fav.Name)
+		}
+	}
+}
+
+func TestCombineFavorites_OnlyLocal(t *testing.T) {
+	local := []structs.Favorite{
+		{Name: "local1", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+		{Name: "local2", Account: "222222222222", CAR: "Role2", AccessType: "web"},
+	}
+
+	all, comparison, err := CombineFavorites(local, nil)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 2 {
+		t.Errorf("expected 2 in All, got %d", len(all))
+	}
+	if len(comparison.LocalOnly) != 2 {
+		t.Errorf("expected 2 in LocalOnly, got %d", len(comparison.LocalOnly))
+	}
+	if comparison.LocalOnly[0].Name != "local1" || comparison.LocalOnly[1].Name != "local2" {
+		t.Errorf("LocalOnly contains wrong favorites")
+	}
+}
+
+func TestCombineFavorites_ExactMatch(t *testing.T) {
+	local := []structs.Favorite{
+		{Name: "shared", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "shared", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 1 {
+		t.Errorf("expected 1 in All (upstream only), got %d", len(all))
+	}
+	if len(comparison.LocalOnly) != 0 {
+		t.Errorf("expected empty LocalOnly for exact match, got %d", len(comparison.LocalOnly))
+	}
+	if len(comparison.ConflictsLocal) != 0 {
+		t.Errorf("expected empty ConflictsLocal for exact match, got %d", len(comparison.ConflictsLocal))
+	}
+}
+
+func TestCombineFavorites_NameConflict(t *testing.T) {
+	local := []structs.Favorite{
+		{Name: "myfav", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "myfav", Account: "222222222222", CAR: "Role2", AccessType: "web", Unaliased: false},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 2 {
+		t.Errorf("expected 2 in All, got %d", len(all))
+	}
+	if len(comparison.ConflictsLocal) != 1 {
+		t.Errorf("expected 1 in ConflictsLocal, got %d", len(comparison.ConflictsLocal))
+	}
+	if len(comparison.ConflictsUpstream) != 1 {
+		t.Errorf("expected 1 in ConflictsUpstream, got %d", len(comparison.ConflictsUpstream))
+	}
+	if comparison.ConflictsLocal[0].Name != "myfav" {
+		t.Errorf("expected conflict to be 'myfav', got %s", comparison.ConflictsLocal[0].Name)
+	}
+}
+
+func TestCombineFavorites_Duplicate(t *testing.T) {
+	local := []structs.Favorite{
+		{Name: "local-name", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "upstream-name", Account: "111111111111", CAR: "Role1", AccessType: "cli", Unaliased: false},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 2 {
+		t.Errorf("expected 2 in All, got %d", len(all))
+	}
+	if len(comparison.ConflictsLocal) != 1 {
+		t.Errorf("expected 1 in ConflictsLocal, got %d", len(comparison.ConflictsLocal))
+	}
+	if len(comparison.ConflictsUpstream) != 1 {
+		t.Errorf("expected 1 in ConflictsUpstream, got %d", len(comparison.ConflictsUpstream))
+	}
+}
+
+func TestCombineFavorites_UnaliasedMatch(t *testing.T) {
+	local := []structs.Favorite{
+		{Name: "my-local-name", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "", Account: "111111111111", CAR: "Role1", AccessType: "cli", Unaliased: true},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 1 {
+		t.Errorf("expected 1 in All, got %d", len(all))
+	}
+	if all[0].Name != "my-local-name" {
+		t.Errorf("expected local favorite in All, got %s", all[0].Name)
+	}
+	if len(comparison.UnaliasedLocal) != 1 {
+		t.Errorf("expected 1 in UnaliasedLocal, got %d", len(comparison.UnaliasedLocal))
+	}
+	if len(comparison.UnaliasedUpstream) != 1 {
+		t.Errorf("expected 1 in UnaliasedUpstream, got %d", len(comparison.UnaliasedUpstream))
+	}
+	if len(comparison.LocalOnly) != 0 {
+		t.Errorf("expected empty LocalOnly, got %d", len(comparison.LocalOnly))
+	}
+}
+
+func TestCombineFavorites_MultipleConflictsWithSameUpstream(t *testing.T) {
+	local := []structs.Favorite{
+		{Name: "shared", Account: "111111111111", CAR: "RoleA", AccessType: "cli"},
+		{Name: "shared", Account: "222222222222", CAR: "RoleB", AccessType: "web"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "shared", Account: "333333333333", CAR: "RoleC", AccessType: "cli", Unaliased: false},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 3 {
+		t.Errorf("expected 3 in All, got %d", len(all))
+	}
+	if len(comparison.ConflictsLocal) != 2 {
+		t.Errorf("expected 2 in ConflictsLocal, got %d", len(comparison.ConflictsLocal))
+	}
+	if len(comparison.ConflictsUpstream) != 1 {
+		t.Errorf("expected 1 in ConflictsUpstream (deduped), got %d", len(comparison.ConflictsUpstream))
+	}
+}
+
+func TestCombineFavorites_MixedScenarios(t *testing.T) {
+	local := []structs.Favorite{
+		{Name: "exact", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+		{Name: "local-only", Account: "999999999999", CAR: "UniqueRole", AccessType: "web"},
+		{Name: "conflict", Account: "333333333333", CAR: "RoleX", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "exact", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+		{Name: "conflict", Account: "444444444444", CAR: "RoleY", AccessType: "web", Unaliased: false},
+		{Name: "upstream-only", Account: "555555555555", CAR: "RoleZ", AccessType: "cli"},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(all) != 5 {
+		t.Errorf("expected 5 in All, got %d", len(all))
+	}
+	if len(comparison.LocalOnly) != 1 {
+		t.Errorf("expected 1 in LocalOnly, got %d", len(comparison.LocalOnly))
+	}
+	if comparison.LocalOnly[0].Name != "local-only" {
+		t.Errorf("expected 'local-only' in LocalOnly, got %s", comparison.LocalOnly[0].Name)
+	}
+	if len(comparison.ConflictsLocal) != 1 {
+		t.Errorf("expected 1 in ConflictsLocal, got %d", len(comparison.ConflictsLocal))
+	}
+	if comparison.ConflictsLocal[0].Name != "conflict" {
+		t.Errorf("expected 'conflict' in ConflictsLocal, got %s", comparison.ConflictsLocal[0].Name)
+	}
+}
+
+func TestCombineFavorites_NilVsEmptySlice(t *testing.T) {
+	all1, comp1, err1 := CombineFavorites(nil, nil)
+	all2, comp2, err2 := CombineFavorites([]structs.Favorite{}, []structs.Favorite{})
+
+	if err1 != nil || err2 != nil {
+		t.Fatalf("unexpected errors: %v, %v", err1, err2)
+	}
+	if len(all1) != len(all2) {
+		t.Errorf("nil vs empty slice produced different All lengths: %d vs %d", len(all1), len(all2))
+	}
+	if len(comp1.LocalOnly) != len(comp2.LocalOnly) {
+		t.Errorf("nil vs empty slice produced different LocalOnly lengths")
+	}
+}
