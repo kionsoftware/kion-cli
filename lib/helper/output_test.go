@@ -84,6 +84,147 @@ func TestPrintSTAK(t *testing.T) {
 	}
 }
 
+func TestPrintFavoriteConfig(t *testing.T) {
+	tests := []struct {
+		name       string
+		car        kion.CAR
+		region     string
+		accessType string
+		wantParts  []string // Parts that must appear in output
+	}{
+		{
+			name: "with region",
+			car: kion.CAR{
+				AccountNumber: "123456789012",
+				Name:          "AdminRole",
+			},
+			region:     "us-east-1",
+			accessType: "cli",
+			wantParts: []string{
+				"account: 123456789012",
+				"cloud_access_role: AdminRole",
+				"region: us-east-1",
+				"access_type: cli",
+				"[your favorite alias]",
+			},
+		},
+		{
+			name: "without region",
+			car: kion.CAR{
+				AccountNumber: "987654321098",
+				Name:          "ReadOnlyRole",
+			},
+			region:     "",
+			accessType: "web",
+			wantParts: []string{
+				"account: 987654321098",
+				"cloud_access_role: ReadOnlyRole",
+				"access_type: web",
+			},
+		},
+		{
+			name: "empty car values",
+			car: kion.CAR{
+				AccountNumber: "",
+				Name:          "",
+			},
+			region:     "",
+			accessType: "",
+			wantParts: []string{
+				"account:",
+				"cloud_access_role:",
+				"access_type:",
+			},
+		},
+		{
+			name: "gov cloud region",
+			car: kion.CAR{
+				AccountNumber: "111122223333",
+				Name:          "GovRole",
+			},
+			region:     "us-gov-west-1",
+			accessType: "cli",
+			wantParts: []string{
+				"account: 111122223333",
+				"cloud_access_role: GovRole",
+				"region: us-gov-west-1",
+				"access_type: cli",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			err := PrintFavoriteConfig(&buf, test.car, test.region, test.accessType)
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			output := buf.String()
+			for _, part := range test.wantParts {
+				if !containsString(output, part) {
+					t.Errorf("output missing expected part %q\noutput: %s", part, output)
+				}
+			}
+
+			// If region is empty, verify "region:" line is not present
+			if test.region == "" && containsString(output, "region:") {
+				t.Errorf("output should not contain 'region:' when region is empty\noutput: %s", output)
+			}
+		})
+	}
+}
+
+func TestPrintFavoriteConfig_AlwaysReturnsNil(t *testing.T) {
+	var buf bytes.Buffer
+	err := PrintFavoriteConfig(&buf, kion.CAR{}, "", "")
+	if err != nil {
+		t.Errorf("expected nil error, got %v", err)
+	}
+}
+
+// containsString checks if s contains substr, stripping ANSI codes first
+func containsString(s, substr string) bool {
+	// Strip ANSI escape codes for comparison
+	stripped := stripANSI(s)
+	return contains(stripped, substr)
+}
+
+func stripANSI(s string) string {
+	var result []byte
+	inEscape := false
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\x1b' {
+			inEscape = true
+			continue
+		}
+		if inEscape {
+			if s[i] == 'm' {
+				inEscape = false
+			}
+			continue
+		}
+		result = append(result, s[i])
+	}
+	return string(result)
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && findSubstring(s, substr)))
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
 func TestPrintCredentialProcess(t *testing.T) {
 	tests := []struct {
 		description string
