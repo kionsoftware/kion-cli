@@ -597,3 +597,204 @@ func TestCombineFavorites_ErrorAlwaysNil(t *testing.T) {
 		}
 	}
 }
+
+func TestMapAccountsFromCARS_Empty(t *testing.T) {
+	names, aMap := MapAccountsFromCARS(nil, 0)
+
+	if len(names) != 0 {
+		t.Errorf("expected empty names, got %d", len(names))
+	}
+	if len(aMap) != 0 {
+		t.Errorf("expected empty map, got %d", len(aMap))
+	}
+}
+
+func TestMapAccountsFromCARS_EmptySlice(t *testing.T) {
+	names, aMap := MapAccountsFromCARS([]kion.CAR{}, 0)
+
+	if len(names) != 0 {
+		t.Errorf("expected empty names, got %d", len(names))
+	}
+	if len(aMap) != 0 {
+		t.Errorf("expected empty map, got %d", len(aMap))
+	}
+}
+
+func TestMapAccountsFromCARS_WithAliases(t *testing.T) {
+	cars := []kion.CAR{
+		{AccountName: "account one", AccountAlias: "alias-one", AccountNumber: "111111111111", ProjectID: 100},
+		{AccountName: "account two", AccountAlias: "alias-two", AccountNumber: "222222222222", ProjectID: 100},
+	}
+
+	names, aMap := MapAccountsFromCARS(cars, 0)
+
+	if len(names) != 2 {
+		t.Fatalf("expected 2 names, got %d", len(names))
+	}
+
+	expectedName1 := "account one [alias-one] (111111111111)"
+	expectedName2 := "account two [alias-two] (222222222222)"
+
+	// Check map has correct entries
+	if aMap[expectedName1] != "111111111111" {
+		t.Errorf("expected account number 111111111111 for %q, got %q", expectedName1, aMap[expectedName1])
+	}
+	if aMap[expectedName2] != "222222222222" {
+		t.Errorf("expected account number 222222222222 for %q, got %q", expectedName2, aMap[expectedName2])
+	}
+}
+
+func TestMapAccountsFromCARS_WithoutAliases(t *testing.T) {
+	cars := []kion.CAR{
+		{AccountName: "account one", AccountAlias: "", AccountNumber: "111111111111", ProjectID: 100},
+		{AccountName: "account two", AccountAlias: "", AccountNumber: "222222222222", ProjectID: 100},
+	}
+
+	names, aMap := MapAccountsFromCARS(cars, 0)
+
+	if len(names) != 2 {
+		t.Fatalf("expected 2 names, got %d", len(names))
+	}
+
+	expectedName1 := "account one (111111111111)"
+	expectedName2 := "account two (222222222222)"
+
+	if aMap[expectedName1] != "111111111111" {
+		t.Errorf("expected account number 111111111111 for %q, got %q", expectedName1, aMap[expectedName1])
+	}
+	if aMap[expectedName2] != "222222222222" {
+		t.Errorf("expected account number 222222222222 for %q, got %q", expectedName2, aMap[expectedName2])
+	}
+
+	// Verify aliases are not included in format
+	for _, name := range names {
+		if contains := len(name) > 0 && name[len(name)-1] == ']'; contains {
+			// Check for bracket pattern indicating alias
+			for i := len(name) - 2; i >= 0; i-- {
+				if name[i] == '[' {
+					t.Errorf("expected no alias brackets in name %q", name)
+					break
+				}
+			}
+		}
+	}
+}
+
+func TestMapAccountsFromCARS_ProjectFiltering(t *testing.T) {
+	cars := []kion.CAR{
+		{AccountName: "project100 account", AccountNumber: "111111111111", ProjectID: 100},
+		{AccountName: "project200 account", AccountNumber: "222222222222", ProjectID: 200},
+		{AccountName: "project100 account2", AccountNumber: "333333333333", ProjectID: 100},
+	}
+
+	// pid=0 returns all
+	names, aMap := MapAccountsFromCARS(cars, 0)
+	if len(names) != 3 {
+		t.Errorf("pid=0: expected 3 names, got %d", len(names))
+	}
+	if len(aMap) != 3 {
+		t.Errorf("pid=0: expected 3 map entries, got %d", len(aMap))
+	}
+
+	// pid=100 returns only project 100
+	names, aMap = MapAccountsFromCARS(cars, 100)
+	if len(names) != 2 {
+		t.Errorf("pid=100: expected 2 names, got %d", len(names))
+	}
+	if len(aMap) != 2 {
+		t.Errorf("pid=100: expected 2 map entries, got %d", len(aMap))
+	}
+
+	// pid=200 returns only project 200
+	names, aMap = MapAccountsFromCARS(cars, 200)
+	if len(names) != 1 {
+		t.Errorf("pid=200: expected 1 name, got %d", len(names))
+	}
+	if aMap["project200 account (222222222222)"] != "222222222222" {
+		t.Errorf("pid=200: expected project200 account in map")
+	}
+
+	// pid=999 returns empty (no matching project)
+	names, aMap = MapAccountsFromCARS(cars, 999)
+	if len(names) != 0 {
+		t.Errorf("pid=999: expected 0 names, got %d", len(names))
+	}
+	if len(aMap) != 0 {
+		t.Errorf("pid=999: expected 0 map entries, got %d", len(aMap))
+	}
+}
+
+func TestMapAccountsFromCARS_Deduplication(t *testing.T) {
+	// Same account appears in multiple CARs (different roles for same account)
+	cars := []kion.CAR{
+		{AccountName: "shared account", AccountAlias: "shared", AccountNumber: "111111111111", ProjectID: 100, Name: "AdminRole"},
+		{AccountName: "shared account", AccountAlias: "shared", AccountNumber: "111111111111", ProjectID: 100, Name: "ReadOnlyRole"},
+		{AccountName: "shared account", AccountAlias: "shared", AccountNumber: "111111111111", ProjectID: 100, Name: "DevRole"},
+	}
+
+	names, aMap := MapAccountsFromCARS(cars, 0)
+
+	// Should only have 1 entry (deduplicated)
+	if len(names) != 1 {
+		t.Errorf("expected 1 deduplicated name, got %d", len(names))
+	}
+	if len(aMap) != 1 {
+		t.Errorf("expected 1 deduplicated map entry, got %d", len(aMap))
+	}
+
+	expectedName := "shared account [shared] (111111111111)"
+	if names[0] != expectedName {
+		t.Errorf("expected %q, got %q", expectedName, names[0])
+	}
+}
+
+func TestMapAccountsFromCARS_Sorting(t *testing.T) {
+	cars := []kion.CAR{
+		{AccountName: "zebra account", AccountNumber: "333333333333", ProjectID: 100},
+		{AccountName: "alpha account", AccountNumber: "111111111111", ProjectID: 100},
+		{AccountName: "beta account", AccountNumber: "222222222222", ProjectID: 100},
+	}
+
+	names, _ := MapAccountsFromCARS(cars, 0)
+
+	if len(names) != 3 {
+		t.Fatalf("expected 3 names, got %d", len(names))
+	}
+
+	// Should be sorted alphabetically
+	expected := []string{
+		"alpha account (111111111111)",
+		"beta account (222222222222)",
+		"zebra account (333333333333)",
+	}
+
+	for i, name := range names {
+		if name != expected[i] {
+			t.Errorf("position %d: expected %q, got %q", i, expected[i], name)
+		}
+	}
+}
+
+func TestMapAccountsFromCARS_MixedAliases(t *testing.T) {
+	// Some accounts have aliases, some don't
+	cars := []kion.CAR{
+		{AccountName: "account with alias", AccountAlias: "my-alias", AccountNumber: "111111111111", ProjectID: 100},
+		{AccountName: "account without alias", AccountAlias: "", AccountNumber: "222222222222", ProjectID: 100},
+	}
+
+	names, aMap := MapAccountsFromCARS(cars, 0)
+
+	if len(names) != 2 {
+		t.Fatalf("expected 2 names, got %d", len(names))
+	}
+
+	withAlias := "account with alias [my-alias] (111111111111)"
+	withoutAlias := "account without alias (222222222222)"
+
+	if aMap[withAlias] != "111111111111" {
+		t.Errorf("expected account with alias in map")
+	}
+	if aMap[withoutAlias] != "222222222222" {
+		t.Errorf("expected account without alias in map")
+	}
+}
