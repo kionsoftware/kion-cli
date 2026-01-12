@@ -488,3 +488,112 @@ func TestCombineFavorites_NilVsEmptySlice(t *testing.T) {
 		t.Errorf("nil vs empty slice produced different LocalOnly lengths")
 	}
 }
+
+func TestCombineFavorites_UnaliasedUpstreamWithSameName(t *testing.T) {
+	// When upstream has Unaliased=true but all fields match (including name),
+	// it's still treated as an exact match (exact match check comes first)
+	local := []structs.Favorite{
+		{Name: "samename", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "samename", Account: "111111111111", CAR: "Role1", AccessType: "cli", Unaliased: true},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should be exact match (not unaliased match) because all fields including name match
+	if len(comparison.ConflictsLocal) != 0 {
+		t.Errorf("expected no conflicts, got %d", len(comparison.ConflictsLocal))
+	}
+	if len(comparison.UnaliasedLocal) != 0 {
+		t.Errorf("expected no unaliased (exact match takes priority), got %d", len(comparison.UnaliasedLocal))
+	}
+	// Only upstream in All (local is exact match, not added)
+	if len(all) != 1 {
+		t.Errorf("expected 1 in All, got %d", len(all))
+	}
+}
+
+func TestCombineFavorites_UnaliasedUpstreamDifferentName(t *testing.T) {
+	// When upstream has Unaliased=true and different name but same account/CAR/AccessType,
+	// it should be treated as unaliased match (local provides the name)
+	local := []structs.Favorite{
+		{Name: "my-local-name", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		{Name: "different-name", Account: "111111111111", CAR: "Role1", AccessType: "cli", Unaliased: true},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should be unaliased match
+	if len(comparison.UnaliasedLocal) != 1 {
+		t.Errorf("expected 1 in UnaliasedLocal, got %d", len(comparison.UnaliasedLocal))
+	}
+	if len(comparison.UnaliasedUpstream) != 1 {
+		t.Errorf("expected 1 in UnaliasedUpstream, got %d", len(comparison.UnaliasedUpstream))
+	}
+	// Local replaces upstream in All
+	if len(all) != 1 {
+		t.Errorf("expected 1 in All, got %d", len(all))
+	}
+	if all[0].Name != "my-local-name" {
+		t.Errorf("expected local name in All, got %s", all[0].Name)
+	}
+}
+
+func TestCombineFavorites_ExactMatchTakesPriority(t *testing.T) {
+	// If local matches first upstream exactly, it shouldn't conflict with second
+	local := []structs.Favorite{
+		{Name: "myfav", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+	}
+	upstream := []structs.Favorite{
+		// First upstream is exact match
+		{Name: "myfav", Account: "111111111111", CAR: "Role1", AccessType: "cli"},
+		// Second upstream has same name but different settings (would be conflict)
+		{Name: "myfav", Account: "222222222222", CAR: "Role2", AccessType: "web"},
+	}
+
+	all, comparison, err := CombineFavorites(local, upstream)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should be exact match with first upstream, no conflict
+	if len(comparison.ConflictsLocal) != 0 {
+		t.Errorf("expected no conflicts (exact match takes priority), got %d", len(comparison.ConflictsLocal))
+	}
+	if len(comparison.LocalOnly) != 0 {
+		t.Errorf("expected no LocalOnly, got %d", len(comparison.LocalOnly))
+	}
+	// All should have both upstreams (local not added due to exact match)
+	if len(all) != 2 {
+		t.Errorf("expected 2 in All, got %d", len(all))
+	}
+}
+
+func TestCombineFavorites_ErrorAlwaysNil(t *testing.T) {
+	// Verify function never returns an error (current implementation)
+	testCases := []struct {
+		local    []structs.Favorite
+		upstream []structs.Favorite
+	}{
+		{nil, nil},
+		{[]structs.Favorite{}, []structs.Favorite{}},
+		{[]structs.Favorite{{Name: "a"}}, nil},
+		{nil, []structs.Favorite{{Name: "b"}}},
+	}
+
+	for _, tc := range testCases {
+		_, _, err := CombineFavorites(tc.local, tc.upstream)
+		if err != nil {
+			t.Errorf("expected nil error, got %v", err)
+		}
+	}
+}
