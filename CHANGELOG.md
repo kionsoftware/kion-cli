@@ -12,6 +12,8 @@ Notes for upgrading...
 
 ### Added
 
+- Screen reader mode (`--screen-reader` flag, `KION_SCREEN_READER` env var, `kion.screen_reader_mode` config key) replaces TUI widgets and Unicode symbols with plain numbered lists and ASCII text for compatibility with screen readers and assistive technology
+
 ### Changed
 
 ### Deprecated

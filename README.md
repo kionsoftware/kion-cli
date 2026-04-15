@@ -222,6 +222,12 @@ __Global Options:__
 
 --quiet                                Reduces output for certain functions.
 
+--screen-reader                        Enables screen reader mode. Replaces TUI
+                                       widgets (interactive selectors, pipe bars)
+                                       and Unicode symbols with plain numbered
+                                       lists and ASCII text for compatibility with
+                                       screen readers and assistive technology.
+
 --profile PROFILE                      Use the specified PROFILE from the Kion CLI
                                        configuration file. If no profile is specified
                                        the default will be used.
@@ -409,6 +415,9 @@ KION_DEBUG               "TRUE" to enable verbose debugging of the Kion CLI.
 
 KION_QUIET               "TRUE" to reduce messages for quieter operation.
 
+KION_SCREEN_READER       "TRUE" to enable screen reader mode. Replaces TUI
+                         widgets and Unicode symbols with plain text output.
+
 The following are maintained for compatibility with older Kion utilities:
 
 CTKEY_USERNAME           Maps to KION_USERNAME.
@@ -435,6 +444,9 @@ kion.saml_print_url                  Set 'true' to print the authentication url 
                                      Defaults to 'false'.
 kion.disable_cache                   Prevents Kion CLI from caching STAK if 'true', defaults
                                      to 'false'.
+kion.screen_reader_mode              Enables screen reader mode if 'true'. Replaces TUI
+                                     widgets and Unicode symbols with plain text output.
+                                     Defaults to 'false'.
 kion.default_region                  The CSP region to use if one is not provided by argument
                                      flag or environment variable.
 
