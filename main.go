@@ -59,6 +59,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Enable screen reader mode early (from config file or env var) so that
+	// any output before BeforeCommands runs is also plain text.  The flag
+	// destination below keeps them in sync for flag-based activation.
+	if config.Kion.ScreenReaderMode || os.Getenv("KION_SCREEN_READER") == "true" {
+		color.NoColor = true
+		helper.ScreenReaderMode = true
+	}
+
 	// prep default text for password
 	passwordDefaultText := ""
 	if config.Kion.Password != "" {
@@ -195,6 +203,13 @@ func main() {
 				EnvVars:     []string{"KION_QUIET"},
 				Usage:       "enable quiet mode to reduce output",
 				Destination: &config.Kion.QuietMode,
+			},
+			&cli.BoolFlag{
+				Name:        "screen-reader",
+				Value:       config.Kion.ScreenReaderMode,
+				EnvVars:     []string{"KION_SCREEN_READER"},
+				Usage:       "enable screen reader mode: replaces TUI widgets and Unicode symbols with plain text",
+				Destination: &config.Kion.ScreenReaderMode,
 			},
 		},
 

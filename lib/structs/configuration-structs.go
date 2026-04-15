@@ -30,6 +30,7 @@ type Kion struct {
 	DefaultRegion    string `yaml:"default_region,omitempty"`
 	DebugMode        bool   `yaml:"debug_mode,omitempty"`
 	QuietMode        bool   `yaml:"quiet_mode,omitempty"`
+	ScreenReaderMode bool   `yaml:"screen_reader_mode,omitempty"`
 }
 
 // Favorite holds information about user defined favorites used to quickly

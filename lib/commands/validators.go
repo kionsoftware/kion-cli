@@ -28,9 +28,9 @@ type validationContext struct {
 }
 
 // newValidationContext creates a new validation context.
-func newValidationContext() *validationContext {
+func newValidationContext(screenReader bool) *validationContext {
 	return &validationContext{
-		styles: styles.NewOutputStyles(),
+		styles: styles.NewOutputStyles(screenReader),
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
@@ -358,7 +358,7 @@ func (c *Cmd) checkSSOURLReachability(ctx *validationContext, metadata *samlType
 
 // ValidateSAML validates SAML configuration and connectivity.
 func (c *Cmd) ValidateSAML(cCtx *cli.Context) error {
-	ctx := newValidationContext()
+	ctx := newValidationContext(c.config.Kion.ScreenReaderMode)
 
 	// Header
 	fmt.Println()
@@ -400,7 +400,7 @@ func (c *Cmd) ValidateSAML(cCtx *cli.Context) error {
 	fmt.Println(ctx.styles.RenderSeparator())
 	if ctx.allPassed {
 		var summary strings.Builder
-		summary.WriteString("✓ All validation checks passed!\n\n")
+		summary.WriteString(ctx.styles.PassStr() + " All validation checks passed!\n\n")
 		summary.WriteString("Your SAML configuration appears to be correct.\n")
 		summary.WriteString("Try running SAML authentication to complete the flow.")
 
@@ -415,7 +415,7 @@ func (c *Cmd) ValidateSAML(cCtx *cli.Context) error {
 	}
 
 	var summary strings.Builder
-	summary.WriteString("✗ Some validation checks failed.\n\n")
+	summary.WriteString(ctx.styles.FailStr() + " Some validation checks failed.\n\n")
 	summary.WriteString("Please review the errors above and fix the configuration.")
 
 	failBox := ctx.styles.SummaryBox.BorderForeground(ctx.styles.XMark.GetForeground())
