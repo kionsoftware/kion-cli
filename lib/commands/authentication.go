@@ -183,6 +183,10 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 			Expiry: time.Now().Add(570 * time.Second).Format(timeFormat),
 		},
 	}
+	if authData.RefreshToken != "" && !authData.RefreshExpiry.IsZero() {
+		session.Refresh.Token = authData.RefreshToken
+		session.Refresh.Expiry = authData.RefreshExpiry.Format(timeFormat)
+	}
 	err = c.cache.SetSession(session)
 	if err != nil {
 		return err
@@ -222,31 +226,28 @@ func (c *Cmd) setAuthToken(cCtx *cli.Context) error {
 				return nil
 			}
 
-			// TODO: uncomment when / if the application supports refresh tokens
-
-			// // see if we can use the refresh token
-			// refreshExp, err := time.Parse(timeFormat, session.Refresh.Expiry)
-			// if err != nil {
-			// 	return err
-			// }
-
-			// if refreshExp.After(now) {
-			// 	un := session.UserName
-			// 	idmsId := session.IDMSID
-			// 	session, err = kion.Authenticate(c.config.Kion.Url, idmsId, un, session.Refresh.Token)
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// 	session.UserName = un
-			// 	session.IDMSID = idmsId
-			// 	err = c.cache.SetSession(session)
-			// 	if err != nil {
-			// 		return err
-			// 	}
-
-			//  c.config.Kion.ApiKey = session.Access.Token
-			// 	return nil
-			// }
+			// access token expired; try the refresh token if we have one
+			// (UNPW sessions only — SAML sessions don't persist a refresh token).
+			if session.Refresh.Token != "" && session.Refresh.Expiry != "" {
+				refreshExp, err := time.Parse(timeFormat, session.Refresh.Expiry)
+				if err == nil && refreshExp.After(now) {
+					refreshed, err := kion.RefreshSession(c.config.Kion.URL, session.Refresh.Token)
+					if err == nil && refreshed.Access.Token != "" {
+						// carry forward identity and the existing refresh token —
+						// the refresh endpoint returns only a new access token.
+						refreshed.UserName = session.UserName
+						refreshed.IDMSID = session.IDMSID
+						refreshed.Refresh = session.Refresh
+						if err := c.cache.SetSession(refreshed); err != nil {
+							return err
+						}
+						c.config.Kion.APIKey = refreshed.Access.Token
+						return nil
+					}
+					// refresh failed (expired, revoked, network) — fall through
+					// to the normal auth path below.
+				}
+			}
 		}
 
 		// check un / pw were set via flags and infer auth method

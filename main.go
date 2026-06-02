@@ -382,6 +382,17 @@ func main() {
 						Usage:  "Validate SAML configuration and connectivity",
 						Action: cmd.ValidateSAML,
 					},
+					{
+						Name:   "auth-status",
+						Usage:  "Show cached session state and (optionally) exercise the refresh token",
+						Action: cmd.AuthStatus,
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "force-refresh",
+								Usage: "Call the refresh endpoint to verify the cached refresh token works (dry run; cache not updated)",
+							},
+						},
+					},
 				},
 			},
 		},

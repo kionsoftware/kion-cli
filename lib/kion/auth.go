@@ -99,3 +99,28 @@ func Authenticate(host string, idmsID uint, un string, pw string) (Session, erro
 
 	return session, nil
 }
+
+// RefreshSession exchanges a refresh token for a new access token via the Kion
+// API. The refresh endpoint only returns a new access token; the refresh token
+// itself is carried forward unchanged by the caller.
+func RefreshSession(host string, refreshToken string) (Session, error) {
+	url := fmt.Sprintf("%v/api/v2/token/refresh", host)
+	query := map[string]string{}
+	data := struct {
+		Token string `json:"token"`
+	}{Token: refreshToken}
+	resp, _, err := runQuery("POST", url, "", query, data)
+	if err != nil {
+		return Session{}, err
+	}
+
+	// the refresh endpoint returns an AuthInfo payload shaped like
+	// { "access": { "token": ..., "expiry": ... }, "refresh": null }
+	var session Session
+	err = json.Unmarshal(resp.Data, &session)
+	if err != nil {
+		return Session{}, err
+	}
+
+	return session, nil
+}
