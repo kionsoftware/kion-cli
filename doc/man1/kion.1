@@ -131,6 +131,10 @@ Clear out all cache entries for the Kion CLI.
 Push locally defined favorites up to Kion. This will overwrite any favorites in Kion that have the same name. After pushing, you are prompted to delete local favorites.
 .It validate-saml
 Validate SAML configuration.
+.It auth-status
+Show the cached session state including access and refresh token expiry. Pass
+.Fl -force-refresh
+to exercise the refresh endpoint without updating the cache.
 .El
 
 .Sh PRECEDENCE
