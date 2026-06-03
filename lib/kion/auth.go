@@ -3,6 +3,7 @@ package kion
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,6 +121,20 @@ func RefreshSession(host string, refreshToken string) (Session, error) {
 	err = json.Unmarshal(resp.Data, &session)
 	if err != nil {
 		return Session{}, err
+	}
+
+	// /api/v2/token/refresh emits expiry as RFC3339Nano with a 'Z' suffix
+	// (it serializes domain.AuthToken's time.Time directly) while the rest of
+	// the CLI — and the cache layout — expect the -0700 format that the v3
+	// public API uses. Normalize on ingest so the refreshed session round-trips
+	// through the cache the same way SAML/UNPW sessions do.
+	if t, err := time.Parse(time.RFC3339Nano, session.Access.Expiry); err == nil {
+		session.Access.Expiry = t.Format("2006-01-02T15:04:05-0700")
+	}
+	if session.Refresh.Expiry != "" {
+		if t, err := time.Parse(time.RFC3339Nano, session.Refresh.Expiry); err == nil {
+			session.Refresh.Expiry = t.Format("2006-01-02T15:04:05-0700")
+		}
 	}
 
 	return session, nil

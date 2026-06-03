@@ -168,7 +168,13 @@ func (c *Cmd) AuthStatus(cCtx *cli.Context) error {
 			color.Red("  Refresh succeeded but no access token in response.")
 			return errors.New("empty access token from refresh endpoint")
 		}
-		newExp, _ := time.Parse(timeFormat, refreshed.Access.Expiry)
+		// RefreshSession normalizes to timeFormat already; surface a parse
+		// error if for some reason normalization didn't take.
+		newExp, err := time.Parse(timeFormat, refreshed.Access.Expiry)
+		if err != nil {
+			color.Red("  Refresh OK, but unparseable expiry %q: %v", refreshed.Access.Expiry, err)
+			return nil
+		}
 		color.Green("  Refresh OK. New access token expiry: %s (%s from now)",
 			newExp.Local().Format(time.RFC1123),
 			time.Until(newExp).Round(time.Second),
