@@ -25,7 +25,13 @@ func (c *Cmd) deleteUpstreamFavorites(favorites []structs.Favorite) error {
 	hasErrors := false
 	for _, f := range favorites {
 		fmt.Printf(" removing upstream favorite %s: ", f.Name)
-		_, err := kion.DeleteFavorite(c.config.Kion.URL, c.config.Kion.APIKey, f.Name)
+		token, err := c.freshAPIKey()
+		if err != nil {
+			color.Red("x %s\n", err)
+			hasErrors = true
+			continue
+		}
+		_, err = kion.DeleteFavorite(c.config.Kion.URL, token, f.Name)
 		if err != nil {
 			color.Red("x %s\n", err)
 			hasErrors = true
@@ -47,7 +53,13 @@ func (c *Cmd) createUpstreamFavorite(favorites []structs.Favorite) error {
 	for _, f := range favorites {
 		fmt.Printf(" creating favorite %s: ", f.Name)
 		f.AccessType = kion.ConvertAccessType(f.AccessType)
-		_, _, err := kion.CreateFavorite(c.config.Kion.URL, c.config.Kion.APIKey, f)
+		token, err := c.freshAPIKey()
+		if err != nil {
+			color.Red("x %s\n", err)
+			hasErrors = true
+			continue
+		}
+		_, _, err = kion.CreateFavorite(c.config.Kion.URL, token, f)
 		if err != nil {
 			color.Red("x %s\n", err)
 			hasErrors = true
@@ -192,7 +204,11 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 	}
 
 	// Get the combined list of favorites from the CLI config and the Kion API.
-	apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.URL, c.config.Kion.APIKey)
+	token, err := c.freshAPIKey()
+	if err != nil {
+		return err
+	}
+	apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.URL, token)
 	if err != nil {
 		fmt.Printf("Error retrieving favorites from Kion API: %v\n", err)
 		return err

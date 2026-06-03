@@ -197,101 +197,159 @@ func (c *Cmd) authSAML(cCtx *cli.Context) error {
 	return nil
 }
 
-// setAuthToken sets the token to be used for querying the Kion API. If not
-// passed to the tool as an argument, set in the env, or present in the
-// configuration dotfile it will prompt the users to authenticate. Auth methods
-// are prioritized as follows: api/bearer token -> username/password -> saml.
-// If flags are set for multiple methods the highest priority method will be
-// used.
-func (c *Cmd) setAuthToken(cCtx *cli.Context) error {
+// sessionTimeFormat is the layout used for Access.Expiry and Refresh.Expiry
+// in the cached session.
+const sessionTimeFormat = "2006-01-02T15:04:05-0700"
+
+// tryRefreshSession attempts to refresh an expired (or near-expired) cached
+// session's access token using its refresh token. Returns the refreshed
+// session on success and a boolean indicating whether a usable session was
+// produced. Errors are non-fatal — callers fall through to fresh auth when
+// refresh isn't possible.
+func (c *Cmd) tryRefreshSession(session kion.Session) (kion.Session, bool) {
+	if session.Refresh.Token == "" || session.Refresh.Expiry == "" {
+		return kion.Session{}, false
+	}
+	refreshExp, err := time.Parse(sessionTimeFormat, session.Refresh.Expiry)
+	if err != nil || !refreshExp.After(time.Now()) {
+		return kion.Session{}, false
+	}
+	refreshed, err := kion.RefreshSession(c.config.Kion.URL, session.Refresh.Token)
+	if err != nil || refreshed.Access.Token == "" {
+		return kion.Session{}, false
+	}
+	// the refresh endpoint returns only a new access token — carry the
+	// existing identity and refresh token forward.
+	refreshed.UserName = session.UserName
+	refreshed.IDMSID = session.IDMSID
+	refreshed.Refresh = session.Refresh
+	if err := c.cache.SetSession(refreshed); err != nil {
+		return kion.Session{}, false
+	}
+	return refreshed, true
+}
+
+// freshAPIKey returns a bearer token that is guaranteed to be valid for at
+// least the next 30 seconds. It re-checks the cached session's expiry at
+// every call, refreshing transparently when the access token is close to
+// expiring. This is the correct accessor at any API-call boundary — the
+// initial token set by setAuthToken may have expired by the time we get
+// around to using it (e.g. user paused at an interactive selection prompt).
+//
+// If the APIKey came from a flag/env/config (not a cached session) it is
+// returned as-is — externally-supplied API keys do not have refresh tokens.
+func (c *Cmd) freshAPIKey() (string, error) {
 	if c.config.Kion.APIKey == "" {
-		// if we still have an active session use it
-		session, found, err := c.cache.GetSession()
+		return "", fmt.Errorf("no API key available; authenticate first")
+	}
+
+	session, found, err := c.cache.GetSession()
+	if err != nil {
+		return "", err
+	}
+	// no cached session means the APIKey was set externally (flag/env/config)
+	// or via an API-key prompt — nothing to refresh.
+	if !found || session.Access.Token == "" {
+		return c.config.Kion.APIKey, nil
+	}
+	// guard against a cached session that belongs to a different identity
+	// than the currently-active APIKey (rare, but possible if a flag
+	// overrides config mid-session).
+	if session.Access.Token != c.config.Kion.APIKey {
+		return c.config.Kion.APIKey, nil
+	}
+
+	expiration, err := time.Parse(sessionTimeFormat, session.Access.Expiry)
+	if err != nil {
+		// unparseable expiry — fall back to returning what we have rather
+		// than failing the command; the API call will surface a 401 if bad.
+		return c.config.Kion.APIKey, nil
+	}
+	if expiration.After(time.Now().Add(30 * time.Second)) {
+		return c.config.Kion.APIKey, nil
+	}
+
+	// access token has expired (or will within 30s) — try refresh.
+	refreshed, ok := c.tryRefreshSession(session)
+	if !ok {
+		return "", fmt.Errorf("session expired and could not be refreshed; please re-run to authenticate")
+	}
+	c.config.Kion.APIKey = refreshed.Access.Token
+	return refreshed.Access.Token, nil
+}
+
+// setAuthToken ensures an API key is set on the Cmd. It is invoked once at
+// the start of an authed command. Order of precedence: api/bearer token ->
+// cached session (with refresh) -> username/password -> saml. If no method
+// is configured the user is prompted to choose one.
+//
+// Tokens may expire between when setAuthToken runs and when they are
+// actually used (interactive prompts can take a while). Always call
+// freshAPIKey at API-call sites to pick up a refreshed token.
+func (c *Cmd) setAuthToken(cCtx *cli.Context) error {
+	if c.config.Kion.APIKey != "" {
+		return nil
+	}
+
+	// if we still have an active or refreshable session use it
+	session, found, err := c.cache.GetSession()
+	if err != nil {
+		return err
+	}
+	if found && session.Access.Expiry != "" {
+		expiration, err := time.Parse(sessionTimeFormat, session.Access.Expiry)
 		if err != nil {
 			return err
 		}
-		if found && session.Access.Expiry != "" {
-			timeFormat := "2006-01-02T15:04:05-0700"
-			now := time.Now()
-			expiration, err := time.Parse(timeFormat, session.Access.Expiry)
-			if err != nil {
-				return err
-			}
-			if expiration.After(now) {
-				// TODO: test token is good with an endpoint that is accessible to all
-				// user permission levels, if you get a 401 then assume token is bad
-				// due to caching a cred when a users password expired, and flush the
-				// cache instead...
-				c.config.Kion.APIKey = session.Access.Token
-				return nil
-			}
-
-			// access token expired; try the refresh token if we have one
-			// (UNPW sessions only — SAML sessions don't persist a refresh token).
-			if session.Refresh.Token != "" && session.Refresh.Expiry != "" {
-				refreshExp, err := time.Parse(timeFormat, session.Refresh.Expiry)
-				if err == nil && refreshExp.After(now) {
-					refreshed, err := kion.RefreshSession(c.config.Kion.URL, session.Refresh.Token)
-					if err == nil && refreshed.Access.Token != "" {
-						// carry forward identity and the existing refresh token —
-						// the refresh endpoint returns only a new access token.
-						refreshed.UserName = session.UserName
-						refreshed.IDMSID = session.IDMSID
-						refreshed.Refresh = session.Refresh
-						if err := c.cache.SetSession(refreshed); err != nil {
-							return err
-						}
-						c.config.Kion.APIKey = refreshed.Access.Token
-						return nil
-					}
-					// refresh failed (expired, revoked, network) — fall through
-					// to the normal auth path below.
-				}
-			}
+		// a small buffer here avoids handing the rest of the command a
+		// near-dead token; freshAPIKey handles the rest at call sites.
+		if expiration.After(time.Now().Add(30 * time.Second)) {
+			// TODO: test token is good with an endpoint that is accessible to all
+			// user permission levels, if you get a 401 then assume token is bad
+			// due to caching a cred when a users password expired, and flush the
+			// cache instead...
+			c.config.Kion.APIKey = session.Access.Token
+			return nil
 		}
-
-		// check un / pw were set via flags and infer auth method
-		if c.config.Kion.Username != "" || c.config.Kion.Password != "" {
-			err := c.authUNPW(cCtx)
-			return err
+		if refreshed, ok := c.tryRefreshSession(session); ok {
+			c.config.Kion.APIKey = refreshed.Access.Token
+			return nil
 		}
+		// refresh failed — fall through to the normal auth path below.
+	}
 
-		// check if saml auth flags set and auth with saml if so
-		if c.config.Kion.SamlMetadataFile != "" && c.config.Kion.SamlIssuer != "" {
-			err := c.authSAML(cCtx)
-			return err
-		}
+	// check un / pw were set via flags and infer auth method
+	if c.config.Kion.Username != "" || c.config.Kion.Password != "" {
+		return c.authUNPW(cCtx)
+	}
 
-		// if no token or session found, prompt for desired auth method
-		methods := []string{
-			"API Key",
-			"Password",
-			"SAML",
-		}
-		authMethod, err := helper.PromptSelect("How would you like to authenticate?", "Choose your preferred authentication method.", methods)
+	// check if saml auth flags set and auth with saml if so
+	if c.config.Kion.SamlMetadataFile != "" && c.config.Kion.SamlIssuer != "" {
+		return c.authSAML(cCtx)
+	}
+
+	// if no token or session found, prompt for desired auth method
+	methods := []string{
+		"API Key",
+		"Password",
+		"SAML",
+	}
+	authMethod, err := helper.PromptSelect("How would you like to authenticate?", "Choose your preferred authentication method.", methods)
+	if err != nil {
+		return err
+	}
+
+	switch authMethod {
+	case "API Key":
+		apiKey, err := helper.PromptPassword("API Key:")
 		if err != nil {
 			return err
 		}
-
-		// handle chosen auth method
-		switch authMethod {
-		case "API Key":
-			apiKey, err := helper.PromptPassword("API Key:")
-			if err != nil {
-				return err
-			}
-			c.config.Kion.APIKey = apiKey
-		case "Password":
-			err := c.authUNPW(cCtx)
-			if err != nil {
-				return err
-			}
-		case "SAML":
-			err := c.authSAML(cCtx)
-			if err != nil {
-				return err
-			}
-		}
+		c.config.Kion.APIKey = apiKey
+	case "Password":
+		return c.authUNPW(cCtx)
+	case "SAML":
+		return c.authSAML(cCtx)
 	}
 	return nil
 }

@@ -16,6 +16,12 @@ type APIRespBody struct {
 	Data    json.RawMessage `json:"data"`
 }
 
+// TokenSource returns a bearer token that is guaranteed to be valid for use
+// against the Kion API at the moment of the call. Used to defer token
+// resolution until the actual API-call boundary so that long-running
+// interactive flows (e.g. selection wizards) don't carry a stale token.
+type TokenSource func() (string, error)
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Helpers                                                                   //

@@ -106,8 +106,13 @@ func (c *Cmd) authStakCache(cCtx *cli.Context, carName string, accNum string, ac
 		return kion.STAK{}, err
 	}
 
+	token, err := c.freshAPIKey()
+	if err != nil {
+		return kion.STAK{}, err
+	}
+
 	// generate short term tokens
-	stak, err := kion.GetSTAK(c.config.Kion.URL, c.config.Kion.APIKey, carName, accNum, accAlias)
+	stak, err := kion.GetSTAK(c.config.Kion.URL, token, carName, accNum, accAlias)
 	if err != nil {
 		return kion.STAK{}, err
 	}
