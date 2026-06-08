@@ -20,15 +20,28 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.16.0] - 2026.06.02
+[0.16.0] - 2026.06.08
 ---------------------
 
-Version 0.16.0 wires up refresh-token support for both SAML and username/password authentication. Cached sessions whose access token has expired (typically after ~10 minutes) are now silently refreshed against Kion as long as the refresh token is still valid — no more re-prompting users to authenticate or re-opening the SAML browser flow during a working session. This release also adds a new `util auth-status` command to inspect cached session state and exercise the refresh endpoint on demand.
+Version 0.16.0 wires up refresh-token support for both SAML and username/password authentication. Cached sessions whose access token has expired (typically after ~10 minutes) are now silently refreshed against Kion as long as the refresh token is still valid — no more re-prompting users to authenticate or re-opening the SAML browser flow during a working session. This release also adds a new `util auth-status` command to inspect cached session state and exercise the refresh endpoint on demand. Additionally this release addresses three Dependabot security findings in the SAML authentication stack and fixes a subshell crash for zsh users who do not have `HISTFILE` set in their environment.
 
 ### Added
 
 - Refresh-token support for SAML and username/password sessions [kionsoftware/kion-cli/pull/112]
 - New `util auth-status` command to inspect the cached session and optionally exercise the refresh endpoint with `--force-refresh` [kionsoftware/kion-cli/pull/112]
+
+### Changed
+
+- Bumped Go toolchain to 1.25.10 (required by `gosaml2` v0.11.0) [kionsoftware/kion-cli/pull/113]
+- Bumped `github.com/russellhaering/gosaml2` from v0.9.1 to v0.11.0 [kionsoftware/kion-cli/pull/113]
+- Bumped `github.com/russellhaering/goxmldsig` from v1.4.0 to v1.6.0 [kionsoftware/kion-cli/pull/113]
+
+### Fixed
+
+- Patched `gosaml2` to address an AES-CBC padding panic that could crash the process on crafted SAML responses (GHSA-hwqm-qvj9-4jr2) [kionsoftware/kion-cli/pull/113]
+- Patched `gosaml2` to address acceptance of unsigned SAML `LogoutRequest` messages (GHSA-pcgw-qcv5-h8ch) [kionsoftware/kion-cli/pull/113]
+- Patched `goxmldsig` to address a signature validation bypass caused by loop variable capture (CVE-2026-33487, GHSA-479m-364c-43vc) [kionsoftware/kion-cli/pull/113]
+- `kion stak` subshells no longer fail to write zsh history when `HISTFILE` is unset in the parent shell; the subshell now defaults to `$HOME/.zsh_history` [kionsoftware/kion-cli/pull/114]
 
 [0.15.1] - 2025.01.08
 ---------------------
