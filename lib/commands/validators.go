@@ -240,13 +240,13 @@ func (c *Cmd) validateMetadataStructure(ctx *validationContext, metadata *samlTy
 func (c *Cmd) printMetadataDetails(ctx *validationContext, metadata *samlTypes.EntityDescriptor) {
 	var details strings.Builder
 	details.WriteString("SAML Metadata Details\n\n")
-	details.WriteString(fmt.Sprintf("Entity ID: %s\n", metadata.EntityID))
+	fmt.Fprintf(&details, "Entity ID: %s\n", metadata.EntityID)
 	if metadata.IDPSSODescriptor != nil {
 		if len(metadata.IDPSSODescriptor.SingleSignOnServices) > 0 {
-			details.WriteString(fmt.Sprintf("SSO URL: %s\n", metadata.IDPSSODescriptor.SingleSignOnServices[0].Location))
-			details.WriteString(fmt.Sprintf("SSO Binding: %s\n", metadata.IDPSSODescriptor.SingleSignOnServices[0].Binding))
+			fmt.Fprintf(&details, "SSO URL: %s\n", metadata.IDPSSODescriptor.SingleSignOnServices[0].Location)
+			fmt.Fprintf(&details, "SSO Binding: %s\n", metadata.IDPSSODescriptor.SingleSignOnServices[0].Binding)
 		}
-		details.WriteString(fmt.Sprintf("Certificates: %d key descriptor(s) found", len(metadata.IDPSSODescriptor.KeyDescriptors)))
+		fmt.Fprintf(&details, "Certificates: %d key descriptor(s) found", len(metadata.IDPSSODescriptor.KeyDescriptors))
 	}
 
 	fmt.Println(ctx.styles.DetailsBox.Render(details.String()))
