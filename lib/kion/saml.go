@@ -84,9 +84,11 @@ type TokenData struct {
 }
 
 type AuthData struct {
-	AuthToken string
-	Cookies   []*http.Cookie
-	CSRFToken string
+	AuthToken     string
+	RefreshToken  string
+	RefreshExpiry time.Time
+	Cookies       []*http.Cookie
+	CSRFToken     string
 }
 
 type SamlCallbackResult struct {
@@ -394,10 +396,14 @@ func AuthenticateSAML(appURL string, metadata *samlTypes.EntityDescriptor, servi
 			return
 		}
 
+		refreshToken, refreshExpiry := extractRefreshCookie(refreshCookie)
+
 		tokenChan <- SamlCallbackResult{Data: &AuthData{
-			AuthToken: authToken,
-			Cookies:   append(refreshCookie, csrfCookie...),
-			CSRFToken: csrfToken,
+			AuthToken:     authToken,
+			RefreshToken:  refreshToken,
+			RefreshExpiry: refreshExpiry,
+			Cookies:       append(refreshCookie, csrfCookie...),
+			CSRFToken:     csrfToken,
 		}, Err: nil}
 	})
 
@@ -663,4 +669,15 @@ func getAuthToken(appURL string, ssoCode string, csrfToken string, client *http.
 	}
 
 	return authData.Data.Access.Token, authResp.Cookies(), nil
+}
+
+// extractRefreshCookie finds Kion's ct_auth refresh cookie and returns its
+// value and expiry. Returns empty string + zero time if not present.
+func extractRefreshCookie(cookies []*http.Cookie) (string, time.Time) {
+	for _, c := range cookies {
+		if c.Name == "ct_auth" && c.Value != "" {
+			return c.Value, c.Expires
+		}
+	}
+	return "", time.Time{}
 }

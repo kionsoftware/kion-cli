@@ -26,28 +26,36 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 
 	var car kion.CAR
 	if carName != "" && (accNum != "" || accountAlias != "") {
+		token, err := c.freshAPIKey()
+		if err != nil {
+			return err
+		}
 		// fetch the car directly using account number or alias and car name
 		if accNum != "" {
-			car, err = kion.GetCARByNameAndAccount(c.config.Kion.URL, c.config.Kion.APIKey, carName, accNum)
+			car, err = kion.GetCARByNameAndAccount(c.config.Kion.URL, token, carName, accNum)
 			if err != nil {
 				return fmt.Errorf("failed to get CAR for account %s and CAR %s: %v", accNum, carName, err)
 			}
 		} else {
-			car, err = kion.GetCARByNameAndAlias(c.config.Kion.URL, c.config.Kion.APIKey, carName, accountAlias)
+			car, err = kion.GetCARByNameAndAlias(c.config.Kion.URL, token, carName, accountAlias)
 			if err != nil {
 				return fmt.Errorf("failed to get CAR for alias %s and CAR %s: %v", accountAlias, carName, err)
 			}
 		}
 	} else {
 		// walk user through the prompt workflow to select a car
-		err = helper.CARSelector(cCtx, &car)
+		err = helper.CARSelector(cCtx, c.freshAPIKey, &car)
 		if err != nil {
 			return err
 		}
 	}
 
 	// grab the csp federation url
-	url, err := kion.GetFederationURL(c.config.Kion.URL, c.config.Kion.APIKey, car)
+	token, err := c.freshAPIKey()
+	if err != nil {
+		return err
+	}
+	url, err := kion.GetFederationURL(c.config.Kion.URL, token, car)
 	if err != nil {
 		return err
 	}

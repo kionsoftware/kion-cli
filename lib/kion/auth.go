@@ -3,6 +3,7 @@ package kion
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +96,45 @@ func Authenticate(host string, idmsID uint, un string, pw string) (Session, erro
 	err = json.Unmarshal(resp.Data, &session)
 	if err != nil {
 		return Session{}, err
+	}
+
+	return session, nil
+}
+
+// RefreshSession exchanges a refresh token for a new access token via the Kion
+// API. The refresh endpoint only returns a new access token; the refresh token
+// itself is carried forward unchanged by the caller.
+func RefreshSession(host string, refreshToken string) (Session, error) {
+	url := fmt.Sprintf("%v/api/v2/token/refresh", host)
+	query := map[string]string{}
+	data := struct {
+		Token string `json:"token"`
+	}{Token: refreshToken}
+	resp, _, err := runQuery("POST", url, "", query, data)
+	if err != nil {
+		return Session{}, err
+	}
+
+	// the refresh endpoint returns an AuthInfo payload shaped like
+	// { "access": { "token": ..., "expiry": ... }, "refresh": null }
+	var session Session
+	err = json.Unmarshal(resp.Data, &session)
+	if err != nil {
+		return Session{}, err
+	}
+
+	// /api/v2/token/refresh emits expiry as RFC3339Nano with a 'Z' suffix
+	// (it serializes domain.AuthToken's time.Time directly) while the rest of
+	// the CLI — and the cache layout — expect the -0700 format that the v3
+	// public API uses. Normalize on ingest so the refreshed session round-trips
+	// through the cache the same way SAML/UNPW sessions do.
+	if t, err := time.Parse(time.RFC3339Nano, session.Access.Expiry); err == nil {
+		session.Access.Expiry = t.Format("2006-01-02T15:04:05-0700")
+	}
+	if session.Refresh.Expiry != "" {
+		if t, err := time.Parse(time.RFC3339Nano, session.Refresh.Expiry); err == nil {
+			session.Refresh.Expiry = t.Format("2006-01-02T15:04:05-0700")
+		}
 	}
 
 	return session, nil

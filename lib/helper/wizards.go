@@ -18,9 +18,16 @@ import (
 // the user selected Cloud Access Role. Optional account number and or car name
 // can be passed via an existing car struct, the flow will dynamically ask what
 // is needed to be able to find the full car.
-func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
+//
+// tokenSource is invoked at every API-call boundary so that pauses on
+// interactive prompts don't leave us holding an expired token.
+func CARSelector(cCtx *cli.Context, tokenSource kion.TokenSource, car *kion.CAR) error {
 	// get list of projects, then build list of names and lookup map
-	projects, err := kion.GetProjects(cCtx.String("endpoint"), cCtx.String("token"))
+	token, err := tokenSource()
+	if err != nil {
+		return err
+	}
+	projects, err := kion.GetProjects(cCtx.String("endpoint"), token)
 	if err != nil {
 		return err
 	}
@@ -40,7 +47,11 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		// give us one full support line of buffer
 
 		// get all cars for authed user, works with min permission set
-		cars, err := kion.GetCARS(cCtx.String("endpoint"), cCtx.String("token"), "")
+		token, err := tokenSource()
+		if err != nil {
+			return err
+		}
+		cars, err := kion.GetCARS(cCtx.String("endpoint"), token, "")
 		if err != nil {
 			return err
 		}
@@ -87,11 +98,15 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		return nil
 	} else {
 		// get list of accounts on project, then build a list of names and lookup map
-		accounts, statusCode, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
+		token, err := tokenSource()
+		if err != nil {
+			return err
+		}
+		accounts, statusCode, err := kion.GetAccountsOnProject(cCtx.String("endpoint"), token, pMap[project].ID)
 		if err != nil {
 			if statusCode == 403 {
 				// if we're getting a 403 work around permissions bug by temp using private api
-				return carSelectorPrivateAPI(cCtx, pMap, project, car)
+				return carSelectorPrivateAPI(cCtx, tokenSource, pMap, project, car)
 			} else {
 				return err
 			}
@@ -108,7 +123,11 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 		}
 
 		// get a list of cloud access roles, then build a list of names and lookup map
-		cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID, aMap[account].ID)
+		token, err = tokenSource()
+		if err != nil {
+			return err
+		}
+		cars, err := kion.GetCARSOnProject(cCtx.String("endpoint"), token, pMap[project].ID, aMap[account].ID)
 		if err != nil {
 			return err
 		}
@@ -141,9 +160,13 @@ func CARSelector(cCtx *cli.Context, car *kion.CAR) error {
 // carSelectorPrivateAPI is a temp shim workaround to address a public API
 // permissions issue. CARSelector should be called directly which will the
 // forward to this function if needed.
-func carSelectorPrivateAPI(cCtx *cli.Context, pMap map[string]kion.Project, project string, car *kion.CAR) error {
+func carSelectorPrivateAPI(cCtx *cli.Context, tokenSource kion.TokenSource, pMap map[string]kion.Project, project string, car *kion.CAR) error {
 	// hit private api endpoint to gather all users cars and their associated accounts
-	caCARs, err := kion.GetConsoleAccessCARS(cCtx.String("endpoint"), cCtx.String("token"), pMap[project].ID)
+	token, err := tokenSource()
+	if err != nil {
+		return err
+	}
+	caCARs, err := kion.GetConsoleAccessCARS(cCtx.String("endpoint"), token, pMap[project].ID)
 	if err != nil {
 		return err
 	}

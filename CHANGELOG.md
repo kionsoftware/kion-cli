@@ -20,6 +20,16 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.16.0] - 2026.06.02
+---------------------
+
+Version 0.16.0 wires up refresh-token support for both SAML and username/password authentication. Cached sessions whose access token has expired (typically after ~10 minutes) are now silently refreshed against Kion as long as the refresh token is still valid — no more re-prompting users to authenticate or re-opening the SAML browser flow during a working session. This release also adds a new `util auth-status` command to inspect cached session state and exercise the refresh endpoint on demand.
+
+### Added
+
+- Refresh-token support for SAML and username/password sessions [kionsoftware/kion-cli/pull/112]
+- New `util auth-status` command to inspect the cached session and optionally exercise the refresh endpoint with `--force-refresh` [kionsoftware/kion-cli/pull/112]
+
 [0.15.1] - 2025.01.08
 ---------------------
 

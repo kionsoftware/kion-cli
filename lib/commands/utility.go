@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/kionsoftware/kion-cli/lib/helper"
@@ -24,7 +25,13 @@ func (c *Cmd) deleteUpstreamFavorites(favorites []structs.Favorite) error {
 	hasErrors := false
 	for _, f := range favorites {
 		fmt.Printf(" removing upstream favorite %s: ", f.Name)
-		_, err := kion.DeleteFavorite(c.config.Kion.URL, c.config.Kion.APIKey, f.Name)
+		token, err := c.freshAPIKey()
+		if err != nil {
+			color.Red("x %s\n", err)
+			hasErrors = true
+			continue
+		}
+		_, err = kion.DeleteFavorite(c.config.Kion.URL, token, f.Name)
 		if err != nil {
 			color.Red("x %s\n", err)
 			hasErrors = true
@@ -46,7 +53,13 @@ func (c *Cmd) createUpstreamFavorite(favorites []structs.Favorite) error {
 	for _, f := range favorites {
 		fmt.Printf(" creating favorite %s: ", f.Name)
 		f.AccessType = kion.ConvertAccessType(f.AccessType)
-		_, _, err := kion.CreateFavorite(c.config.Kion.URL, c.config.Kion.APIKey, f)
+		token, err := c.freshAPIKey()
+		if err != nil {
+			color.Red("x %s\n", err)
+			hasErrors = true
+			continue
+		}
+		_, _, err = kion.CreateFavorite(c.config.Kion.URL, token, f)
 		if err != nil {
 			color.Red("x %s\n", err)
 			hasErrors = true
@@ -69,6 +82,107 @@ func (c *Cmd) createUpstreamFavorite(favorites []structs.Favorite) error {
 // FlushCache clears the Kion CLI cache.
 func (c *Cmd) FlushCache(cCtx *cli.Context) error {
 	return c.cache.FlushCache()
+}
+
+// AuthStatus prints the state of the cached session — access/refresh token
+// presence, expiry, and (with --force-refresh) exercises the refresh flow
+// against the Kion API so you can verify SAML/UNPW refresh end-to-end.
+func (c *Cmd) AuthStatus(cCtx *cli.Context) error {
+	timeFormat := "2006-01-02T15:04:05-0700"
+
+	session, found, err := c.cache.GetSession()
+	if err != nil {
+		return fmt.Errorf("failed to read session cache: %w", err)
+	}
+	if !found {
+		color.Yellow("No cached session. Run any auth'd command to create one.")
+		return nil
+	}
+
+	fmt.Printf("Kion URL:    %s\n", c.config.Kion.URL)
+	if session.UserName != "" {
+		fmt.Printf("Username:    %s\n", session.UserName)
+	}
+	if session.IDMSID != 0 {
+		fmt.Printf("IDMS ID:     %d\n", session.IDMSID)
+	}
+
+	// access token
+	fmt.Println()
+	color.Cyan("Access token")
+	if session.Access.Token == "" {
+		color.Red("  (none)")
+	} else {
+		exp, err := time.Parse(timeFormat, session.Access.Expiry)
+		if err != nil {
+			color.Red("  unparseable expiry %q: %v", session.Access.Expiry, err)
+		} else {
+			fmt.Printf("  expiry:     %s\n", exp.Local().Format(time.RFC1123))
+			remaining := time.Until(exp).Round(time.Second)
+			if remaining > 0 {
+				color.Green("  remaining:  %s (valid)", remaining)
+			} else {
+				color.Yellow("  remaining:  expired %s ago", (-remaining).Round(time.Second))
+			}
+		}
+	}
+
+	// refresh token
+	fmt.Println()
+	color.Cyan("Refresh token")
+	if session.Refresh.Token == "" {
+		color.Yellow("  (not cached — this session can't be refreshed)")
+		if session.Access.Token != "" {
+			fmt.Println("  Likely cause: SAML on a Kion that didn't return ct_auth, or")
+			fmt.Println("  the session was cached by an older version of this CLI.")
+		}
+	} else {
+		exp, err := time.Parse(timeFormat, session.Refresh.Expiry)
+		if err != nil {
+			color.Red("  unparseable expiry %q: %v", session.Refresh.Expiry, err)
+		} else {
+			fmt.Printf("  expiry:     %s\n", exp.Local().Format(time.RFC1123))
+			remaining := time.Until(exp).Round(time.Second)
+			if remaining > 0 {
+				color.Green("  remaining:  %s (valid)", remaining)
+			} else {
+				color.Yellow("  remaining:  expired %s ago", (-remaining).Round(time.Second))
+			}
+		}
+	}
+
+	// optional: actually exercise the refresh endpoint
+	if cCtx.Bool("force-refresh") {
+		fmt.Println()
+		color.Cyan("Force refresh")
+		if session.Refresh.Token == "" {
+			color.Red("  No refresh token to exchange — skipping.")
+			return nil
+		}
+		refreshed, err := kion.RefreshSession(c.config.Kion.URL, session.Refresh.Token)
+		if err != nil {
+			color.Red("  Refresh failed: %v", err)
+			return err
+		}
+		if refreshed.Access.Token == "" {
+			color.Red("  Refresh succeeded but no access token in response.")
+			return errors.New("empty access token from refresh endpoint")
+		}
+		// RefreshSession normalizes to timeFormat already; surface a parse
+		// error if for some reason normalization didn't take.
+		newExp, err := time.Parse(timeFormat, refreshed.Access.Expiry)
+		if err != nil {
+			color.Red("  Refresh OK, but unparseable expiry %q: %v", refreshed.Access.Expiry, err)
+			return nil
+		}
+		color.Green("  Refresh OK. New access token expiry: %s (%s from now)",
+			newExp.Local().Format(time.RFC1123),
+			time.Until(newExp).Round(time.Second),
+		)
+		fmt.Println("  (cache not updated — this is a dry run)")
+	}
+
+	return nil
 }
 
 // PushFavorites pushes the local favorites to a target instance of Kion.
@@ -96,7 +210,11 @@ func (c *Cmd) PushFavorites(cCtx *cli.Context) error {
 	}
 
 	// Get the combined list of favorites from the CLI config and the Kion API.
-	apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.URL, c.config.Kion.APIKey)
+	token, err := c.freshAPIKey()
+	if err != nil {
+		return err
+	}
+	apiFavorites, _, err := kion.GetAPIFavorites(c.config.Kion.URL, token)
 	if err != nil {
 		fmt.Printf("Error retrieving favorites from Kion API: %v\n", err)
 		return err

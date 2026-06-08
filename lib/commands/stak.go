@@ -52,13 +52,17 @@ func (c *Cmd) GenStaks(cCtx *cli.Context) error {
 				return err
 			}
 
+			token, err := c.freshAPIKey()
+			if err != nil {
+				return err
+			}
 			if accNum != "" {
-				car, err = kion.GetCARByNameAndAccount(endpoint, c.config.Kion.APIKey, carName, accNum)
+				car, err = kion.GetCARByNameAndAccount(endpoint, token, carName, accNum)
 				if err != nil {
 					return err
 				}
 			} else {
-				car, err = kion.GetCARByNameAndAlias(endpoint, c.config.Kion.APIKey, carName, accAlias)
+				car, err = kion.GetCARByNameAndAlias(endpoint, token, carName, accAlias)
 				if err != nil {
 					return err
 				}
@@ -72,7 +76,7 @@ func (c *Cmd) GenStaks(cCtx *cli.Context) error {
 		}
 
 		// run through the car selector to fill any gaps
-		err = helper.CARSelector(cCtx, &car)
+		err = helper.CARSelector(cCtx, c.freshAPIKey, &car)
 		if err != nil {
 			return err
 		}

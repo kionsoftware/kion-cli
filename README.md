@@ -368,6 +368,11 @@ SUB COMMANDS
                                        are prompted to delete local favorites.
 
   validate-saml                        Validate the current SAML configuration.
+
+  auth-status                          Show the cached session state including
+                                       access and refresh token expiry. Pass
+                                       --force-refresh to exercise the refresh
+                                       endpoint without updating the cache.
 ```
 
 __Environment:__
@@ -468,6 +473,10 @@ browser.firefox_container            Boolean to enable Firefox container support
 ```
 
 Note: if the authentication password is not provided as a Flag / Environment Variable / Configuration file entry, kion will prompt for the password on the command line. Kion will cache this password in the system keychain's encrypted storage. This may be preferable in environments where plaintext storage of credentials is frowned upon.
+
+__Session Refresh:__
+
+After a successful SAML or username/password login, Kion CLI caches the session along with the refresh token Kion issues. When the cached access token expires (typically ~10 minutes), Kion CLI silently exchanges the refresh token for a new access token rather than re-prompting for credentials or re-opening the SAML browser flow. If the refresh token has also expired or been revoked, Kion CLI falls back to the normal authentication flow. Use `kion util auth-status` to inspect the cached session, and `kion util auth-status --force-refresh` to verify the refresh path is working without updating the cache.
 
 __Caching:__
 
