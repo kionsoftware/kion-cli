@@ -32,7 +32,7 @@ Version 0.16.0 wires up refresh-token support for both SAML and username/passwor
 
 ### Changed
 
-- Bumped Go toolchain to 1.25.10 (required by `gosaml2` v0.11.0) [kionsoftware/kion-cli/pull/113]
+- Bumped Go toolchain to 1.25.11 (required by `gosaml2` v0.11.0) [kionsoftware/kion-cli/pull/113]
 - Bumped `github.com/russellhaering/gosaml2` from v0.9.1 to v0.11.0 [kionsoftware/kion-cli/pull/113]
 - Bumped `github.com/russellhaering/goxmldsig` from v1.4.0 to v1.6.0 [kionsoftware/kion-cli/pull/113]
 
