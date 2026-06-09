@@ -42,6 +42,9 @@ func CreateSubShell(accountNumber string, accountAlias string, carName string, s
 	usrShellPath := os.Getenv("SHELL")
 	usrShellName := filepath.Base(usrShellPath)
 	usrHistFile := os.Getenv("HISTFILE")
+	if usrHistFile == "" {
+		usrHistFile = filepath.Join(os.Getenv("HOME"), ".zsh_history")
+	}
 
 	// create command based on the users shell and set prompt
 	var cmd string
