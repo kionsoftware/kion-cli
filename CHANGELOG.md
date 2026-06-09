@@ -20,7 +20,7 @@ Notes for upgrading...
 
 ### Fixed
 
-[0.16.0] - 2026.06.08
+[0.16.0] - 2026.06.09
 ---------------------
 
 Version 0.16.0 wires up refresh-token support for both SAML and username/password authentication. Cached sessions whose access token has expired (typically after ~10 minutes) are now silently refreshed against Kion as long as the refresh token is still valid — no more re-prompting users to authenticate or re-opening the SAML browser flow during a working session. This release also adds a new `util auth-status` command to inspect cached session state and exercise the refresh endpoint on demand. Additionally this release addresses three Dependabot security findings in the SAML authentication stack and fixes a subshell crash for zsh users who do not have `HISTFILE` set in their environment.
