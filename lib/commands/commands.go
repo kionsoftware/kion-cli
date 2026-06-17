@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/99designs/keyring"
+	fatihcolor "github.com/fatih/color"
 	"github.com/hashicorp/go-version"
 	"github.com/kionsoftware/kion-cli/lib/cache"
 	"github.com/kionsoftware/kion-cli/lib/helper"
@@ -189,6 +190,7 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 		var disableCacheFlagged bool
 		var debugFlagged bool
 		var quietFlagged bool
+		var screenReaderFlagged bool
 
 		setGlobalFlags := cCtx.FlagNames()
 		for _, flag := range setGlobalFlags {
@@ -214,6 +216,8 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 				debugFlagged = true
 			case "quiet":
 				quietFlagged = true
+			case "screen-reader":
+				screenReaderFlagged = true
 			}
 		}
 
@@ -244,6 +248,9 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 		if quietFlagged {
 			c.config.Kion.QuietMode = true
 		}
+		if screenReaderFlagged {
+			c.config.Kion.ScreenReaderMode = true
+		}
 	}
 	return nil
 }
@@ -268,6 +275,14 @@ func (c *Cmd) BeforeCommands(cCtx *cli.Context) error {
 	err := c.handleProfile(profileName, cCtx)
 	if err != nil {
 		return err
+	}
+
+	// propagate screen reader mode to the helper package so all prompts
+	// use plain text I/O instead of TUI widgets; also disable ANSI color
+	// so fatih/color calls throughout commands emit plain text
+	if c.config.Kion.ScreenReaderMode {
+		helper.ScreenReaderMode = true
+		fatihcolor.NoColor = true
 	}
 
 	// grab the Kion url if not already set

@@ -33,3 +33,4 @@ kion:
   disable_cache: false
   debug_mode: false
   quiet_mode: false
+  screen_reader_mode: false

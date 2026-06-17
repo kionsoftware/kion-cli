@@ -33,11 +33,19 @@ func (c *Cmd) deleteUpstreamFavorites(favorites []structs.Favorite) error {
 		}
 		_, err = kion.DeleteFavorite(c.config.Kion.URL, token, f.Name)
 		if err != nil {
-			color.Red("x %s\n", err)
+			if c.config.Kion.ScreenReaderMode {
+				fmt.Printf("[FAIL] %s\n", err)
+			} else {
+				color.Red("x %s\n", err)
+			}
 			hasErrors = true
 			continue
 		}
-		color.Green("✓")
+		if c.config.Kion.ScreenReaderMode {
+			fmt.Println("[OK]")
+		} else {
+			color.Green("✓")
+		}
 	}
 	if hasErrors {
 		return errors.New("one or more favorites failed to delete")
@@ -61,11 +69,19 @@ func (c *Cmd) createUpstreamFavorite(favorites []structs.Favorite) error {
 		}
 		_, _, err = kion.CreateFavorite(c.config.Kion.URL, token, f)
 		if err != nil {
-			color.Red("x %s\n", err)
+			if c.config.Kion.ScreenReaderMode {
+				fmt.Printf("[FAIL] %s\n", err)
+			} else {
+				color.Red("x %s\n", err)
+			}
 			hasErrors = true
 			continue
 		}
-		color.Green("✓")
+		if c.config.Kion.ScreenReaderMode {
+			fmt.Println("[OK]")
+		} else {
+			color.Green("✓")
+		}
 	}
 	if hasErrors {
 		return errors.New("one or more errors occurred during the creation process")

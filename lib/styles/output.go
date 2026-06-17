@@ -2,6 +2,7 @@ package styles
 
 import (
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
@@ -40,10 +41,36 @@ type OutputStyles struct {
 	// Layout dimensions
 	TerminalWidth   int
 	CheckLabelWidth int
+
+	// Accessibility
+	ScreenReader bool
 }
 
 // NewOutputStyles creates a new set of output styles with terminal-aware dimensions.
-func NewOutputStyles() *OutputStyles {
+// When screenReader is true, all styling is replaced with plain ASCII text so that
+// screen readers receive clean, unambiguous output.
+func NewOutputStyles(screenReader bool) *OutputStyles {
+	if screenReader {
+		return &OutputStyles{
+			CheckMark:       lipgloss.NewStyle(),
+			XMark:           lipgloss.NewStyle(),
+			CheckLabel:      lipgloss.NewStyle(),
+			ErrorText:       lipgloss.NewStyle().PaddingLeft(2),
+			WarningText:     lipgloss.NewStyle().PaddingLeft(2),
+			InfoText:        lipgloss.NewStyle().PaddingLeft(2),
+			DetailText:      lipgloss.NewStyle().PaddingLeft(2),
+			SuccessText:     lipgloss.NewStyle(),
+			MainHeader:      lipgloss.NewStyle(),
+			SectionHeader:   lipgloss.NewStyle(),
+			Separator:       lipgloss.NewStyle(),
+			DetailsBox:      lipgloss.NewStyle(),
+			SummaryBox:      lipgloss.NewStyle(),
+			TerminalWidth:   80,
+			CheckLabelWidth: 78,
+			ScreenReader:    true,
+		}
+	}
+
 	// Detect terminal width
 	termWidth := 80 // Default fallback
 	if width, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil && width > 0 {
@@ -142,7 +169,14 @@ func NewOutputStyles() *OutputStyles {
 ////////////////////////////////////////////////////////////////////////////////
 
 // RenderCheck renders a check result with label and status indicator.
+// In screen reader mode it uses "[PASS]" / "[FAIL]" instead of Unicode symbols.
 func (s *OutputStyles) RenderCheck(label string, passed bool) string {
+	if s.ScreenReader {
+		if passed {
+			return "[PASS] " + label
+		}
+		return "[FAIL] " + label
+	}
 	status := s.CheckMark.Render("✓")
 	if !passed {
 		status = s.XMark.Render("✗")
@@ -150,7 +184,7 @@ func (s *OutputStyles) RenderCheck(label string, passed bool) string {
 	return s.CheckLabel.Render(label) + " " + status
 }
 
-// RenderDetail renders a detail line (indented gray text).
+// RenderDetail renders a detail line (indented text).
 func (s *OutputStyles) RenderDetail(text string) string {
 	return s.DetailText.Render(text)
 }
@@ -176,12 +210,13 @@ func (s *OutputStyles) RenderNote(text string) string {
 }
 
 // RenderSeparator renders a horizontal separator line.
+// In screen reader mode it uses plain hyphens instead of box-drawing characters.
 func (s *OutputStyles) RenderSeparator() string {
-	width := s.CheckLabelWidth + 2
-	line := ""
-	for range width {
-		line += "─"
+	if s.ScreenReader {
+		return "---"
 	}
+	width := s.CheckLabelWidth + 2
+	line := strings.Repeat("─", width)
 	return s.Separator.Render(line)
 }
 
@@ -193,4 +228,22 @@ func (s *OutputStyles) RenderMainHeader(text string) string {
 // RenderSectionHeader renders a section header.
 func (s *OutputStyles) RenderSectionHeader(text string) string {
 	return s.SectionHeader.Render(text)
+}
+
+// PassStr returns the appropriate pass symbol for embedding in strings.
+// In screen reader mode returns "[PASS]"; otherwise returns "✓".
+func (s *OutputStyles) PassStr() string {
+	if s.ScreenReader {
+		return "[PASS]"
+	}
+	return "✓"
+}
+
+// FailStr returns the appropriate fail symbol for embedding in strings.
+// In screen reader mode returns "[FAIL]"; otherwise returns "✗".
+func (s *OutputStyles) FailStr() string {
+	if s.ScreenReader {
+		return "[FAIL]"
+	}
+	return "✗"
 }

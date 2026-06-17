@@ -44,6 +44,8 @@ Disable the use of cache for Kion CLI.
 Enable debug mode for additional CLI output.
 .It --quiet
 Enable quiet mode for to reduce unnecessary output.
+.It --screen-reader
+Enable screen reader mode. Replaces TUI widgets (interactive selectors, pipe bars) and Unicode symbols with plain numbered lists and ASCII text for compatibility with screen readers and assistive technology.
 .It --profile PROFILE
 Use the specified PROFILE from the Kion CLI configuration file.
 .It --help, -h
@@ -174,6 +176,8 @@ The Kion IDMS issuer value.
 "TRUE" to enable verbose debugging of the Kion CLI.
 .It KION_QUIET
 "TRUE" to reduce messages for quieter operation.
+.It KION_SCREEN_READER
+"TRUE" to enable screen reader mode. Replaces TUI widgets and Unicode symbols with plain text output.
 .El
 
 .Sh FILES

@@ -10,6 +10,20 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
+//  Screen Reader Mode                                                        //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// ScreenReaderMode switches all huh forms to WithAccessible(true), which
+// replaces TUI widgets (pipe bar, arrow-key navigation, screen redraw) with
+// sequential plain-text prompts that screen readers can follow linearly.
+// Set this before any prompt is called; typically done in BeforeCommands after
+// profile resolution so --screen-reader and the config-file value are both
+// honoured.
+var ScreenReaderMode bool
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
 //  Helpers                                                                   //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,6 +51,14 @@ func shouldLimitHeight(optionCount int) (bool, int) {
 	return false, 0
 }
 
+// newForm wraps huh.NewForm and applies WithAccessible when ScreenReaderMode
+// is on, so callers don't need to repeat the check.
+func newForm(groups ...*huh.Group) *huh.Form {
+	return huh.NewForm(groups...).
+		WithTheme(styles.FormTheme).
+		WithAccessible(ScreenReaderMode)
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //  Prompts                                                                   //
@@ -45,6 +67,9 @@ func shouldLimitHeight(optionCount int) (bool, int) {
 
 // PromptSelect prompts the user to select from a slice of options. It
 // requires that the selection made be one of the options provided.
+//
+// In screen reader mode huh switches to a numbered list printed sequentially
+// to stdout; the user types the number and presses Enter.
 func PromptSelect(message string, description string, options []string) (string, error) {
 	var selection string
 
@@ -60,16 +85,12 @@ func PromptSelect(message string, description string, options []string) (string,
 		Options(huhOptions...).
 		Value(&selection)
 
-	// Apply height limiting only if needed
+	// Apply height limiting only if needed (no-op in accessible mode)
 	if shouldLimit, height := shouldLimitHeight(len(options)); shouldLimit {
 		selectField = selectField.Height(height)
 	}
 
-	form := huh.NewForm(
-		huh.NewGroup(selectField),
-	).WithTheme(styles.FormTheme)
-
-	if err := form.Run(); err != nil {
+	if err := newForm(huh.NewGroup(selectField)).Run(); err != nil {
 		return "", err
 	}
 
@@ -77,19 +98,20 @@ func PromptSelect(message string, description string, options []string) (string,
 }
 
 // PromptInput prompts the user to provide dynamic input.
+//
+// In screen reader mode huh prints the title and reads a plain line from
+// stdin with no TUI decoration.
 func PromptInput(message string) (string, error) {
 	var input string
 
-	form := huh.NewForm(
+	if err := newForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title(message).
 				Value(&input).
 				Validate(styles.RequiredValidator),
 		),
-	).WithTheme(styles.FormTheme)
-
-	if err := form.Run(); err != nil {
+	).Run(); err != nil {
 		return "", err
 	}
 
@@ -97,10 +119,13 @@ func PromptInput(message string) (string, error) {
 }
 
 // PromptPassword prompts the user to provide sensitive dynamic input.
+//
+// In screen reader mode huh prints the title and reads from stdin without
+// echoing characters.
 func PromptPassword(message string) (string, error) {
 	var input string
 
-	form := huh.NewForm(
+	if err := newForm(
 		huh.NewGroup(
 			huh.NewInput().
 				Title(message).
@@ -108,9 +133,7 @@ func PromptPassword(message string) (string, error) {
 				Value(&input).
 				Validate(styles.RequiredValidator),
 		),
-	).WithTheme(styles.FormTheme)
-
-	if err := form.Run(); err != nil {
+	).Run(); err != nil {
 		return "", err
 	}
 
