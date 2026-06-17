@@ -454,21 +454,31 @@ func (c *Cmd) ValidateCmdConsole(cCtx *cli.Context) error {
 // ValidateCmdRun validates the flags passed to the run command and sets the
 // favorites region as the default region if needed to ensure precedence.
 func (c *Cmd) ValidateCmdRun(cCtx *cli.Context) error {
+	favName := cCtx.String("favorite")
+	account := cCtx.String("account")
+	alias := cCtx.String("alias")
+	car := cCtx.String("car")
+
 	// Validate that either a favorite is used or both account/alias and car are provided
-	if cCtx.String("favorite") == "" && ((cCtx.String("account") == "" && cCtx.String("alias") == "") || cCtx.String("car") == "") {
+	hasAccountOrAlias := account != "" || alias != ""
+	hasCar := car != ""
+	hasFavorite := favName != ""
+
+	if !hasFavorite && (!hasAccountOrAlias || !hasCar) {
 		return errors.New("must specify either --fav OR --account and --car  OR --alias and --car parameters")
 	}
 
+	// If using account/alias + car directly, no favorite lookup needed
+	if !hasFavorite {
+		return nil
+	}
+
 	// Set the favorite region as the default region if a favorite is used
-	favName := cCtx.String("favorite")
 	_, fMap := helper.MapFavs(c.config.Favorites)
-	var fav string
-	if fMap[favName] != (structs.Favorite{}) {
-		fav = favName
-	} else {
+	if fMap[favName] == (structs.Favorite{}) {
 		return errors.New("can't find favorite")
 	}
-	favorite := fMap[fav]
+	favorite := fMap[favName]
 	if favorite.Region != "" {
 		c.config.Kion.DefaultRegion = favorite.Region
 	}
