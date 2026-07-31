@@ -87,12 +87,17 @@ func MapAccountsFromCARS(cars []kion.CAR, pid uint) ([]string, map[string]string
 }
 
 // MapCAR transforms a slice of CARs into a slice of their names and a map
-// indexed by their names.
+// indexed by their names. Note that the v3/me/cloud-access-role endpoint can
+// return the same CAR and account pairing more than once (observed with CARs
+// assigned directly to users) so duplicates are skipped.
 func MapCAR(cars []kion.CAR) ([]string, map[string]kion.CAR) {
 	var cNames []string
 	cMap := make(map[string]kion.CAR)
 	for _, car := range cars {
 		name := fmt.Sprintf("%v (%v)", car.Name, car.ID)
+		if slices.Contains(cNames, name) {
+			continue
+		}
 		cNames = append(cNames, name)
 		cMap[name] = car
 	}

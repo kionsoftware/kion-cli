@@ -113,6 +113,16 @@ func TestMapCAR(t *testing.T) {
 				fmt.Sprintf("%v (%v)", kionTestCARsNames[5], kionTestCARs[5].ID): kionTestCARs[5],
 			},
 		},
+		{
+			"Duplicates",
+			[]kion.CAR{kionTestCARs[0], kionTestCARs[0], kionTestCARs[0]},
+			[]string{
+				fmt.Sprintf("%v (%v)", kionTestCARsNames[0], kionTestCARs[0].ID),
+			},
+			map[string]kion.CAR{
+				fmt.Sprintf("%v (%v)", kionTestCARsNames[0], kionTestCARs[0].ID): kionTestCARs[0],
+			},
+		},
 	}
 
 	for _, test := range tests {
