@@ -65,14 +65,14 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 
 	// print out how to store as a favorite (or that one already exists)
 	if !c.config.Kion.QuietMode {
+		// non-fatal: if we cannot determine the user's favorites we stay quiet
+		// rather than suggest they create one that may already exist
 		favorites, ferr := c.getFavorites(cCtx)
-		if ferr != nil {
-			// non-fatal: just skip the existing-favorite hint
-			favorites = nil
-		}
-		existing := helper.MatchExistingFavorite(favorites, car, "web")
-		if err := helper.PrintFavoriteConfig(os.Stdout, car, "", "web", existing); err != nil {
-			return err
+		if ferr == nil {
+			existing := helper.MatchExistingFavorite(favorites, car, "web")
+			if err := helper.PrintFavoriteConfig(os.Stdout, car, "", "web", existing); err != nil {
+				return err
+			}
 		}
 	}
 

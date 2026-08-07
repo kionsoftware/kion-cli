@@ -7,7 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/kionsoftware/kion-cli/lib/kion"
+	"github.com/kionsoftware/kion-cli/lib/structs"
 )
 
 func TestPrintSTAK(t *testing.T) {
@@ -148,6 +150,188 @@ func TestPrintCredentialProcess(t *testing.T) {
 
 			if buf.String() != expected {
 				t.Fatalf("Expected %s, but got %s", expected, buf.String())
+			}
+		})
+	}
+}
+
+const (
+	testAccessTypeWeb = AccessTypeWeb
+	testAccessTypeCLI = AccessTypeCLI
+	testCARName       = "some-car"
+	testAccountNum    = "111111111111"
+)
+
+func TestMatchExistingFavorite(t *testing.T) {
+	car := kion.CAR{AccountNumber: testAccountNum, Name: testCARName}
+
+	tests := []struct {
+		description string
+		favorites   []structs.Favorite
+		accessType  string
+		want        string
+	}{
+		{
+			"Nil Favorites",
+			nil,
+			testAccessTypeCLI,
+			"",
+		},
+		{
+			"Empty Favorites",
+			[]structs.Favorite{},
+			testAccessTypeCLI,
+			"",
+		},
+		{
+			"Exact Access Type Match",
+			[]structs.Favorite{
+				{Name: "web-fav", Account: testAccountNum, CAR: testCARName, AccessType: testAccessTypeWeb},
+			},
+			testAccessTypeWeb,
+			"web-fav",
+		},
+		{
+			"Generic Favorite Matches Any Access Type",
+			[]structs.Favorite{
+				{Name: "generic-fav", Account: testAccountNum, CAR: testCARName, AccessType: ""},
+			},
+			testAccessTypeWeb,
+			"generic-fav",
+		},
+		{
+			"Exact Match Preferred Over Generic",
+			[]structs.Favorite{
+				{Name: "generic-fav", Account: testAccountNum, CAR: testCARName, AccessType: ""},
+				{Name: "web-fav", Account: testAccountNum, CAR: testCARName, AccessType: testAccessTypeWeb},
+			},
+			testAccessTypeWeb,
+			"web-fav",
+		},
+		{
+			"Exact Match Preferred Regardless Of Order",
+			[]structs.Favorite{
+				{Name: "web-fav", Account: testAccountNum, CAR: testCARName, AccessType: testAccessTypeWeb},
+				{Name: "generic-fav", Account: testAccountNum, CAR: testCARName, AccessType: ""},
+			},
+			testAccessTypeWeb,
+			"web-fav",
+		},
+		{
+			"First Generic Wins",
+			[]structs.Favorite{
+				{Name: "generic-one", Account: testAccountNum, CAR: testCARName, AccessType: ""},
+				{Name: "generic-two", Account: testAccountNum, CAR: testCARName, AccessType: ""},
+			},
+			testAccessTypeCLI,
+			"generic-one",
+		},
+		{
+			"Mismatched Access Type Only",
+			[]structs.Favorite{
+				{Name: "web-fav", Account: testAccountNum, CAR: testCARName, AccessType: testAccessTypeWeb},
+			},
+			testAccessTypeCLI,
+			"",
+		},
+		{
+			"Mismatched Account",
+			[]structs.Favorite{
+				{Name: "other-acct", Account: "222222222222", CAR: testCARName, AccessType: testAccessTypeCLI},
+			},
+			testAccessTypeCLI,
+			"",
+		},
+		{
+			"Mismatched CAR",
+			[]structs.Favorite{
+				{Name: "other-car", Account: testAccountNum, CAR: "other-car", AccessType: testAccessTypeCLI},
+			},
+			testAccessTypeCLI,
+			"",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			got := MatchExistingFavorite(test.favorites, car, test.accessType)
+			if test.want == "" {
+				if got != nil {
+					t.Errorf("\ngot:\n  %v\nwanted:\n  no match", got.Name)
+				}
+				return
+			}
+			if got == nil {
+				t.Fatalf("\ngot:\n  no match\nwanted:\n  %v", test.want)
+			}
+			if got.Name != test.want {
+				t.Errorf("\ngot:\n  %v\nwanted:\n  %v", got.Name, test.want)
+			}
+		})
+	}
+}
+
+func TestPrintFavoriteConfig(t *testing.T) {
+	// pin color output off so assertions do not depend on tty detection
+	origNoColor := color.NoColor
+	color.NoColor = true
+	defer func() { color.NoColor = origNoColor }()
+
+	car := kion.CAR{AccountNumber: testAccountNum, Name: testCARName}
+
+	tests := []struct {
+		description string
+		region      string
+		accessType  string
+		existing    *structs.Favorite
+		want        string
+	}{
+		{
+			"No Match Prints Snippet Without Region",
+			"",
+			testAccessTypeWeb,
+			nil,
+			"\nTo save your selection as a favorite add the following to\nyour configuration file under the 'favorites:' section:\n  - name: [your favorite alias]\n    account: 111111111111\n    cloud_access_role: some-car\n    access_type: web\n\n",
+		},
+		{
+			"No Match Prints Snippet With Region",
+			"us-gov-west-1",
+			testAccessTypeCLI,
+			nil,
+			"\nTo save your selection as a favorite add the following to\nyour configuration file under the 'favorites:' section:\n  - name: [your favorite alias]\n    account: 111111111111\n    cloud_access_role: some-car\n    region: us-gov-west-1\n    access_type: cli\n\n",
+		},
+		{
+			"Existing Exact Web Favorite Omits Flag",
+			"",
+			testAccessTypeWeb,
+			&structs.Favorite{Name: "web-fav", AccessType: testAccessTypeWeb},
+			"\nYou already have a favorite for this selection. Next time you can run:\n  kion favorite web-fav\n\n",
+		},
+		{
+			"Existing Generic Favorite Adds Web Flag",
+			"",
+			testAccessTypeWeb,
+			&structs.Favorite{Name: "generic-fav", AccessType: ""},
+			"\nYou already have a favorite for this selection. Next time you can run:\n  kion favorite --web generic-fav\n\n",
+		},
+		{
+			"Existing Generic Favorite For Cli Omits Flag",
+			"us-gov-west-1",
+			testAccessTypeCLI,
+			&structs.Favorite{Name: "generic-fav", AccessType: ""},
+			"\nYou already have a favorite for this selection. Next time you can run:\n  kion favorite generic-fav\n\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			var output bytes.Buffer
+			err := PrintFavoriteConfig(&output, car, test.region, test.accessType, test.existing)
+			if err != nil {
+				t.Error(err)
+			}
+			if output.String() != test.want {
+				t.Errorf("\ngot:\n  %q\nwanted:\n  %q", output.String(), test.want)
 			}
 		})
 	}

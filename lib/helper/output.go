@@ -45,6 +45,12 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 	return nil
 }
 
+// Access types used to distinguish web console access from CLI credentials.
+const (
+	AccessTypeWeb = "web"
+	AccessTypeCLI = "cli"
+)
+
 // MatchExistingFavorite returns the favorite that best matches the given
 // account/CAR/access_type combination, or nil if none match. A favorite with
 // no access_type set is considered generic and matches any access type, but
@@ -72,7 +78,7 @@ func PrintFavoriteConfig(w io.Writer, car kion.CAR, region string, access_type s
 	if existing != nil {
 		color.New(color.FgBlue).Fprintf(w, "\nYou already have a favorite for this selection. Next time you can run:\n")
 		flag := ""
-		if access_type == "web" && existing.AccessType != "web" {
+		if access_type == AccessTypeWeb && existing.AccessType != AccessTypeWeb {
 			flag = " --web"
 		}
 		color.New(color.FgGreen).Fprintf(w, "  kion favorite%v %v\n\n", flag, existing.Name)
