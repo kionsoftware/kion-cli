@@ -32,3 +32,4 @@ dist/
 .vectorcode/
 .claude/
 CLAUDE.md
+doc/*.local.md
