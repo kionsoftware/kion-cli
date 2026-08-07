@@ -15,6 +15,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/kionsoftware/kion-cli/lib/kion"
+	"github.com/kionsoftware/kion-cli/lib/structs"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,9 +45,46 @@ func PrintSTAK(w io.Writer, stak kion.STAK, region string) error {
 	return nil
 }
 
-// PrintFavoriteConfig prints out how to save the current selection as a
-// favorite within the users configuration file.
-func PrintFavoriteConfig(w io.Writer, car kion.CAR, region string, access_type string) error {
+// Access types used to distinguish web console access from CLI credentials.
+const (
+	AccessTypeWeb = "web"
+	AccessTypeCLI = "cli"
+)
+
+// MatchExistingFavorite returns the favorite that best matches the given
+// account/CAR/access_type combination, or nil if none match. A favorite with
+// no access_type set is considered generic and matches any access type, but
+// an exact access_type match is preferred.
+func MatchExistingFavorite(favorites []structs.Favorite, car kion.CAR, accessType string) *structs.Favorite {
+	var generic *structs.Favorite
+	for i, f := range favorites {
+		if f.Account != car.AccountNumber || f.CAR != car.Name {
+			continue
+		}
+		if f.AccessType == accessType {
+			return &favorites[i]
+		}
+		if f.AccessType == "" && generic == nil {
+			generic = &favorites[i]
+		}
+	}
+	return generic
+}
+
+// PrintFavoriteConfig prints either a hint that the current selection is
+// already stored as a favorite (and how to use it), or — if no matching
+// favorite is found — a config snippet for the user to add one.
+func PrintFavoriteConfig(w io.Writer, car kion.CAR, region string, access_type string, existing *structs.Favorite) error {
+	if existing != nil {
+		color.New(color.FgBlue).Fprintf(w, "\nYou already have a favorite for this selection. Next time you can run:\n")
+		flag := ""
+		if access_type == AccessTypeWeb && existing.AccessType != AccessTypeWeb {
+			flag = " --web"
+		}
+		color.New(color.FgGreen).Fprintf(w, "  kion favorite%v %v\n\n", flag, existing.Name)
+		return nil
+	}
+
 	color.New(color.FgBlue).Fprintf(w, "\nTo save your selection as a favorite add the following to\nyour configuration file under the 'favorites:' section:\n")
 	fmt.Fprintf(w, "  - name: ")
 	color.New(color.FgGreen).Fprintf(w, "[your favorite alias]\n")

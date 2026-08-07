@@ -112,8 +112,14 @@ func (c *Cmd) GenStaks(cCtx *cli.Context) error {
 		return helper.SaveAWSCreds(stak, car)
 	case "subshell":
 		if !c.config.Kion.QuietMode {
-			if err := helper.PrintFavoriteConfig(os.Stdout, car, region, "cli"); err != nil {
-				return err
+			// non-fatal: if we cannot determine the user's favorites we stay
+			// quiet rather than suggest they create one that may already exist
+			favorites, ferr := c.getFavorites(cCtx)
+			if ferr == nil {
+				existing := helper.MatchExistingFavorite(favorites, car, "cli")
+				if err := helper.PrintFavoriteConfig(os.Stdout, car, region, "cli", existing); err != nil {
+					return err
+				}
 			}
 		}
 		var displayAlais string

@@ -63,10 +63,16 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 	// grab the second argument, used as a redirect parameter
 	redirect := getSecondArgument(cCtx)
 
-	// print out how to store as a favorite
+	// print out how to store as a favorite (or that one already exists)
 	if !c.config.Kion.QuietMode {
-		if err := helper.PrintFavoriteConfig(os.Stdout, car, "", "web"); err != nil {
-			return err
+		// non-fatal: if we cannot determine the user's favorites we stay quiet
+		// rather than suggest they create one that may already exist
+		favorites, ferr := c.getFavorites(cCtx)
+		if ferr == nil {
+			existing := helper.MatchExistingFavorite(favorites, car, "web")
+			if err := helper.PrintFavoriteConfig(os.Stdout, car, "", "web", existing); err != nil {
+				return err
+			}
 		}
 	}
 
