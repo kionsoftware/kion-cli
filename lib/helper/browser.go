@@ -252,8 +252,10 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 		}
 	} else {
 		federationLink = fmt.Sprintf("%s%s", logoutURL, encodedUrlRedirect)
+		if session.AWSMultiSession && session.AccountTypeID == 1 {
+			federationLink = fmt.Sprintf("%s", redirectTarget)
+		}
 	}
-
 	// open the browser
 	if config.CustomBrowserPath != "" {
 		err = exec.Command(config.CustomBrowserPath, federationLink).Start()

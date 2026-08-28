@@ -28,6 +28,7 @@ type Kion struct {
 	SamlPrintURL     bool   `yaml:"saml_print_url,omitempty"`
 	DisableCache     bool   `yaml:"disable_cache,omitempty"`
 	DefaultRegion    string `yaml:"default_region,omitempty"`
+	AWSMultiSession  bool   `yaml:"aws_multi_session,omitempty"`
 	DebugMode        bool   `yaml:"debug_mode,omitempty"`
 	QuietMode        bool   `yaml:"quiet_mode,omitempty"`
 }
