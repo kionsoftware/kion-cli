@@ -12,7 +12,7 @@ require (
 	github.com/russellhaering/goxmldsig v1.6.0
 	github.com/urfave/cli/v2 v2.25.1
 	golang.org/x/term v0.7.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

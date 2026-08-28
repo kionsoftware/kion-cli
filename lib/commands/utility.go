@@ -307,35 +307,67 @@ func (c *Cmd) DeleteLocalFavorites(cCtx *cli.Context) error {
 
 		configPath := cCtx.App.Metadata["configPath"].(string)
 
-		// load the full config file
-		var config structs.Configuration
-		err := helper.LoadConfig(configPath, &config)
-		if err != nil {
-			color.Red("Error loading config: %v\n", err)
-			return err
-		}
-
 		// if using a profile, delete favorites from that profile
 		// otherwise delete favorites from the default profile
 		profile := cCtx.String("profile")
 		if profile == "" {
-			config.Favorites = []structs.Favorite{}
+			err = helper.DeleteConfigField(configPath, []string{"favorites"})
+			if err != nil {
+				return fmt.Errorf("error deleting favorites from default profile: %v", err)
+			}
 		} else {
-			profileConfig := config.Profiles[profile]
-			profileConfig.Favorites = []structs.Favorite{}
-			config.Profiles[profile] = profileConfig
-		}
-
-		// Save the updated config back to the file
-		err = helper.SaveConfig(configPath, config)
-		if err != nil {
-			color.Red("Error saving updated config: %v\n", err)
-			return err
+			err = helper.DeleteConfigField(configPath, []string{"profiles", profile, "favorites"})
+			if err != nil {
+				return fmt.Errorf("error deleting favorites from profile %s: %v", profile, err)
+			}
 		}
 		color.Green("\nLocal favorites deleted after successful push to Kion API.\n")
 	} else {
 		color.Green("\nKeeping local favorites.\n")
 	}
+
+	return nil
+}
+
+// RotateAPIKey rotates the Kion App API Key for the default or specified profile in the configuration file.
+func (c *Cmd) RotateAPIKey(cCtx *cli.Context) error {
+	configPath := cCtx.App.Metadata["configPath"].(string)
+
+	var config structs.Configuration
+	err := helper.LoadConfigStruct(configPath, &config)
+	if err != nil {
+		return fmt.Errorf("error loading config: %v", err)
+	}
+
+	profile := cCtx.String("profile")
+	if profile == "" {
+		fmt.Printf("Rotating the Kion App API Key in the configuration file...\n")
+
+		newAPIKey, err := kion.RotateAPIKey(config.Kion.URL, config.Kion.APIKey)
+		if err != nil {
+			return fmt.Errorf("error rotating Kion App API Key: %v", err)
+		}
+		err = helper.UpdateConfigField(configPath, []string{"kion", "api_key"}, newAPIKey)
+		if err != nil {
+			return fmt.Errorf("error saving new Kion App API Key within configuration file: %v", err)
+		}
+	} else {
+		fmt.Printf("Rotating the Kion App API Key for profile %s...\n", profile)
+		profileStruct, found := config.Profiles[profile]
+		if !found {
+			return fmt.Errorf("configuration profile not found: %s", profile)
+		}
+		newAPIKey, err := kion.RotateAPIKey(config.Kion.URL, profileStruct.Kion.APIKey)
+		if err != nil {
+			return fmt.Errorf("error rotating Kion App API Key for profile %s: %v", profile, err)
+		}
+		err = helper.UpdateConfigField(configPath, []string{"profiles", profile, "kion", "api_key"}, newAPIKey)
+		if err != nil {
+			return fmt.Errorf("error updating Kion App API Key within configuration file for profile %s: %v", profile, err)
+		}
+	}
+
+	color.Green("Kion App API Key rotated successfully.\n")
 
 	return nil
 }
