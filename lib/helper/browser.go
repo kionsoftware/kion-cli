@@ -254,9 +254,10 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 	} else {
 		federationLink = fmt.Sprintf("%s%s", logoutURL, encodedUrlRedirect)
 		if session.AWSMultiSession {
-			if session.AccountTypeID == 1 {
+			switch session.AccountTypeID {
+			case 1:
 				federationLink = redirectTarget
-			} else if session.AccountTypeID == 2 {
+			case 2:
 				color.Yellow("AWS does not support multi-session for GovCloud accounts, reverting to single session.")
 			}
 		}
