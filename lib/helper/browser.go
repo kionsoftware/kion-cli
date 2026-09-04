@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/kionsoftware/kion-cli/lib/structs"
 )
 
@@ -252,8 +253,15 @@ func OpenBrowserRedirect(target string, session structs.SessionInfo, config stru
 		}
 	} else {
 		federationLink = fmt.Sprintf("%s%s", logoutURL, encodedUrlRedirect)
+		if session.AWSMultiSession {
+			switch session.AccountTypeID {
+			case 1:
+				federationLink = redirectTarget
+			case 2:
+				color.Yellow("AWS does not support multi-session for GovCloud accounts, reverting to single session.")
+			}
+		}
 	}
-
 	// open the browser
 	if config.CustomBrowserPath != "" {
 		err = exec.Command(config.CustomBrowserPath, federationLink).Start()

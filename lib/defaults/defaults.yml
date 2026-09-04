@@ -31,5 +31,6 @@ kion:
   saml_sp_issuer: ""
   saml_print_url: false
   disable_cache: false
+  aws_multi_session: false
   debug_mode: false
   quiet_mode: false

@@ -183,6 +183,13 @@ func main() {
 				Destination: &config.Kion.DisableCache,
 			},
 			&cli.BoolFlag{
+				Name:        "aws-multi-session",
+				Value:       config.Kion.AWSMultiSession,
+				EnvVars:     []string{"AWS_MULTI_SESSION"},
+				Usage:       "enable AWS multi-session for commercial accounts",
+				Destination: &config.Kion.AWSMultiSession,
+			},
+			&cli.BoolFlag{
 				Name:        "debug",
 				Value:       config.Kion.DebugMode,
 				EnvVars:     []string{"KION_DEBUG"},

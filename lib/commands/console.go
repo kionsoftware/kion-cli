@@ -71,10 +71,11 @@ func (c *Cmd) FedConsole(cCtx *cli.Context) error {
 	}
 
 	session := structs.SessionInfo{
-		AccountName:    car.AccountName,
-		AccountNumber:  car.AccountNumber,
-		AccountTypeID:  car.AccountTypeID,
-		AwsIamRoleName: car.AwsIamRoleName,
+		AccountName:     car.AccountName,
+		AccountNumber:   car.AccountNumber,
+		AccountTypeID:   car.AccountTypeID,
+		AwsIamRoleName:  car.AwsIamRoleName,
+		AWSMultiSession: c.config.Kion.AWSMultiSession,
 	}
 	return helper.OpenBrowserRedirect(url, session, c.config.Browser, redirect, "")
 }
