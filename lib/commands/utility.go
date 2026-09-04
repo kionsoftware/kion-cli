@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -10,6 +13,7 @@ import (
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/term"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,34 +344,72 @@ func (c *Cmd) RotateAPIKey(cCtx *cli.Context) error {
 	}
 
 	profile := cCtx.String("profile")
-	if profile == "" {
-		fmt.Printf("Rotating the Kion App API Key in the configuration file...\n")
+	label := "default profile"
+	url := config.Kion.URL
+	storedKey := config.Kion.APIKey
+	fieldPath := []string{"kion", "api_key"}
 
-		newAPIKey, err := kion.RotateAPIKey(config.Kion.URL, config.Kion.APIKey)
+	if profile != "" {
+		profileStruct, found := config.Profiles[profile]
+		if !found {
+			return fmt.Errorf("profile not found: %s", profile)
+		}
+		label = fmt.Sprintf("%s profile", profile)
+		url = profileStruct.Kion.URL
+		storedKey = profileStruct.Kion.APIKey
+		fieldPath = []string{"profiles", profile, "kion", "api_key"}
+	}
+
+	if storedKey != c.config.Kion.APIKey {
+		fmt.Printf("Active key doesn't match the %s's stored key (likely --token or KION_API_KEY).\n", label)
+		fmt.Println("Rotating it and printing the new key — config file will not be updated.")
+
+		newAPIKey, err := kion.RotateAPIKey(url, c.config.Kion.APIKey)
 		if err != nil {
 			return fmt.Errorf("error rotating Kion App API Key: %v", err)
 		}
-		err = helper.UpdateConfigField(configPath, []string{"kion", "api_key"}, newAPIKey)
-		if err != nil {
-			return fmt.Errorf("error saving new Kion App API Key within configuration file: %v", err)
-		}
-	} else {
-		fmt.Printf("Rotating the Kion App API Key for profile %s...\n", profile)
-		profileStruct, found := config.Profiles[profile]
-		if !found {
-			return fmt.Errorf("configuration profile not found: %s", profile)
-		}
-		newAPIKey, err := kion.RotateAPIKey(config.Kion.URL, profileStruct.Kion.APIKey)
-		if err != nil {
-			return fmt.Errorf("error rotating Kion App API Key for profile %s: %v", profile, err)
-		}
-		err = helper.UpdateConfigField(configPath, []string{"profiles", profile, "kion", "api_key"}, newAPIKey)
-		if err != nil {
-			return fmt.Errorf("error updating Kion App API Key within configuration file for profile %s: %v", profile, err)
-		}
+		return printKeyFallback(newAPIKey)
+	}
+
+	fmt.Printf("Rotating Kion App API Key (%s)\n", label)
+	newAPIKey, err := kion.RotateAPIKey(url, storedKey)
+	if err != nil {
+		return fmt.Errorf("error rotating Kion App API Key (%s): %v", label, err)
+	}
+
+	err = helper.UpdateConfigField(configPath, fieldPath, newAPIKey)
+	if err != nil {
+		color.Red("Error updating Kion App API Key in configuration file (%s): %v", label, err)
+		return printKeyFallback(newAPIKey)
 	}
 
 	color.Green("Kion App API Key rotated successfully.\n")
+	return nil
+}
 
+func printKeyFallback(s string) error {
+	if !term.IsTerminal(int(os.Stdout.Fd())) {
+		return fmt.Errorf("non-interactive terminal detected, unable to display new Kion App API Key. Please manually regenerate a key and update your configuration")
+	}
+	timeout := 10 * time.Second
+	color.Green("\nDo you wish to print the key? [y/N] (auto-declines in %s): ", timeout)
+	answers := make(chan string, 1)
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		if scanner.Scan() {
+			answers <- scanner.Text()
+		}
+		close(answers)
+	}()
+
+	select {
+	case answer, ok := <-answers:
+		if ok && strings.EqualFold(strings.TrimSpace(answer), "y") {
+			fmt.Println(s)
+			color.Yellow("Key rotated but not saved — copy it from above before it's gone.\n")
+		}
+	case <-time.After(timeout):
+		fmt.Println("\nNo response, not printing the key.")
+	}
 	return nil
 }
