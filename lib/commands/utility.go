@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -10,6 +13,7 @@ import (
 	"github.com/kionsoftware/kion-cli/lib/kion"
 	"github.com/kionsoftware/kion-cli/lib/structs"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/term"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,35 +311,105 @@ func (c *Cmd) DeleteLocalFavorites(cCtx *cli.Context) error {
 
 		configPath := cCtx.App.Metadata["configPath"].(string)
 
-		// load the full config file
-		var config structs.Configuration
-		err := helper.LoadConfig(configPath, &config)
-		if err != nil {
-			color.Red("Error loading config: %v\n", err)
-			return err
-		}
-
 		// if using a profile, delete favorites from that profile
 		// otherwise delete favorites from the default profile
 		profile := cCtx.String("profile")
 		if profile == "" {
-			config.Favorites = []structs.Favorite{}
+			err = helper.DeleteConfigField(configPath, []string{"favorites"})
+			if err != nil {
+				return fmt.Errorf("error deleting favorites from default profile: %v", err)
+			}
 		} else {
-			profileConfig := config.Profiles[profile]
-			profileConfig.Favorites = []structs.Favorite{}
-			config.Profiles[profile] = profileConfig
-		}
-
-		// Save the updated config back to the file
-		err = helper.SaveConfig(configPath, config)
-		if err != nil {
-			color.Red("Error saving updated config: %v\n", err)
-			return err
+			err = helper.DeleteConfigField(configPath, []string{"profiles", profile, "favorites"})
+			if err != nil {
+				return fmt.Errorf("error deleting favorites from profile %s: %v", profile, err)
+			}
 		}
 		color.Green("\nLocal favorites deleted after successful push to Kion API.\n")
 	} else {
 		color.Green("\nKeeping local favorites.\n")
 	}
 
+	return nil
+}
+
+// RotateAPIKey rotates the Kion App API Key for the default or specified profile in the configuration file.
+func (c *Cmd) RotateAPIKey(cCtx *cli.Context) error {
+	configPath := cCtx.App.Metadata["configPath"].(string)
+
+	var config structs.Configuration
+	err := helper.LoadConfigStruct(configPath, &config)
+	if err != nil {
+		return fmt.Errorf("error loading config: %v", err)
+	}
+
+	profile := cCtx.String("profile")
+	label := "default profile"
+	url := config.Kion.URL
+	storedKey := config.Kion.APIKey
+	fieldPath := []string{"kion", "api_key"}
+
+	if profile != "" {
+		profileStruct, found := config.Profiles[profile]
+		if !found {
+			return fmt.Errorf("profile not found: %s", profile)
+		}
+		label = fmt.Sprintf("%s profile", profile)
+		url = profileStruct.Kion.URL
+		storedKey = profileStruct.Kion.APIKey
+		fieldPath = []string{"profiles", profile, "kion", "api_key"}
+	}
+
+	if storedKey != c.config.Kion.APIKey {
+		fmt.Printf("Active key doesn't match the %s's stored key (likely --token or KION_API_KEY).\n", label)
+		fmt.Println("Rotating it and printing the new key — config file will not be updated.")
+
+		newAPIKey, err := kion.RotateAPIKey(url, c.config.Kion.APIKey)
+		if err != nil {
+			return fmt.Errorf("error rotating Kion App API Key: %v", err)
+		}
+		return printKeyFallback(newAPIKey)
+	}
+
+	fmt.Printf("Rotating Kion App API Key (%s)\n", label)
+	newAPIKey, err := kion.RotateAPIKey(url, storedKey)
+	if err != nil {
+		return fmt.Errorf("error rotating Kion App API Key (%s): %v", label, err)
+	}
+
+	err = helper.UpdateConfigField(configPath, fieldPath, newAPIKey)
+	if err != nil {
+		color.Red("Error updating Kion App API Key in configuration file (%s): %v", label, err)
+		return printKeyFallback(newAPIKey)
+	}
+
+	color.Green("Kion App API Key rotated successfully.\n")
+	return nil
+}
+
+func printKeyFallback(s string) error {
+	if !term.IsTerminal(int(os.Stdout.Fd())) {
+		return fmt.Errorf("non-interactive terminal detected, unable to display new Kion App API Key. Please manually regenerate a key and update your configuration")
+	}
+	timeout := 10 * time.Second
+	color.Green("\nDo you wish to print the key? [y/N] (auto-declines in %s): ", timeout)
+	answers := make(chan string, 1)
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		if scanner.Scan() {
+			answers <- scanner.Text()
+		}
+		close(answers)
+	}()
+
+	select {
+	case answer, ok := <-answers:
+		if ok && strings.EqualFold(strings.TrimSpace(answer), "y") {
+			fmt.Println(s)
+			color.Yellow("Key rotated but not saved — copy it from above before it's gone.\n")
+		}
+	case <-time.After(timeout):
+		fmt.Println("\nNo response, not printing the key.")
+	}
 	return nil
 }

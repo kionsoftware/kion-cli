@@ -53,7 +53,7 @@ func main() {
 	}
 
 	// load configuration file
-	err = helper.LoadConfig(configPath, &config)
+	err = helper.LoadConfigStruct(configPath, &config)
 	if err != nil {
 		color.Red(" Error: %v", err)
 		os.Exit(1)
@@ -383,6 +383,11 @@ func main() {
 						Name:   "push-favorites",
 						Usage:  "Push configured favorites to Kion",
 						Action: cmd.PushFavorites,
+					},
+					{
+						Name:   "rotate-api-key",
+						Usage:  "Rotates the Kion App API Key within the configuration file",
+						Action: cmd.RotateAPIKey,
 					},
 					{
 						Name:   "validate-saml",

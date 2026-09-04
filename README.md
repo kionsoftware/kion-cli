@@ -370,6 +370,10 @@ SUB COMMANDS
                                        that have the same alias. After pushing, you
                                        are prompted to delete local favorites.
 
+  rotate-api-key                       Rotates the Kion App API Key within the
+                                       configuration file. Can also rotate the Kion
+                                       App API Key of alternate configuration profiles.
+
   validate-saml                        Validate the current SAML configuration.
 
   auth-status                          Show the cached session state including
