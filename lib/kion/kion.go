@@ -163,3 +163,28 @@ func ConvertAccessType(accessType string) string {
 		return accessType
 	}
 }
+
+// RotateAPIKey rotates the Kion App API Key stored in the configuration file.
+// It returns status code and error if any.
+func RotateAPIKey(host string, token string) (string, error) {
+	url := fmt.Sprintf("%v/api/v3/app-api-key/rotate", host)
+	query := map[string]string{}
+	data := map[string]string{
+		"key": token,
+	}
+	resp, _, err := runQuery("POST", url, token, query, data)
+	if err != nil {
+		return "", err
+	}
+
+	// unmarshal response body
+	var response struct {
+		Key string `json:"key"`
+	}
+	err = json.Unmarshal(resp.Data, &response)
+	if err != nil {
+		return "", err
+	}
+
+	return response.Key, nil
+}

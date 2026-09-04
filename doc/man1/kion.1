@@ -40,6 +40,8 @@ Print the authentication URL instead of opening it automatically with the defaul
 Token (API or Bearer) used to authenticate.
 .It --disable-cache
 Disable the use of cache for Kion CLI.
+.It --aws-multi-session
+Enable AWS multi-session for commercial accounts. AWS GovCloud does not support multi-session.
 .It --debug
 Enable debug mode for additional CLI output.
 .It --quiet
@@ -129,6 +131,8 @@ Tools for managing Kion CLI.
 Clear out all cache entries for the Kion CLI.
 .It push-favorites
 Push locally defined favorites up to Kion. This will overwrite any favorites in Kion that have the same name. After pushing, you are prompted to delete local favorites.
+.It rotate-api-key
+Rotates the Kion App API Key within the configuration file.
 .It validate-saml
 Validate SAML configuration.
 .It auth-status
@@ -170,6 +174,8 @@ FILENAME or URL of the identity provider's XML metadata document.
 The Kion IDMS issuer value.
 .It KION_SAML_PRINT_URL
 "TRUE" to print the authentication url as opposed to automatically opening it in the default browser. Defaults to "FALSE".
+.It AWS_MULTI_SESSION
+"TRUE" to enable AWS multi-session for commercial accounts. AWS GovCloud does not support multi-session.
 .It KION_DEBUG
 "TRUE" to enable verbose debugging of the Kion CLI.
 .It KION_QUIET

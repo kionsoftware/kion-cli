@@ -218,6 +218,9 @@ __Global Options:__
 
 --disable-cache                        Disable the use of cache for Kion CLI.
 
+--aws-multi-session                    Enable AWS multi-session for commercial accounts.
+                                       AWS GovCloud does not support multi-session.
+
 --debug                                Enables debug output for certain functions.
 
 --quiet                                Reduces output for certain functions.
@@ -367,6 +370,10 @@ SUB COMMANDS
                                        that have the same alias. After pushing, you
                                        are prompted to delete local favorites.
 
+  rotate-api-key                       Rotates the Kion App API Key within the
+                                       configuration file. Can also rotate the Kion
+                                       App API Key of alternate configuration profiles.
+
   validate-saml                        Validate the current SAML configuration.
 
   auth-status                          Show the cached session state including
@@ -410,6 +417,9 @@ KION_SAML_PRINT_URL      "TRUE" to print the authentication url as opposed to
                          automatically opening it in the default browser.
                          Defaults to "FALSE".
 
+AWS_MULTI_SESSION        "TRUE" to enable AWS multi-session for commercial accounts.
+                         AWS GovCloud does not support multi-session.
+
 KION_DEBUG               "TRUE" to enable verbose debugging of the Kion CLI.
 
 KION_QUIET               "TRUE" to reduce messages for quieter operation.
@@ -440,6 +450,9 @@ kion.saml_print_url                  Set 'true' to print the authentication url 
                                      Defaults to 'false'.
 kion.disable_cache                   Prevents Kion CLI from caching STAK if 'true', defaults
                                      to 'false'.
+kion.aws_multi_session               Enables AWS multi-session for commercial accounts if 'true'.
+                                     AWS GovCloud does not support multi-session.
+                                     Defaults to 'false'
 kion.default_region                  The CSP region to use if one is not provided by argument
                                      flag or environment variable.
 
