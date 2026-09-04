@@ -149,11 +149,12 @@ func (c *Cmd) Favorites(cCtx *cli.Context) error {
 		}
 		fmt.Printf("Federating into %s (%s) via %s\n", favorite.Name, favorite.Account, car.AwsIamRoleName)
 		session := structs.SessionInfo{
-			AccountName:    favorite.Name,
-			AccountNumber:  car.AccountNumber,
-			AccountTypeID:  car.AccountTypeID,
-			AwsIamRoleName: car.AwsIamRoleName,
-			Region:         favorite.Region,
+			AccountName:     favorite.Name,
+			AccountNumber:   car.AccountNumber,
+			AccountTypeID:   car.AccountTypeID,
+			AwsIamRoleName:  car.AwsIamRoleName,
+			Region:          favorite.Region,
+			AWSMultiSession: c.config.Kion.AWSMultiSession,
 		}
 		return helper.OpenBrowserRedirect(url, session, c.config.Browser, favorite.Service, favorite.FirefoxContainerName)
 	} else {

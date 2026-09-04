@@ -187,6 +187,7 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 		setStrings := make(map[string]string)
 
 		var disableCacheFlagged bool
+		var AWSMultiSessionFlagged bool
 		var debugFlagged bool
 		var quietFlagged bool
 
@@ -210,6 +211,8 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 			// non-string flags
 			case "disable-cache":
 				disableCacheFlagged = true
+			case "aws-multi-session":
+				AWSMultiSessionFlagged = true
 			case "debug":
 				debugFlagged = true
 			case "quiet":
@@ -237,6 +240,9 @@ func (c *Cmd) handleProfile(profileName string, cCtx *cli.Context) error {
 		// handle non-string flags
 		if disableCacheFlagged {
 			c.config.Kion.DisableCache = true
+		}
+		if AWSMultiSessionFlagged {
+			c.config.Kion.AWSMultiSession = true
 		}
 		if debugFlagged {
 			c.config.Kion.DebugMode = true
