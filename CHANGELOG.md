@@ -20,6 +20,28 @@ Notes for upgrading...
 
 ### Fixed
 
+[0.18.0] - 2026.09.04
+---------------------
+
+Version 0.18.0 adds AWS multi-session support for commercial accounts and a new utility for rotating Kion App API Keys. Rotation updates the configuration file or prints the key, depending on how the current key was supplied — printing is gated behind a user prompt so a key is never printed without confirmation. Configuration file operations were also improved: modifications now preserve comments and formatting. Also fixes a bug where the selection prompt printed duplicate CARs during `stak/console` operations.
+
+__AWS Multi-Session__
+- Add `aws_multi_session: true` under the kion mapping in your config file
+
+__Kion App API Key Rotation__
+- `kion util rotate-api-key` rotates the API key for the default profile
+- For another profile: `kion --profile <PROFILE> util rotate-api-key`
+- Setting `KION_API_KEY` or passing `--token <KION_API_KEY>` rotates and prints the key instead of saving it to the config file
+
+### Added
+
+- Adds support for AWS multi-session for commercial accounts via a new `aws_multi_session` config field [kionsoftware/kion-cli/pull/118]
+- Adds `kion util rotate-api-key` for rotating Kion App API Keys, plus supporting config helper changes [kionsoftware/kion-cli/pull/119]
+
+### Fixed
+
+- Dedupes repeated CAR rows in selection prompts [kionsoftware/kion-cli/pull/116]
+
 [0.16.0] - 2026.06.09
 ---------------------
 
